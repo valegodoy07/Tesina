@@ -16,18 +16,8 @@ Este proyecto consiste en una carta virtual diseñada para restaurantes, bares y
 
 -  Instrucciones básicas para el usuario final (cómo navegar, interactuar, etc.).
 
-# Project Title
 
-A brief description of what this project does and who it's for
-
-
-## Tech Stack
-
-**Client:** React, Redux, TailwindCSS
-
-**Server:** Node, Express
-
-## Intengrantes de la tesina  
+## Integrantes de la tesina  
 
 |     Nombre    |    Usuarios de GitHub                                      |
 | ----------------- | ------------------------------------------------------------------ |

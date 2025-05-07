@@ -2,7 +2,7 @@
 
 Este proyecto consiste en una carta virtual diseñada para restaurantes, bares y cafeterias. Pensada para ser accedida de forma rápida y práctica por los clientes a través de un código QR. La aplicación web puede visualizar el menú desde cualquier diapositivo móvil vinculado a una red. 
 
-***Características***
+## ***Características***
 - Lista de lo que ofrece el proyecto
 - Visualización del menú desde cualquier dispositivo móvil
 - Acceso mediante código QR

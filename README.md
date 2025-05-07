@@ -22,5 +22,5 @@ Este proyecto consiste en una carta virtual diseñada para restaurantes, bares y
 |     Nombre    |    Usuarios de GitHub                                      |
 | ----------------- | ------------------------------------------------------------------ |
 | Marianela Mattio  | [@Marimattio](https://www.github.com/Marimattio)|
-| Example Color | [@valegodoy07](https://www.github.com/valegodoy07)| |
-| Example Color | [@araceli71](https://www.github.com/araceli71)| |
+| Valentina Godoy | [@valegodoy07](https://www.github.com/valegodoy07)| |
+| Araceli Valfredo | [@araceli71](https://www.github.com/araceli71)| |

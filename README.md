@@ -18,5 +18,5 @@ Este proyecto consiste en una carta virtual diseñada para restaurantes, bares y
 | Valentina Godoy | [@valegodoy07](https://www.github.com/valegodoy07)| |
 | Araceli Valfredo | [@araceli71](https://www.github.com/araceli71)| |
 
-##*** Link a drive
+## Link a drive
 https://drive.google.com/drive/folders/10C6E2v_1bd6HfV9iCSNGT_7ETtqjwQRn?usp=drive_link

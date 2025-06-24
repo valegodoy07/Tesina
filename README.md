@@ -7,7 +7,9 @@ Este proyecto consiste en una carta virtual diseñada para restaurantes, bares y
 - Acceso mediante código QR
 - No requiere instalaciones ni apps externas
 - Adaptable a cualquier tipo de establecimiento gastronómico
-
+## Teconologias utilizadas
+- Visual Studio
+- Python
 ## Integrantes de la tesina  
 
 |     Nombre    |    Usuarios de GitHub                                      |

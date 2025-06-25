@@ -36,9 +36,9 @@ This project consists of a virtual menu designed for restaurants, bars and cafes
 - Python
 ## Members of the dissertation  
 
-| Name | GitHub users |
+|     Nombre    |    GitHub users                                     |
 | ----------------- | ------------------------------------------------------------------ |
-| Marianela Mattio | [@Marimattio](https://www.github.com/Marimattio)|
-| Valentina Godoy | [@valegodoy07](https://www.github.com/valegodoy07)|
-| | Araceli Valfredo | @araceli71](https://www.github.com/araceli71)| | | |
+| Marianela Mattio  | [@Marimattio](https://www.github.com/Marimattio)|
+| Valentina Godoy | [@valegodoy07](https://www.github.com/valegodoy07)| |
+| Araceli Valfredo | [@araceli71](https://www.github.com/araceli71)| |
 

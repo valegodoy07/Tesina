@@ -21,7 +21,9 @@ Este proyecto consiste en una carta virtual diseñada para restaurantes, bares y
 ## Link a drive
 https://drive.google.com/drive/folders/10C6E2v_1bd6HfV9iCSNGT_7ETtqjwQRn?usp=drive_link
 -----------------------------------------------------------------------------------------
-# *vertion in inglish*
+
+
+*vertion in inglish*
 # **Digital menu**
 
 This project consists of a virtual menu designed for restaurants, bars and cafes. Designed to be accessed quickly and conveniently by customers through a QR code. The web application can visualize the menu from any mobile device linked to a network.
@@ -36,7 +38,7 @@ This project consists of a virtual menu designed for restaurants, bars and cafes
 - Python
 ## Members of the dissertation  
 
-|     Nombre    |    GitHub users                                     |
+|     Name   |    GitHub users                                     |
 | ----------------- | ------------------------------------------------------------------ |
 | Marianela Mattio  | [@Marimattio](https://www.github.com/Marimattio)|
 | Valentina Godoy | [@valegodoy07](https://www.github.com/valegodoy07)| |

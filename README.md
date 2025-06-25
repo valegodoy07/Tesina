@@ -40,5 +40,5 @@ This project consists of a virtual menu designed for restaurants, bars and cafes
 | ----------------- | ------------------------------------------------------------------ |
 | Marianela Mattio | [@Marimattio](https://www.github.com/Marimattio)|
 | Valentina Godoy | [@valegodoy07](https://www.github.com/valegodoy07)|
-| | Araceli Valfredo | [@araceli71](https://www.github.com/araceli71)| | | |
+| | Araceli Valfredo | @araceli71](https://www.github.com/araceli71)| | | |
 

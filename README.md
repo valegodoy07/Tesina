@@ -38,6 +38,8 @@ This project consists of a virtual menu designed for restaurants, bars and cafes
 ## Technologies used
 - Visual Studio
 - Python
+- mysql
+- xamp
 ## Members of the dissertation  
 
 |     Name   |    GitHub users                                     |

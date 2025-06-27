@@ -10,6 +10,8 @@ Este proyecto consiste en una carta virtual diseñada para restaurantes, bares y
 ## Teconologias utilizadas
 - Visual Studio
 - Python
+- -Xamp
+- Mysql
 ## Integrantes de la tesina  
 
 |     Nombre    |    Usuarios de GitHub                                      |

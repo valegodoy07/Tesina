@@ -8,10 +8,13 @@ Este proyecto consiste en una carta virtual diseñada para restaurantes, bares y
 - No requiere instalaciones ni apps externas
 - Adaptable a cualquier tipo de establecimiento gastronómico
 ## Teconologias utilizadas
-- Visual Studio
-- Python
-- Xamp
-- Mysql
+**Frontend**
+- Html
+- Css
+- Bootstrap
+**Backend**
+-Python if flask
+-Mysql
 ## Integrantes de la tesina  
 
 |     Nombre    |    Usuarios de GitHub                                      |
@@ -36,10 +39,13 @@ This project consists of a virtual menu designed for restaurants, bars and cafes
 - No installation or external apps required
 - Adaptable to any type of gastronomic establishment
 ## Technologies used
-- Visual Studio
-- Python
-- mysql
-- xamp
+**Frontend**
+- Html
+- Css
+- Bootstrap
+**Backend**
+-Python if flask
+-Mysql
 ## Members of the dissertation  
 
 |     Name   |    GitHub users                                     |

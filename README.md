@@ -1,5 +1,7 @@
 # **Menú digital**
 
+![Logo](https://www.canva.com/design/DAGoSNjnrKA/2X4mFJzAHA0n9rsYG7cg6A/edit?utm_content=DAGoSNjnrKA&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
+
 Este proyecto consiste en una carta virtual diseñada para restaurantes, bares y cafeterias. Pensada para ser accedida de forma rápida y práctica por los clientes a través de un código QR. La aplicación web puede visualizar el menú desde cualquier diapositivo móvil vinculado a una red
 
 ## ***Características***

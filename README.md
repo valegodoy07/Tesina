@@ -1,7 +1,6 @@
 # **Menú digital**
  ![Logo](https://drive.google.com/uc?export=view&id=13uhBE_dScPFVyRxmAqfek8Gq_NqaFzM6)
 
-https://drive.google.com/file/d/13uhBE_dScPFVyRxmAqfek8Gq_NqaFzM6/view?usp=sharing
 Este proyecto consiste en una carta virtual diseñada para restaurantes, bares y cafeterias. Pensada para ser accedida de forma rápida y práctica por los clientes a través de un código QR. La aplicación web puede visualizar el menú desde cualquier diapositivo móvil vinculado a una red
 
 ## ***Características***

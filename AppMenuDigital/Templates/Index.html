@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>P&C Restobar</title>
+  <link rel="stylesheet" href="estilos.css">
+  <script>
+    function toggleMenu() {
+      const menu = document.getElementById("menu-lateral");
+      menu.style.display = menu.style.display === "block" ? "none" : "block";
+    }
+  </script>
+</head>
+<body>
+
+  <div class="barra-superior">
+    <div class="menu-icono" onclick="toggleMenu()">☰</div>
+    SABORES QUE TE INVITAN A QUEDARTE
+  </div>
+
+  <div id="menu-lateral" class="menu-lateral">
+    <a href="menu.html">MENÚ</a>
+    <a href="#">CONTACTO</a>
+  </div>
+
+  <div class="fondo">
+    <h1 class="titulo">P&amp;C</h1>
+    <p class="subtitulo">RESTOBAR</p>
+  </div>
+
+</body>
+</html>

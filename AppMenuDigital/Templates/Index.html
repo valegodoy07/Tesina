@@ -2,31 +2,190 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>P&C Restobar</title>
-  <link rel="stylesheet" href="estilos.css">
-  <script>
-    function toggleMenu() {
-      const menu = document.getElementById("menu-lateral");
-      menu.style.display = menu.style.display === "block" ? "none" : "block";
+  <link rel="stylesheet" href="{{ url_for('static', filename='Styles.css') }}">
+  <style>
+    .user-info {
+      position: absolute;
+      right: 20px;
+      top: 10px;
+      color: white;
+      font-size: 14px;
     }
-  </script>
+    
+    .user-info a {
+      color: white;
+      text-decoration: none;
+      margin-left: 15px;
+      padding: 5px 10px;
+      border-radius: 5px;
+      background: rgba(255, 255, 255, 0.2);
+      transition: background-color 0.3s;
+    }
+    
+    .user-info a:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+    
+    .welcome-message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: white;
+      text-shadow: 2px 2px 5px black;
+      z-index: 1;
+    }
+    
+    .welcome-message h1 {
+      font-size: 100px;
+      font-weight: bold;
+      margin: 0;
+    }
+    
+    .welcome-message p {
+      font-size: 50px;
+      margin-top: 5px;
+    }
+    
+    .auth-buttons {
+      margin-top: 30px;
+    }
+    
+    .auth-buttons a {
+      display: inline-block;
+      padding: 15px 30px;
+      margin: 0 10px;
+      background-color: rgba(113, 61, 42, 0.9);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 18px;
+      transition: background-color 0.3s;
+    }
+    
+    .auth-buttons a:hover {
+      background-color: rgba(113, 61, 42, 1);
+    }
+    
+    .flash-messages {
+      position: fixed;
+      top: 100px;
+      right: 20px;
+      z-index: 1000;
+    }
+    
+    .flash-message {
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      color: white;
+      font-weight: bold;
+      animation: slideIn 0.5s ease-out;
+    }
+    
+    .flash-success {
+      background-color: #28a745;
+    }
+    
+    .flash-error {
+      background-color: #dc3545;
+    }
+    
+    .flash-info {
+      background-color: #17a2b8;
+    }
+    
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+  </style>
 </head>
 <body>
 
   <div class="barra-superior">
     <div class="menu-icono" onclick="toggleMenu()">☰</div>
     SABORES QUE TE INVITAN A QUEDARTE
+    
+    <div class="user-info">
+      {% if usuario %}
+        <span>Bienvenido, {{ usuario }}</span>
+        <a href="{{ url_for('perfil') }}">Mi Perfil</a>
+        <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
+      {% else %}
+        <a href="{{ url_for('login') }}">Iniciar Sesión</a>
+        <a href="{{ url_for('registro') }}">Registrarse</a>
+      {% endif %}
+    </div>
   </div>
 
   <div id="menu-lateral" class="menu-lateral">
-    <a href="menu.html">MENÚ</a>
+    <a href="{{ url_for('menu') }}">MENÚ</a>
+    {% if usuario %}
+      <a href="{{ url_for('perfil') }}">MI PERFIL</a>
+    {% else %}
+      <a href="{{ url_for('login') }}">INICIAR SESIÓN</a>
+      <a href="{{ url_for('registro') }}">REGISTRARSE</a>
+    {% endif %}
     <a href="#">CONTACTO</a>
   </div>
 
   <div class="fondo">
-    <h1 class="titulo">P&amp;C</h1>
-    <p class="subtitulo">RESTOBAR</p>
+    <div class="welcome-message">
+      <h1>P&C</h1>
+      <p>RESTOBAR</p>
+      
+      {% if not usuario %}
+        <div class="auth-buttons">
+          <a href="{{ url_for('login') }}">Iniciar Sesión</a>
+          <a href="{{ url_for('registro') }}">Crear Cuenta</a>
+        </div>
+      {% else %}
+        <div class="auth-buttons">
+          <a href="{{ url_for('menu') }}">Ver Menú</a>
+        </div>
+      {% endif %}
+    </div>
   </div>
 
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-messages">
+        {% for category, message in messages %}
+          <div class="flash-message flash-{{ category }}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <script>
+    function toggleMenu() {
+      const menu = document.getElementById("menu-lateral");
+      menu.style.display = menu.style.display === "block" ? "none" : "block";
+    }
+    
+    // Auto-hide flash messages after 5 seconds
+    setTimeout(function() {
+      const flashMessages = document.querySelectorAll('.flash-message');
+      flashMessages.forEach(function(message) {
+        message.style.opacity = '0';
+        setTimeout(function() {
+          message.remove();
+        }, 500);
+      });
+    }, 5000);
+  </script>
 </body>
 </html>

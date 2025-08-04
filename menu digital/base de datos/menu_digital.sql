@@ -20,7 +20,7 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `menu_digital`
 --
-
+CREATE database menu_digital;
 -- --------------------------------------------------------
 
 --

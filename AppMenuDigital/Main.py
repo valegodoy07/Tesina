@@ -22,7 +22,7 @@ def init_database():
         cur = mysql.connection.cursor()
         
         # Crear base de datos si no existe
-        cur.execute("CREATE DATABASE IF NOT EXISTS restobar_db")
+        cur.execute("CREATE DATABASE IF NOT EXISTS menu_digital")
         cur.execute("USE restobar_db")
         
         # Crear tabla de usuarios

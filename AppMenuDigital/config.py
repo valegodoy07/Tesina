@@ -1,18 +1,19 @@
 import os
+import secrets
 
 class Config:
     # Configuración de la aplicación
-    SECRET_KEY = 'tu_clave_secreta_aqui_cambiala_en_produccion'
+    SECRET_KEY = secrets.token_hex(32)  # Genera una clave secreta de 64 caracteres hexadecimales
     
     # Configuración de MySQL
     MYSQL_HOST = 'localhost'
     MYSQL_USER = 'root'
     MYSQL_PASSWORD = ''
-    MYSQL_DB = 'restobar_db'
+    MYSQL_DB = 'menu_digital'
     
     # Configuración del servidor
     DEBUG = True
-    HOST = '0.0.0.0'
+    HOST = 'localhost'
     PORT = 5000
     
     # Configuración de archivos estáticos

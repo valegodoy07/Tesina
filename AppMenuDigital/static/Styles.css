@@ -1,0 +1,111 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+.barra-superior {
+  background-color: #713D2A;
+  color: white;
+  padding: 35px;
+  text-align: center;
+  font-weight: 80px;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 2;
+}
+
+.menu-icono {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  font-size: 45px;
+  cursor: pointer;
+}
+
+.menu-lateral {
+  position: fixed;
+  top: 70px;
+  left: 0;
+  background-color: #713D2A;
+  color: white;
+  padding: 20px;
+  display: none;
+  flex-direction: column;
+  border-bottom-right-radius: 15px;
+  z-index: 3;
+}
+
+.menu-lateral a {
+  color: white;
+  text-decoration: none;
+  margin-bottom: 10px;
+  display: block;
+  font-weight: bold;
+}
+
+.fondo {
+  background-image: url("cafe-tesina.png");
+  background-size: cover;
+  background-position: center;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  color: white;
+  text-shadow: 2px 2px 5px black;
+  padding-top: 60px;
+  text-align: center;
+}
+
+.titulo {
+  font-size: 100px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.subtitulo {
+  font-size: 50px;
+  margin-top: 5px;
+}
+
+
+.fondo-carta {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 100px;
+  padding-bottom: 30px;
+}
+
+.carta {
+  display: flex;
+  gap: 30px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.item {
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 15px;
+  padding: 10px;
+  text-align: center;
+  width: 200px;
+}
+
+.item img {
+  width: 100%;
+  border-radius: 10px;
+}
+
+.item h3 {
+  font-size: 16px;
+  margin: 10px 0 5px;
+}
+
+.item p {
+  margin: 0;
+  font-weight: bold;
+}

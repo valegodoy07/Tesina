@@ -16,60 +16,6 @@ app.config['MYSQL_DB'] = Config.MYSQL_DB
 # Inicializar MySQL
 mysql = MySQL(app)
 
-# Crear la base de datos y tabla de usuarios si no existe
-def init_database():
-    try:
-        cur = mysql.connection.cursor()
-        
-        # Crear base de datos si no existe
-        cur.execute("CREATE DATABASE IF NOT EXISTS menu_digital")
-        cur.execute("USE restobar_db")
-        
-        # Crear tabla de usuarios
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS usuarios (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                nombre VARCHAR(100) NOT NULL,
-                email VARCHAR(100) UNIQUE NOT NULL,
-                password VARCHAR(255) NOT NULL,
-                fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
-        
-        # Crear tabla de productos del menú
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS productos (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                nombre VARCHAR(100) NOT NULL,
-                descripcion TEXT,
-                precio DECIMAL(10,2) NOT NULL,
-                imagen VARCHAR(255),
-                categoria VARCHAR(50) DEFAULT 'general'
-            )
-        """)
-        
-        # Insertar productos de ejemplo si la tabla está vacía
-        cur.execute("SELECT COUNT(*) FROM productos")
-        if cur.fetchone()[0] == 0:
-            productos_ejemplo = [
-                ('Milanesa con papas fritas', 'Deliciosa milanesa acompañada de papas fritas crujientes', 10000.00, 'milanesa-tesina.png', 'platos_principales'),
-                ('Café', 'Café recién preparado', 3000.00, 'cafe.png', 'bebidas'),
-                ('Pizza', 'Pizza artesanal con ingredientes frescos', 7000.00, 'pizza.png', 'platos_principales')
-            ]
-            
-            for producto in productos_ejemplo:
-                cur.execute("""
-                    INSERT INTO productos (nombre, descripcion, precio, imagen, categoria)
-                    VALUES (%s, %s, %s, %s, %s)
-                """, producto)
-        
-        mysql.connection.commit()
-        cur.close()
-        print("Base de datos inicializada correctamente")
-        
-    except Exception as e:
-        print(f"Error al inicializar la base de datos: {e}")
-
 # Rutas de la aplicación
 @app.route('/')
 def index():
@@ -180,5 +126,4 @@ def perfil():
         return redirect(url_for('index'))
 
 if __name__ == '__main__':
-    init_database()
     app.run(debug=Config.DEBUG, host=Config.HOST, port=Config.PORT)

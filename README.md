@@ -44,6 +44,7 @@ This project consists of a virtual menu designed for restaurants, bars and cafes
 - Html
 - Css
 - Bootstrap
+- Python
 **Backend**
 -Python if flask
 -Mysql

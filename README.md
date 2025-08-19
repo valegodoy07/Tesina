@@ -26,6 +26,9 @@ Este proyecto consiste en una carta virtual diseñada para restaurantes, bares y
 
 ## Link a drive
 https://drive.google.com/drive/folders/10C6E2v_1bd6HfV9iCSNGT_7ETtqjwQRn?usp=drive_link
+
+## Casos de prueba 
+https://docs.google.com/spreadsheets/d/1J_2jOcm42RB6h405YBky0S6LfX8Puc1G3GpTFHSlHn4/edit?usp=sharing
 -----------------------------------------------------------------------------------------
 
 

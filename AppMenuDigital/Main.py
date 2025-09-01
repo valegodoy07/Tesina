@@ -61,6 +61,7 @@ def login():
     
     return render_template('Login.html')
 
+# esta funcion maneja el registro de nuevos usuarios
 @app.route('/registro', methods=['GET', 'POST'])
 def registro():
     if request.method == 'POST':
@@ -115,7 +116,7 @@ def perfil():
     
     try:
         cur = mysql.connection.cursor()
-        cur.execute("SELECT * FROM usuarios WHERE id = %s", (session['user_id'],))
+        cur.execute("SELECT * FROM usuarios WHERE idusuario  = %s", (session['user_id'],))
         usuario = cur.fetchone()
         cur.close()
         

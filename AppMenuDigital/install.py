@@ -45,7 +45,7 @@ def test_mysql_connection():
         connection = mysql.connector.connect(
             host='localhost',
             user='root',
-            password=''
+            password='admin123'
         )
         if connection.is_connected():
             print("✅ Conexión a MySQL exitosa")

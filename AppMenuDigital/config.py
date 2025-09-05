@@ -7,6 +7,7 @@ class Config:
     
     # Configuración de MySQL para XAMPP
     MYSQL_HOST = 'localhost'
+    MYSQL_PORT = 3307
     MYSQL_USER = 'root'
     MYSQL_PASSWORD = 'admin123'  # Contraseña vacía por defecto en XAMPP
     MYSQL_DB = 'menudigital'  # Nombre de tu base de datos existente

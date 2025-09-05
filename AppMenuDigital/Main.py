@@ -8,6 +8,7 @@ app = Flask(__name__)
 
 # Configuración de la aplicación
 app.config['SECRET_KEY'] = Config.SECRET_KEY
+app.config['MYSQL_PORT'] = Config.MYSQL_PORT
 app.config['MYSQL_HOST'] = Config.MYSQL_HOST
 app.config['MYSQL_USER'] = Config.MYSQL_USER
 app.config['MYSQL_PASSWORD'] = Config.MYSQL_PASSWORD

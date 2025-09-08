@@ -206,7 +206,14 @@ ALTER TABLE `usuarios`
 --
 ALTER TABLE `usuarios`
   MODIFY `idusuario` int(11) NOT NULL AUTO_INCREMENT;
-COMMIT;
+
+
+--
+-- Volcado de datos para la tabla `usuarios`
+--
+
+INSERT INTO `usuarios` (`idusuario`, `nombre`, `email`, `password`) VALUES
+(1, 'hoola', 'hola@hola.com', 'scrypt:32768:8:1$Ld33ZzOAyS5hC1Rb$2bb581b7e52f87bb6c53f9f3bf6b663ba3b7564c6c77bb7d590413d3f006f1d1282da52668a4c6b3b45e982ada4109ec11d27375d60d18dfa44866aff0f80680');
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;

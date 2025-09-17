@@ -460,6 +460,563 @@ body {
   border: 1px solid #bee5eb;
 }
 
+/* ===== NEW HERO SECTION STYLES ===== */
+.hero-section {
+  background-image: url("cafes-tesina.jpg");
+  background-size: cover;
+  background-position: center;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  color: white;
+  text-shadow: 2px 2px 5px black;
+  padding-top: 60px;
+  text-align: center;
+}
+
+.hero-content h1 {
+  font-size: 80px;
+  font-weight: bold;
+  margin: 0;
+  margin-bottom: 10px;
+}
+
+.hero-content p {
+  font-size: 24px;
+  margin: 0;
+  margin-bottom: 30px;
+  opacity: 0.9;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+}
+
+.hero-buttons .btn-primary {
+  font-size: 24px;
+  padding: 20px 40px;
+  background: linear-gradient(135deg, #713D2A, #8B4513);
+  box-shadow: 0 6px 20px rgba(113, 61, 42, 0.4);
+  animation: pulse-glow 2s infinite;
+}
+
+@keyframes pulse-glow {
+  0% { box-shadow: 0 6px 20px rgba(113, 61, 42, 0.4); }
+  50% { box-shadow: 0 8px 25px rgba(113, 61, 42, 0.6); }
+  100% { box-shadow: 0 6px 20px rgba(113, 61, 42, 0.4); }
+}
+
+.btn-primary,
+.btn-secondary {
+  display: inline-block;
+  padding: 15px 30px;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 18px;
+  transition: all 0.3s;
+  border: 2px solid transparent;
+}
+
+.btn-primary {
+  background-color: rgba(113, 61, 42, 0.9);
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background-color: rgba(113, 61, 42, 1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(113, 61, 42, 0.3);
+}
+
+.btn-secondary {
+  background-color: transparent;
+  color: white;
+  border-color: white;
+}
+
+.btn-secondary:hover {
+  background-color: white;
+  color: #713D2A;
+  transform: translateY(-2px);
+}
+
+/* ===== MENU CATEGORIES STYLES ===== */
+.menu-categories {
+  background-color: #f8f9fa;
+  padding: 80px 0;
+  transition: all 0.3s ease;
+}
+
+.menu-header-section {
+  text-align: center;
+  margin-bottom: 40px;
+  position: relative;
+}
+
+.btn-close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-close:hover {
+  background: #c82333;
+  transform: translateY(-2px);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.menu-categories h2 {
+  text-align: center;
+  font-size: 48px;
+  color: #713D2A;
+  margin: 0 0 10px 0;
+  font-weight: bold;
+}
+
+.subtitle {
+  text-align: center;
+  font-size: 18px;
+  color: #666;
+  margin: 0 0 50px 0;
+}
+
+.categories-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 30px;
+  margin-top: 40px;
+}
+
+.category-card {
+  background: white;
+  border-radius: 15px;
+  padding: 30px 20px;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.category-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.category-card.promotion-card {
+  background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+  color: white;
+}
+
+.category-icon {
+  font-size: 48px;
+  margin-bottom: 15px;
+}
+
+.category-card h3 {
+  font-size: 24px;
+  margin: 0 0 10px 0;
+  color: #333;
+  font-weight: bold;
+}
+
+.promotion-card h3 {
+  color: white;
+}
+
+.category-card p {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.promotion-card p {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.promo-badge {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: #ff4757;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* ===== MENU SECTIONS STYLES ===== */
+.menu-sections {
+  background: white;
+}
+
+.menu-section {
+  padding: 80px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.menu-section:last-child {
+  border-bottom: none;
+}
+
+.menu-section h2 {
+  text-align: center;
+  font-size: 36px;
+  color: #713D2A;
+  margin: 0 0 40px 0;
+  font-weight: bold;
+}
+
+.menu-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px;
+  margin-top: 40px;
+}
+
+.menu-item {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 0;
+  transition: all 0.3s ease;
+  border-left: 4px solid #713D2A;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.menu-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  background: white;
+}
+
+.menu-item-image {
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+  border-radius: 12px 12px 0 0;
+}
+
+.menu-item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.menu-item:hover .menu-item-image img {
+  transform: scale(1.05);
+}
+
+.menu-item h4,
+.menu-item p,
+.menu-item .price {
+  padding: 0 20px;
+}
+
+.menu-item h4 {
+  margin-top: 15px;
+  margin-bottom: 10px;
+}
+
+.menu-item p {
+  margin-bottom: 15px;
+}
+
+.menu-item .price {
+  padding-bottom: 20px;
+}
+
+.menu-item h4 {
+  font-size: 20px;
+  color: #333;
+  margin: 0 0 10px 0;
+  font-weight: bold;
+}
+
+.menu-item p {
+  font-size: 14px;
+  color: #666;
+  margin: 0 0 15px 0;
+  line-height: 1.4;
+}
+
+.price {
+  font-size: 18px;
+  font-weight: bold;
+  color: #713D2A;
+}
+
+/* ===== BEVERAGE CATEGORIES ===== */
+.beverage-category {
+  margin-bottom: 50px;
+}
+
+.beverage-category h3 {
+  font-size: 28px;
+  color: #8B4513;
+  margin: 0 0 30px 0;
+  font-weight: bold;
+  text-align: center;
+  position: relative;
+}
+
+.beverage-category h3::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, #8B4513, #A0522D);
+  border-radius: 2px;
+}
+
+/* ===== TONOS MARRONES VARIADOS ===== */
+.menu-section:nth-child(1) .menu-item {
+  border-left-color: #8B4513; /* Saddle Brown */
+}
+
+.menu-section:nth-child(2) .menu-item {
+  border-left-color: #A0522D; /* Sienna */
+}
+
+.menu-section:nth-child(3) .menu-item {
+  border-left-color: #CD853F; /* Peru */
+}
+
+.menu-section:nth-child(4) .menu-item {
+  border-left-color: #D2691E; /* Chocolate */
+}
+
+.menu-section:nth-child(5) .menu-item {
+  border-left-color: #BC8F8F; /* Rosy Brown */
+}
+
+.menu-section:nth-child(6) .menu-item {
+  border-left-color: #DEB887; /* Burlywood */
+}
+
+.menu-section:nth-child(7) .menu-item {
+  border-left-color: #F4A460; /* Sandy Brown */
+}
+
+/* Colores específicos para cada categoría */
+#desayunos .menu-item {
+  border-left-color: #8B4513;
+  background: linear-gradient(135deg, #faf8f5, #f5f2ed);
+}
+
+#almuerzos .menu-item {
+  border-left-color: #A0522D;
+  background: linear-gradient(135deg, #faf7f4, #f4f0eb);
+}
+
+#cenas .menu-item {
+  border-left-color: #CD853F;
+  background: linear-gradient(135deg, #f9f6f2, #f2ede6);
+}
+
+#meriendas .menu-item {
+  border-left-color: #D2691E;
+  background: linear-gradient(135deg, #f8f4f0, #f0e9e1);
+}
+
+#postres .menu-item {
+  border-left-color: #BC8F8F;
+  background: linear-gradient(135deg, #f7f2f0, #ede4e0);
+}
+
+#bebidas .menu-item {
+  border-left-color: #DEB887;
+  background: linear-gradient(135deg, #f6f1ed, #ebe2d8);
+}
+
+#promociones .menu-item {
+  border-left-color: #F4A460;
+  background: linear-gradient(135deg, #f5f0eb, #e8ddd0);
+}
+
+/* ===== PROMOTION SECTION STYLES ===== */
+.promotion-section {
+  background: linear-gradient(135deg, #8B4513 0%, #A0522D 50%, #CD853F 100%);
+  color: white;
+}
+
+.promotion-section h2 {
+  color: white;
+}
+
+.promo-item {
+  background: rgba(255, 255, 255, 0.15);
+  border-left-color: #F4A460;
+  color: white;
+  backdrop-filter: blur(10px);
+}
+
+.promo-item h4 {
+  color: white;
+}
+
+.promo-item p {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.promo-item .menu-item-image {
+  border-radius: 12px 12px 0 0;
+  overflow: hidden;
+}
+
+.promo-item .menu-item-image img {
+  filter: brightness(0.9) contrast(1.1);
+}
+
+.original-price {
+  text-decoration: line-through;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 16px;
+  margin-right: 10px;
+}
+
+.promo-price {
+  color: #ff6b6b;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .hero-content h1 {
+    font-size: 60px;
+  }
+  
+  .hero-content p {
+    font-size: 20px;
+  }
+  
+  .hero-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .hero-buttons .btn-primary {
+    font-size: 20px;
+    padding: 15px 30px;
+  }
+  
+  .btn-primary,
+  .btn-secondary {
+    width: 200px;
+  }
+  
+  .menu-categories h2 {
+    font-size: 36px;
+  }
+  
+  .btn-close {
+    position: static;
+    margin-top: 20px;
+  }
+  
+  .categories-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .menu-items {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .menu-section h2 {
+    font-size: 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-content h1 {
+    font-size: 48px;
+  }
+  
+  .hero-content p {
+    font-size: 18px;
+  }
+  
+  .category-card {
+    padding: 20px 15px;
+  }
+  
+  .category-icon {
+    font-size: 36px;
+  }
+  
+  .category-card h3 {
+    font-size: 20px;
+  }
+  
+  .menu-item {
+    padding: 0;
+  }
+  
+  .menu-item-image {
+    height: 150px;
+  }
+  
+  .menu-item h4,
+  .menu-item p,
+  .menu-item .price {
+    padding: 0 15px;
+  }
+  
+  .menu-item h4 {
+    margin-top: 10px;
+    font-size: 18px;
+  }
+  
+  .menu-item p {
+    font-size: 13px;
+  }
+  
+  .menu-item .price {
+    padding-bottom: 15px;
+    font-size: 16px;
+  }
+}
+
 /* ===== ANIMATIONS ===== */
 @keyframes slideIn {
   from {
@@ -470,4 +1027,19 @@ body {
     transform: translateX(0);
     opacity: 1;
   }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.menu-section {
+  animation: fadeInUp 0.6s ease-out;
 }

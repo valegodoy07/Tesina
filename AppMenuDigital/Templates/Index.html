@@ -15,7 +15,6 @@
     <div class="user-info">
       {% if usuario %}
         <span>Bienvenido, {{ usuario }}</span>
-        <a href="{{ url_for('perfil') }}">Mi Perfil</a>
         <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
       {% else %}
         <a href="{{ url_for('login') }}">Iniciar Sesión</a>
@@ -25,9 +24,9 @@
   </div>
 
   <div id="menu-lateral" class="menu-lateral">
-    <a href="{{ url_for('menu') }}">MENÚ</a>
+    <a href="{{ url_for('menu') }}">Admin</a>
     {% if usuario %}
-      <a href="{{ url_for('perfil') }}">MI PERFIL</a>
+      <a href="{{ url_for('perfil') }}">MI PANEL DE GESTIÓN</a>
     {% else %}
       <a href="{{ url_for('login') }}">INICIAR SESIÓN</a>
       <a href="{{ url_for('registro') }}">REGISTRARSE</a>
@@ -35,22 +34,572 @@
     <a href="#">CONTACTO</a>
   </div>
 
-  <div class="fondo">
-    <div class="welcome-message">
-      <h1>P&C</h1>
-      <p>RESTOBAR</p>
-      
-      {% if not usuario %}
-        <div class="auth-buttons">
-          <a href="{{ url_for('login') }}">Iniciar Sesión</a>
-          <a href="{{ url_for('registro') }}">Crear Cuenta</a>
-        </div>
-      {% else %}
-        <div class="auth-buttons">
-          <a href="{{ url_for('menu') }}">Ver Menú</a>
-        </div>
-      {% endif %}
+  <!-- Hero Section -->
+  <div class="hero-section">
+    <div class="hero-content">
+      <h1>P&C RESTOBAR</h1>
+      <p>SABORES QUE TE INVITAN A QUEDARTE</p>
+      <div class="hero-buttons">
+        <button onclick="showMenu()" class="btn-primary">Ver Carta</button>
+        <!-- {% if not usuario %}
+         <a href="{{ url_for('login') }}" class="btn-secondary">Iniciar Sesión</a>
+          <a href="{{ url_for('registro') }}" class="btn-secondary">Crear Cuenta</a>
+        {% else %}
+          <a href="{{ url_for('menu') }}" class="btn-secondary">Carta Completa</a>
+        {% endif %}-->
+      </div>
     </div>
+  </div>
+
+  <!-- Categorías del Menú (ocultas inicialmente) -->
+  <div id="menu-categories" class="menu-categories" style="display: none;">
+    <div class="container">
+      <div class="menu-header-section">
+        <h2>Nuestra Carta</h2>
+        <p class="subtitle">Explora nuestros deliciosos platos organizados por categorías</p>
+        <button onclick="hideMenu()" class="btn-close">✕ Cerrar Carta</button>
+      </div>
+      
+      <div class="categories-grid">
+        <!-- Desayunos -->
+        <div class="category-card" onclick="scrollToCategory('desayunos')">
+          <div class="category-icon">🌅</div>
+          <h3>Desayunos</h3>
+          <p>Comienza tu día con nuestros deliciosos desayunos</p>
+        </div>
+
+        <!-- Almuerzos -->
+        <div class="category-card" onclick="scrollToCategory('almuerzos')">
+          <div class="category-icon">🍽️</div>
+          <h3>Almuerzos</h3>
+          <p>Platos fuertes para el mediodía</p>
+        </div>
+
+        <!-- Cenas -->
+        <div class="category-card" onclick="scrollToCategory('cenas')">
+          <div class="category-icon">🌙</div>
+          <h3>Cenas</h3>
+          <p>Especialidades para la noche</p>
+        </div>
+
+        <!-- Meriendas -->
+        <div class="category-card" onclick="scrollToCategory('meriendas')">
+          <div class="category-icon">☕</div>
+          <h3>Meriendas</h3>
+          <p>Snacks y acompañamientos</p>
+        </div>
+
+        <!-- Postres -->
+        <div class="category-card" onclick="scrollToCategory('postres')">
+          <div class="category-icon">🍰</div>
+          <h3>Postres</h3>
+          <p>Dulces tentaciones para el final</p>
+        </div>
+
+        <!-- Bebidas -->
+        <div class="category-card" onclick="scrollToCategory('bebidas')">
+          <div class="category-icon">🥤</div>
+          <h3>Bebidas</h3>
+          <p>Refrescantes y deliciosas</p>
+        </div>
+
+        <!-- Promociones -->
+        <div class="category-card promotion-card" onclick="scrollToCategory('promociones')">
+          <div class="category-icon">🎉</div>
+          <h3>Promociones</h3>
+          <p>Ofertas especiales del día</p>
+          <span class="promo-badge">¡OFERTA!</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Secciones de cada categoría -->
+  <div class="menu-sections" style="display: none;">
+    <!-- Desayunos -->
+    <section id="desayunos" class="menu-section">
+      <div class="container">
+        <h2>🌅 Desayunos</h2>
+        <div class="menu-items">
+          <div class="menu-item">
+            <div class="menu-item-image">
+              <img src="https://images.unsplash.com/photo-1551218808-94e220e084d2?w=400&h=300&fit=crop" alt="Desayuno Continental">
+            </div>
+            <h4>Desayuno Continental</h4>
+            <p>Pan tostado, mermelada, café y jugo de naranja</p>
+            <span class="price">$8.50</span>
+          </div>
+          <div class="menu-item">
+            <div class="menu-item-image">
+              <img src="https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=400&h=300&fit=crop" alt="Huevos Benedictinos">
+            </div>
+            <h4>Huevos Benedictinos</h4>
+            <p>Huevos pochados sobre pan inglés con salsa holandesa</p>
+            <span class="price">$12.00</span>
+          </div>
+          <div class="menu-item">
+            <div class="menu-item-image">
+              <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Pancakes con Frutas">
+            </div>
+            <h4>Pancakes con Frutas</h4>
+            <p>Pancakes esponjosos con frutas frescas y miel</p>
+            <span class="price">$10.50</span>
+          </div>
+          <div class="menu-item">
+            <div class="menu-item-image">
+              <img src="https://images.unsplash.com/photo-1525351484163-7529414344d8?w=400&h=300&fit=crop" alt="Omelette del Chef">
+            </div>
+            <h4>Omelette del Chef</h4>
+            <p>Huevos batidos con jamón, queso y vegetales frescos</p>
+            <span class="price">$11.50</span>
+          </div>
+          <div class="menu-item">
+            <div class="menu-item-image">
+              <img src="https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=400&h=300&fit=crop" alt="Waffles Belgas">
+            </div>
+            <h4>Waffles Belgas</h4>
+            <p>Waffles crujientes con sirope de arce y frutos rojos</p>
+            <span class="price">$13.00</span>
+          </div>
+          <div class="menu-item">
+            <div class="menu-item-image">
+              <img src="https://images.unsplash.com/photo-1551024506-0bccd828d307?w=400&h=300&fit=crop" alt="Tostada Francesa">
+            </div>
+            <h4>Tostada Francesa</h4>
+            <p>Pan brioche empapado en huevo con canela y azúcar</p>
+            <span class="price">$9.50</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Almuerzos -->
+    <section id="almuerzos" class="menu-section">
+      <div class="container">
+        <h2>🍽️ Almuerzos</h2>
+        <div class="menu-items">
+          <div class="menu-item">
+            <div class="menu-item-image">
+              <img src="https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=400&h=300&fit=crop" alt="Pollo a la Plancha">
+            </div>
+            <h4>Pollo a la Plancha</h4>
+            <p>Pechuga de pollo con arroz y ensalada mixta</p>
+            <span class="price">$15.00</span>
+          </div>
+          <div class="menu-item">
+            <div class="menu-item-image">
+              <img src="https://images.unsplash.com/photo-1621996346565-e3dbc353d2e5?w=400&h=300&fit=crop" alt="Pasta Carbonara">
+            </div>
+            <h4>Pasta Carbonara</h4>
+            <p>Spaghetti con tocino, huevo y queso parmesano</p>
+            <span class="price">$13.50</span>
+          </div>
+          <div class="menu-item">
+            <div class="menu-item-image">
+              <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=300&fit=crop" alt="Hamburguesa Clásica">
+            </div>
+            <h4>Hamburguesa Clásica</h4>
+            <p>Carne de res, lechuga, tomate, cebolla y papas fritas</p>
+            <span class="price">$14.00</span>
+          </div>
+          <div class="menu-item">
+            <div class="menu-item-image">
+              <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Ensalada César">
+            </div>
+            <h4>Ensalada César Premium</h4>
+            <p>Lechuga romana, pollo, crutones, parmesano y aderezo césar</p>
+            <span class="price">$12.50</span>
+          </div>
+          <div class="menu-item">
+            <div class="menu-item-image">
+              <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Wrap de Pollo">
+            </div>
+            <h4>Wrap de Pollo</h4>
+            <p>Tortilla de trigo con pollo, vegetales frescos y salsa especial</p>
+            <span class="price">$11.00</span>
+          </div>
+          <div class="menu-item">
+            <div class="menu-item-image">
+              <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Sándwich Club">
+            </div>
+            <h4>Sándwich Club</h4>
+            <p>Pollo, tocino, lechuga, tomate y mayonesa en pan tostado</p>
+            <span class="price">$13.00</span>
+          </div>
+          <div class="menu-item">
+            <div class="menu-item-image">
+              <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Pizza Margherita">
+            </div>
+            <h4>Pizza Margherita</h4>
+            <p>Masa artesanal con tomate, mozzarella fresca y albahaca</p>
+            <span class="price">$16.50</span>
+          </div>
+          <div class="menu-item">
+            <div class="menu-item-image">
+              <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Tacos de Carne">
+            </div>
+            <h4>Tacos de Carne Asada</h4>
+            <p>Tres tacos con carne asada, cebolla, cilantro y salsas</p>
+            <span class="price">$14.50</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Cenas -->
+    <section id="cenas" class="menu-section">
+      <div class="container">
+        <h2>🌙 Cenas</h2>
+        <div class="menu-items">
+          <div class="menu-item">
+            <div class="menu-item-image">
+              <img src="https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400&h=300&fit=crop" alt="Salmon a la Parrilla">
+            </div>
+            <h4>Salmon a la Parrilla</h4>
+            <p>Salmón fresco con vegetales asados y puré de papa</p>
+            <span class="price">$22.00</span>
+          </div>
+          <div class="menu-item">
+            <div class="menu-item-image">
+              <img src="https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=400&h=300&fit=crop" alt="Ribeye Steak">
+            </div>
+            <h4>Ribeye Steak</h4>
+            <p>Carne de res premium con chimichurri y papas</p>
+            <span class="price">$25.00</span>
+          </div>
+          <div class="menu-item">
+            <div class="menu-item-image">
+              <img src="https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=400&h=300&fit=crop" alt="Risotto de Hongos">
+            </div>
+            <h4>Risotto de Hongos</h4>
+            <p>Arroz cremoso con hongos porcini y queso parmesano</p>
+            <span class="price">$18.50</span>
+          </div>
+          <div class="menu-item">
+            <div class="menu-item-image">
+              <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Pasta Alfredo">
+            </div>
+            <h4>Pasta Alfredo</h4>
+            <p>Fettuccine con salsa cremosa de parmesano y pollo</p>
+            <span class="price">$19.00</span>
+          </div>
+          <div class="menu-item">
+            <div class="menu-item-image">
+              <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Cordero Asado">
+            </div>
+            <h4>Cordero Asado</h4>
+            <p>Pierna de cordero con hierbas aromáticas y vegetales</p>
+            <span class="price">$28.00</span>
+          </div>
+          <div class="menu-item">
+            <div class="menu-item-image">
+              <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Paella Valenciana">
+            </div>
+            <h4>Paella Valenciana</h4>
+            <p>Arroz con mariscos, pollo y vegetales al estilo tradicional</p>
+            <span class="price">$24.50</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Meriendas -->
+    <section id="meriendas" class="menu-section">
+      <div class="container">
+        <h2>☕ Meriendas</h2>
+        <div class="menu-items">
+          <div class="menu-item">
+            <div class="menu-item-image">
+              <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Empanadas">
+            </div>
+            <h4>Empanadas (3 unidades)</h4>
+            <p>Carne, pollo o queso</p>
+            <span class="price">$6.00</span>
+          </div>
+          <div class="menu-item">
+            <div class="menu-item-image">
+              <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Croissants">
+            </div>
+            <h4>Croissants Artesanales</h4>
+            <p>Mantequilla, jamón y queso o dulces</p>
+            <span class="price">$4.50</span>
+          </div>
+          <div class="menu-item">
+            <div class="menu-item-image">
+              <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Quesadillas">
+            </div>
+            <h4>Quesadillas</h4>
+            <p>Tortilla de maíz con queso y pollo</p>
+            <span class="price">$7.50</span>
+          </div>
+          <div class="menu-item">
+            <div class="menu-item-image">
+              <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Nachos">
+            </div>
+            <h4>Nachos con Queso</h4>
+            <p>Tortillas crujientes con queso derretido y jalapeños</p>
+            <span class="price">$8.00</span>
+          </div>
+          <div class="menu-item">
+            <div class="menu-item-image">
+              <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Alitas de Pollo">
+            </div>
+            <h4>Alitas de Pollo</h4>
+            <p>6 alitas con salsa BBQ o buffalo</p>
+            <span class="price">$10.00</span>
+          </div>
+          <div class="menu-item">
+            <div class="menu-item-image">
+              <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Papas Fritas">
+            </div>
+            <h4>Papas Fritas Gourmet</h4>
+            <p>Papas con queso parmesano y trufa</p>
+            <span class="price">$6.50</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Postres -->
+    <section id="postres" class="menu-section">
+      <div class="container">
+        <h2>🍰 Postres</h2>
+        <div class="menu-items">
+          <div class="menu-item">
+            <div class="menu-item-image">
+              <img src="https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=400&h=300&fit=crop" alt="Tiramisu">
+            </div>
+            <h4>Tiramisu</h4>
+            <p>Postre italiano con café y mascarpone</p>
+            <span class="price">$7.50</span>
+          </div>
+          <div class="menu-item">
+            <div class="menu-item-image">
+              <img src="https://images.unsplash.com/photo-1533134242443-d4fd215305ad?w=400&h=300&fit=crop" alt="Cheesecake de Fresa">
+            </div>
+            <h4>Cheesecake de Fresa</h4>
+            <p>Tarta de queso con coulis de fresa</p>
+            <span class="price">$6.50</span>
+          </div>
+          <div class="menu-item">
+            <div class="menu-item-image">
+              <img src="https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=400&h=300&fit=crop" alt="Brownie con Helado">
+            </div>
+            <h4>Brownie con Helado</h4>
+            <p>Brownie de chocolate con helado de vainilla</p>
+            <span class="price">$8.00</span>
+          </div>
+          <div class="menu-item">
+            <div class="menu-item-image">
+              <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Flan de Caramelo">
+            </div>
+            <h4>Flan de Caramelo</h4>
+            <p>Postre tradicional con caramelo líquido</p>
+            <span class="price">$5.50</span>
+          </div>
+          <div class="menu-item">
+            <div class="menu-item-image">
+              <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Profiteroles">
+            </div>
+            <h4>Profiteroles</h4>
+            <p>Bolitas de masa con helado y chocolate</p>
+            <span class="price">$9.00</span>
+          </div>
+          <div class="menu-item">
+            <div class="menu-item-image">
+              <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Tarta de Manzana">
+            </div>
+            <h4>Tarta de Manzana</h4>
+            <p>Masa hojaldrada con manzanas y canela</p>
+            <span class="price">$7.00</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bebidas -->
+    <section id="bebidas" class="menu-section">
+      <div class="container">
+        <h2>🥤 Bebidas</h2>
+        
+        <!-- Bebidas Frías -->
+        <div class="beverage-category">
+          <h3>🧊 Bebidas Frías</h3>
+          <div class="menu-items">
+            <div class="menu-item">
+              <div class="menu-item-image">
+                <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Jugos Naturales">
+              </div>
+              <h4>Jugos Naturales</h4>
+              <p>Naranja, manzana, piña o maracuyá</p>
+              <span class="price">$4.00</span>
+            </div>
+            <div class="menu-item">
+              <div class="menu-item-image">
+                <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Limonada Natural">
+              </div>
+              <h4>Limonada Natural</h4>
+              <p>Refrescante limonada con menta</p>
+              <span class="price">$3.50</span>
+            </div>
+            <div class="menu-item">
+              <div class="menu-item-image">
+                <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Smoothies">
+              </div>
+              <h4>Smoothies</h4>
+              <p>Fresa, mango, banana o mixto</p>
+              <span class="price">$5.50</span>
+            </div>
+            <div class="menu-item">
+              <div class="menu-item-image">
+                <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Agua de Coco">
+              </div>
+              <h4>Agua de Coco</h4>
+              <p>Refrescante agua de coco natural</p>
+              <span class="price">$4.50</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bebidas Calientes -->
+        <div class="beverage-category">
+          <h3>☕ Bebidas Calientes</h3>
+          <div class="menu-items">
+            <div class="menu-item">
+              <div class="menu-item-image">
+                <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Café Americano">
+              </div>
+              <h4>Café Americano</h4>
+              <p>Café negro caliente</p>
+              <span class="price">$2.50</span>
+            </div>
+            <div class="menu-item">
+              <div class="menu-item-image">
+                <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Cappuccino">
+              </div>
+              <h4>Cappuccino</h4>
+              <p>Espresso con leche vaporizada y espuma</p>
+              <span class="price">$3.50</span>
+            </div>
+            <div class="menu-item">
+              <div class="menu-item-image">
+                <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Latte">
+              </div>
+              <h4>Latte</h4>
+              <p>Espresso con leche caliente y arte latte</p>
+              <span class="price">$4.00</span>
+            </div>
+            <div class="menu-item">
+              <div class="menu-item-image">
+                <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Té de Hierbas">
+              </div>
+              <h4>Té de Hierbas</h4>
+              <p>Manzanilla, menta, jengibre o canela</p>
+              <span class="price">$2.00</span>
+            </div>
+            <div class="menu-item">
+              <div class="menu-item-image">
+                <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Chocolate Caliente">
+              </div>
+              <h4>Chocolate Caliente</h4>
+              <p>Chocolate artesanal con malvaviscos</p>
+              <span class="price">$4.50</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bebidas Alcohólicas -->
+        <div class="beverage-category">
+          <h3>🍷 Bebidas Alcohólicas</h3>
+          <div class="menu-items">
+            <div class="menu-item">
+              <div class="menu-item-image">
+                <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Cerveza Nacional">
+              </div>
+              <h4>Cerveza Nacional</h4>
+              <p>Corona, Modelo o Tecate</p>
+              <span class="price">$3.50</span>
+            </div>
+            <div class="menu-item">
+              <div class="menu-item-image">
+                <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Cerveza Importada">
+              </div>
+              <h4>Cerveza Importada</h4>
+              <p>Heineken, Stella Artois o Budweiser</p>
+              <span class="price">$4.50</span>
+            </div>
+            <div class="menu-item">
+              <div class="menu-item-image">
+                <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Vino Tinto">
+              </div>
+              <h4>Vino Tinto</h4>
+              <p>Malbec, Cabernet o Merlot</p>
+              <span class="price">$6.00</span>
+            </div>
+            <div class="menu-item">
+              <div class="menu-item-image">
+                <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Vino Blanco">
+              </div>
+              <h4>Vino Blanco</h4>
+              <p>Chardonnay, Sauvignon Blanc o Pinot Grigio</p>
+              <span class="price">$6.00</span>
+            </div>
+            <div class="menu-item">
+              <div class="menu-item-image">
+                <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Cócteles">
+              </div>
+              <h4>Cócteles</h4>
+              <p>Mojito, Margarita, Piña Colada o Daiquiri</p>
+              <span class="price">$8.00</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Promociones -->
+    <section id="promociones" class="menu-section promotion-section">
+      <div class="container">
+        <h2>🎉 Promociones del Día</h2>
+        <div class="menu-items">
+          <div class="menu-item promo-item">
+            <div class="menu-item-image">
+              <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Combo Desayuno">
+            </div>
+            <h4>Combo Desayuno</h4>
+            <p>Desayuno continental + café + jugo</p>
+            <span class="price original-price">$12.00</span>
+            <span class="price promo-price">$9.50</span>
+          </div>
+          <div class="menu-item promo-item">
+            <div class="menu-item-image">
+              <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Almuerzo Ejecutivo">
+            </div>
+            <h4>Almuerzo Ejecutivo</h4>
+            <p>Plato principal + postre + bebida</p>
+            <span class="price original-price">$20.00</span>
+            <span class="price promo-price">$16.00</span>
+          </div>
+          <div class="menu-item promo-item">
+            <div class="menu-item-image">
+              <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Happy Hour">
+            </div>
+            <h4>Happy Hour</h4>
+            <p>2x1 en bebidas de 5:00 PM a 7:00 PM</p>
+            <span class="price promo-price">50% OFF</span>
+          </div>
+          <div class="menu-item promo-item">
+            <div class="menu-item-image">
+              <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Combo Familiar">
+            </div>
+            <h4>Combo Familiar</h4>
+            <p>2 pizzas medianas + 4 bebidas</p>
+            <span class="price original-price">$35.00</span>
+            <span class="price promo-price">$28.00</span>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 
   {% with messages = get_flashed_messages(with_categories=true) %}
@@ -71,6 +620,49 @@
       menu.style.display = menu.style.display === "block" ? "none" : "block";
     }
     
+    // Función para mostrar el menú de categorías
+    function showMenu() {
+      const menuCategories = document.getElementById("menu-categories");
+      const menuSections = document.querySelector(".menu-sections");
+      
+      menuCategories.style.display = "block";
+      menuSections.style.display = "block";
+      
+      // Scroll suave hacia las categorías
+      setTimeout(() => {
+        menuCategories.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }, 100);
+    }
+    
+    // Función para ocultar el menú de categorías
+    function hideMenu() {
+      const menuCategories = document.getElementById("menu-categories");
+      const menuSections = document.querySelector(".menu-sections");
+      
+      menuCategories.style.display = "none";
+      menuSections.style.display = "none";
+      
+      // Scroll de vuelta al hero section
+      document.querySelector(".hero-section").scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
+    
+    // Función para hacer scroll suave a una categoría específica
+    function scrollToCategory(categoryId) {
+      const element = document.getElementById(categoryId);
+      if (element) {
+        element.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+    }
+    
     // Auto-hide flash messages after 5 seconds
     setTimeout(function() {
       const flashMessages = document.querySelectorAll('.flash-message');
@@ -81,6 +673,19 @@
         }, 500);
       });
     }, 5000);
+
+    // Efecto de hover en las tarjetas de categorías
+    document.addEventListener('DOMContentLoaded', function() {
+      const categoryCards = document.querySelectorAll('.category-card');
+      categoryCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+          this.style.transform = 'translateY(-5px)';
+        });
+        card.addEventListener('mouseleave', function() {
+          this.style.transform = 'translateY(0)';
+        });
+      });
+    });
   </script>
 </body>
 </html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Almuerzos</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='Styles.css') }}">
+</head>
+<body>
+  <div class="barra-superior">
+    <div class="menu-icono" onclick="window.location='{{ url_for('index') }}?ver=carta'">⟵</div>
+    Almuerzos
+  </div>
+
+  <div class="menu-sections" style="padding-top: 120px;">
+    <section class="menu-section" id="almuerzos">
+      <div class="container">
+        <h2>Almuerzos</h2>
+        <div class="menu-items">
+          {% if productos and productos|length > 0 %}
+            {% for p in productos %}
+            <div class="menu-item">
+              {% if p[4] %}
+              <div class="menu-item-image"><img src="{{ p[4] }}" alt="{{ p[1] }}"></div>
+              {% endif %}
+              <h4>{{ p[1] }}</h4>
+              <p>{{ p[2] }}</p>
+              <span class="price">${{ '%.2f' % p[3] }}</span>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="menu-item">
+              <div class="menu-item-image"><img src="https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=600&h=400&fit=crop" alt="Pollo a la Plancha"></div>
+              <h4>Pollo a la Plancha</h4>
+              <p>Pechuga de pollo con arroz y ensalada mixta</p>
+              <span class="price">$15.00</span>
+            </div>
+            <div class="menu-item">
+              <div class="menu-item-image"><img src="https://images.unsplash.com/photo-1621996346565-e3dbc353d2e5?w=600&h=400&fit=crop" alt="Pasta Carbonara"></div>
+              <h4>Pasta Carbonara</h4>
+              <p>Spaghetti con tocino, huevo y queso parmesano</p>
+              <span class="price">$13.50</span>
+            </div>
+            <div class="menu-item">
+              <div class="menu-item-image"><img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&h=400&fit=crop" alt="Hamburguesa Clásica"></div>
+              <h4>Hamburguesa Clásica</h4>
+              <p>Carne de res, lechuga, tomate, cebolla y papas fritas</p>
+              <span class="price">$14.00</span>
+            </div>
+          {% endif %}
+        </div>
+        <div style="text-align:center; margin-top:30px;">
+          <a class="btn-secondary" href="{{ url_for('index') }}?ver=carta">Volver</a>
+        </div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>
+

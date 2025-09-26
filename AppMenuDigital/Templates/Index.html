@@ -12,21 +12,13 @@
     <div class="menu-icono" onclick="toggleMenu()">☰</div>
     SABORES QUE TE INVITAN A QUEDARTE
     
-    <div class="user-info">
-      {% if usuario %}
-        <span>Bienvenido, {{ usuario }}</span>
-        <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
-      {% else %}
-        <a href="{{ url_for('login') }}">Iniciar Sesión</a>
-        <a href="{{ url_for('registro') }}">Registrarse</a>
-      {% endif %}
-    </div>
+    <div class="user-info"></div>
   </div>
 
   <div id="menu-lateral" class="menu-lateral">
-    <a href="{{ url_for('menu') }}">Admin</a>
+    <a href="{{ url_for('admin_dashboard') }}">Admin</a>
     {% if usuario %}
-      <a href="{{ url_for('perfil') }}">MI PANEL DE GESTIÓN</a>
+      <a href="{{ url_for('admin_dashboard') }}">MI PANEL DE GESTIÓN</a>
     {% else %}
       <a href="{{ url_for('login') }}">INICIAR SESIÓN</a>
       <a href="{{ url_for('registro') }}">REGISTRARSE</a>
@@ -62,50 +54,50 @@
       
       <div class="categories-grid">
         <!-- Desayunos -->
-        <div class="category-card" onclick="scrollToCategory('desayunos')">
-          <div class="category-icon">🌅</div>
+        <div class="category-card" onclick="window.location='{{ url_for('categoria', nombre='desayunos') }}'">
+          <div class="category-icon"></div>
           <h3>Desayunos</h3>
           <p>Comienza tu día con nuestros deliciosos desayunos</p>
         </div>
 
         <!-- Almuerzos -->
-        <div class="category-card" onclick="scrollToCategory('almuerzos')">
-          <div class="category-icon">🍽️</div>
+        <div class="category-card" onclick="window.location='{{ url_for('categoria', nombre='almuerzos') }}'">
+          <div class="category-icon"></div>
           <h3>Almuerzos</h3>
           <p>Platos fuertes para el mediodía</p>
         </div>
 
         <!-- Cenas -->
-        <div class="category-card" onclick="scrollToCategory('cenas')">
-          <div class="category-icon">🌙</div>
+        <div class="category-card" onclick="window.location='{{ url_for('categoria', nombre='cenas') }}'">
+          <div class="category-icon"></div>
           <h3>Cenas</h3>
           <p>Especialidades para la noche</p>
         </div>
 
         <!-- Meriendas -->
-        <div class="category-card" onclick="scrollToCategory('meriendas')">
-          <div class="category-icon">☕</div>
+        <div class="category-card" onclick="window.location='{{ url_for('categoria', nombre='meriendas') }}'">
+          <div class="category-icon"></div>
           <h3>Meriendas</h3>
           <p>Snacks y acompañamientos</p>
         </div>
 
         <!-- Postres -->
-        <div class="category-card" onclick="scrollToCategory('postres')">
-          <div class="category-icon">🍰</div>
+        <div class="category-card" onclick="window.location='{{ url_for('categoria', nombre='postres') }}'">
+          <div class="category-icon"></div>
           <h3>Postres</h3>
           <p>Dulces tentaciones para el final</p>
         </div>
 
         <!-- Bebidas -->
-        <div class="category-card" onclick="scrollToCategory('bebidas')">
-          <div class="category-icon">🥤</div>
+        <div class="category-card" onclick="window.location='{{ url_for('categoria', nombre='bebidas') }}'">
+          <div class="category-icon"></div>
           <h3>Bebidas</h3>
           <p>Refrescantes y deliciosas</p>
         </div>
 
         <!-- Promociones -->
-        <div class="category-card promotion-card" onclick="scrollToCategory('promociones')">
-          <div class="category-icon">🎉</div>
+        <div class="category-card promotion-card" onclick="window.location='{{ url_for('categoria', nombre='promociones') }}'">
+          <div class="category-icon"></div>
           <h3>Promociones</h3>
           <p>Ofertas especiales del día</p>
           <span class="promo-badge">¡OFERTA!</span>
@@ -119,7 +111,7 @@
     <!-- Desayunos -->
     <section id="desayunos" class="menu-section">
       <div class="container">
-        <h2>🌅 Desayunos</h2>
+        <h2>Desayunos</h2>
         <div class="menu-items">
           <div class="menu-item">
             <div class="menu-item-image">
@@ -176,7 +168,7 @@
     <!-- Almuerzos -->
     <section id="almuerzos" class="menu-section">
       <div class="container">
-        <h2>🍽️ Almuerzos</h2>
+        <h2>Almuerzos</h2>
         <div class="menu-items">
           <div class="menu-item">
             <div class="menu-item-image">
@@ -249,7 +241,7 @@
     <!-- Cenas -->
     <section id="cenas" class="menu-section">
       <div class="container">
-        <h2>🌙 Cenas</h2>
+        <h2>Cenas</h2>
         <div class="menu-items">
           <div class="menu-item">
             <div class="menu-item-image">
@@ -306,7 +298,7 @@
     <!-- Meriendas -->
     <section id="meriendas" class="menu-section">
       <div class="container">
-        <h2>☕ Meriendas</h2>
+        <h2>Meriendas</h2>
         <div class="menu-items">
           <div class="menu-item">
             <div class="menu-item-image">
@@ -363,7 +355,7 @@
     <!-- Postres -->
     <section id="postres" class="menu-section">
       <div class="container">
-        <h2>🍰 Postres</h2>
+        <h2>Postres</h2>
         <div class="menu-items">
           <div class="menu-item">
             <div class="menu-item-image">
@@ -420,11 +412,11 @@
     <!-- Bebidas -->
     <section id="bebidas" class="menu-section">
       <div class="container">
-        <h2>🥤 Bebidas</h2>
+        <h2>Bebidas</h2>
         
         <!-- Bebidas Frías -->
         <div class="beverage-category">
-          <h3>🧊 Bebidas Frías</h3>
+          <h3>Bebidas Frías</h3>
           <div class="menu-items">
             <div class="menu-item">
               <div class="menu-item-image">
@@ -463,7 +455,7 @@
 
         <!-- Bebidas Calientes -->
         <div class="beverage-category">
-          <h3>☕ Bebidas Calientes</h3>
+          <h3>Bebidas Calientes</h3>
           <div class="menu-items">
             <div class="menu-item">
               <div class="menu-item-image">
@@ -510,7 +502,7 @@
 
         <!-- Bebidas Alcohólicas -->
         <div class="beverage-category">
-          <h3>🍷 Bebidas Alcohólicas</h3>
+          <h3>Bebidas Alcohólicas</h3>
           <div class="menu-items">
             <div class="menu-item">
               <div class="menu-item-image">
@@ -560,7 +552,7 @@
     <!-- Promociones -->
     <section id="promociones" class="menu-section promotion-section">
       <div class="container">
-        <h2>🎉 Promociones del Día</h2>
+        <h2>Promociones del Día</h2>
         <div class="menu-items">
           <div class="menu-item promo-item">
             <div class="menu-item-image">
@@ -676,6 +668,12 @@
 
     // Efecto de hover en las tarjetas de categorías
     document.addEventListener('DOMContentLoaded', function() {
+      // Auto mostrar carta si llegamos con ?ver=carta
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('ver') === 'carta') {
+        showMenu();
+      }
+
       const categoryCards = document.querySelectorAll('.category-card');
       categoryCards.forEach(card => {
         card.addEventListener('mouseenter', function() {

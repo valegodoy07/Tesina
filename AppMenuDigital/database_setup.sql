@@ -20,6 +20,22 @@ CREATE TABLE IF NOT EXISTS productos (
     categoria VARCHAR(50) DEFAULT 'general'
 );
 
+-- Crear tabla de categorías
+CREATE TABLE IF NOT EXISTS categorias (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) UNIQUE NOT NULL,
+    descripcion VARCHAR(255)
+);
+
+-- Crear tabla de mozos
+CREATE TABLE IF NOT EXISTS mozos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    email VARCHAR(120) UNIQUE,
+    telefono VARCHAR(30),
+    activo TINYINT(1) DEFAULT 1
+);
+
 -- Insertar productos de ejemplo (opcional)
 INSERT INTO productos (nombre, descripcion, precio, imagen, categoria) VALUES
 ('Milanesa con papas fritas', 'Deliciosa milanesa acompañada de papas fritas crujientes', 10000.00, 'milanesa-tesina.png', 'platos_principales'),
@@ -28,3 +44,10 @@ INSERT INTO productos (nombre, descripcion, precio, imagen, categoria) VALUES
 ('Hamburguesa', 'Hamburguesa con carne, lechuga, tomate y queso', 8000.00, 'hamburguesa.png', 'platos_principales'),
 ('Ensalada César', 'Ensalada fresca con lechuga, crutones y aderezo especial', 6000.00, 'ensalada.png', 'entradas'),
 ('Limonada', 'Limonada natural refrescante', 2500.00, 'limonada.png', 'bebidas'); 
+
+-- Insertar categorías de ejemplo (opcional)
+INSERT INTO categorias (nombre, descripcion) VALUES
+('platos_principales', 'Platos fuertes y principales'),
+('entradas', 'Entradas y aperitivos'),
+('bebidas', 'Bebidas frías y calientes')
+ON DUPLICATE KEY UPDATE descripcion = VALUES(descripcion);

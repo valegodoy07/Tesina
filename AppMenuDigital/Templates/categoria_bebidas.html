@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bebidas</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='Styles.css') }}">
+</head>
+<body>
+  <div class="barra-superior">
+    <div class="menu-icono" onclick="window.location='{{ url_for('index') }}?ver=carta'">⟵</div>
+    Bebidas
+  </div>
+
+  <div class="menu-sections" style="padding-top: 120px;">
+    <section class="menu-section" id="bebidas">
+      <div class="container">
+        <h2>Bebidas</h2>
+        <div class="beverage-category">
+          <h3>Bebidas Frías</h3>
+          <div class="menu-items">
+            <div class="menu-item">
+              <div class="menu-item-image"><img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=600&h=400&fit=crop" alt="Jugos Naturales"></div>
+              <h4>Jugos Naturales</h4>
+              <p>Naranja, manzana, piña o maracuyá</p>
+              <span class="price">$4.00</span>
+            </div>
+            <div class="menu-item">
+              <div class="menu-item-image"><img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=600&h=400&fit=crop" alt="Limonada"></div>
+              <h4>Limonada Natural</h4>
+              <p>Con menta fresca</p>
+              <span class="price">$3.50</span>
+            </div>
+          </div>
+        </div>
+        <div class="beverage-category">
+          <h3>Bebidas Calientes</h3>
+          <div class="menu-items">
+            <div class="menu-item">
+              <div class="menu-item-image"><img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=600&h=400&fit=crop" alt="Café Americano"></div>
+              <h4>Café Americano</h4>
+              <p>Café negro caliente</p>
+              <span class="price">$2.50</span>
+            </div>
+            <div class="menu-item">
+              <div class="menu-item-image"><img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=600&h=400&fit=crop" alt="Chocolate Caliente"></div>
+              <h4>Chocolate Caliente</h4>
+              <p>Con malvaviscos</p>
+              <span class="price">$4.50</span>
+            </div>
+          </div>
+        </div>
+        <div class="beverage-category">
+          <h3>Bebidas Alcohólicas</h3>
+          <div class="menu-items">
+            <div class="menu-item">
+              <div class="menu-item-image"><img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=600&h=400&fit=crop" alt="Cerveza"></div>
+              <h4>Cerveza</h4>
+              <p>Nacional e importada</p>
+              <span class="price">$3.50</span>
+            </div>
+            <div class="menu-item">
+              <div class="menu-item-image"><img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=600&h=400&fit=crop" alt="Cócteles"></div>
+              <h4>Cócteles</h4>
+              <p>Mojito, Margarita, Piña Colada, Daiquiri</p>
+              <span class="price">$8.00</span>
+            </div>
+          </div>
+        </div>
+        <div style="text-align:center; margin-top:30px;">
+          <a class="btn-secondary" href="{{ url_for('index') }}?ver=carta">Volver</a>
+        </div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>
+

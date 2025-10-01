@@ -16,9 +16,11 @@
   </div>
 
   <div id="menu-lateral" class="menu-lateral">
-    <a href="{{ url_for('admin_dashboard') }}">Admin</a>
-    {% if usuario %}
-      <a href="{{ url_for('admin_dashboard') }}">MI PANEL DE GESTIÓN</a>
+    {% if session.get('user_id') %}
+      {% if session.get('is_admin') or session.get('user_id') == 1 %}
+        <a href="{{ url_for('admin_dashboard') }}">MI PANEL DE GESTIÓN</a>
+      {% endif %}
+      <a href="{{ url_for('logout') }}">CERRAR SESIÓN</a>
     {% else %}
       <a href="{{ url_for('login') }}">INICIAR SESIÓN</a>
       <a href="{{ url_for('registro') }}">REGISTRARSE</a>
@@ -359,7 +361,7 @@
         <div class="menu-items">
           <div class="menu-item">
             <div class="menu-item-image">
-              <img src="https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=400&h=300&fit=crop" alt="Tiramisu">
+              <img src="../static/images/tiramisu.webp" alt="Tiramisu">
             </div>
             <h4>Tiramisu</h4>
             <p>Postre italiano con café y mascarpone</p>
@@ -367,7 +369,7 @@
           </div>
           <div class="menu-item">
             <div class="menu-item-image">
-              <img src="https://images.unsplash.com/photo-1533134242443-d4fd215305ad?w=400&h=300&fit=crop" alt="Cheesecake de Fresa">
+              <img src="../static/images/cheescake.jpg" alt="Cheesecake de Fresa">
             </div>
             <h4>Cheesecake de Fresa</h4>
             <p>Tarta de queso con coulis de fresa</p>
@@ -383,7 +385,7 @@
           </div>
           <div class="menu-item">
             <div class="menu-item-image">
-              <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Flan de Caramelo">
+              <img src="../static/images/fla.png" alt="Flan de Caramelo">
             </div>
             <h4>Flan de Caramelo</h4>
             <p>Postre tradicional con caramelo líquido</p>
@@ -391,7 +393,7 @@
           </div>
           <div class="menu-item">
             <div class="menu-item-image">
-              <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Profiteroles">
+              <img src="../static/images/prosfitelores.png" alt="Profiteroles">
             </div>
             <h4>Profiteroles</h4>
             <p>Bolitas de masa con helado y chocolate</p>
@@ -399,7 +401,7 @@
           </div>
           <div class="menu-item">
             <div class="menu-item-image">
-              <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Tarta de Manzana">
+              <img src="../static/images/manzana.png" alt="Tarta de Manzana">
             </div>
             <h4>Tarta de Manzana</h4>
             <p>Masa hojaldrada con manzanas y canela</p>

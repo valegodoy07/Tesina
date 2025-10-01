@@ -371,7 +371,7 @@ def perfil():
     
     try:
         cur = mysql.connection.cursor()
-        cur.execute("SELECT * FROM usuarios WHERE idusuario  = %s", (session['user_id'],))
+        cur.execute("SELECT * FROM usuarios WHERE id = %s", (session['user_id'],))
         usuario = cur.fetchone()
         cur.close()
         

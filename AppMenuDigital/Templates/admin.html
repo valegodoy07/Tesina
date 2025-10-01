@@ -1,196 +1,145 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panel de Administración</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='Styles.css') }}">
-  <style>
-    .admin-container { max-width: 1200px; margin: 120px auto 60px; padding: 0 20px; }
-    .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .admin-sections { display: grid; grid-template-columns: 1fr; gap: 40px; }
-    .admin-card { background: #fff; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,0.1); overflow: hidden; }
-    .admin-card h2 { margin: 0; padding: 16px 20px; background: #713D2A; color: #fff; }
-    .admin-card .body { padding: 20px; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
-    .table { width: 100%; border-collapse: collapse; }
-    .table th, .table td { padding: 10px; border-bottom: 1px solid #eee; text-align: left; }
-    .actions { display: flex; gap: 8px; }
-    .btn { padding: 8px 12px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; }
-    .btn-primary { background: #713D2A; color: #fff; }
-    .btn-danger { background: #dc3545; color: #fff; }
-    .btn-secondary { background: #8B4513; color: #fff; }
-    form.inline { display: inline; }
-    input[type=text], input[type=number] { width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-    .muted { color: #666; font-size: 13px; }
-    @media (max-width: 900px) { .grid, .grid-3 { grid-template-columns: 1fr; } }
-  </style>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Panel de Administración</title>
+	<link rel="stylesheet" href="{{ url_for('static', filename='Styles.css') }}">
 </head>
 <body>
-  <div class="barra-superior">
-    <div class="menu-icono" onclick="window.location='{{ url_for('index') }}'">⟵</div>
-    Panel de Administración
-    <div class="user-info">
-      <span>{{ session.get('nombre') }}</span>
-      <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
-    </div>
-  </div>
+	<div class="barra-superior">
+		<div class="menu-icono" onclick="window.location='{{ url_for('index') }}'">⟵</div>
+		Panel de Administración
+		<div style="margin-left:auto; padding-right:16px;">
+			<a href="{{ url_for('logout') }}">Cerrar sesión</a>
+		</div>
+	</div>
 
-  <div class="admin-container">
-    <div class="admin-header">
-      <h1 class="muted">Gestiona categorías, productos y mozos</h1>
-      <a class="btn btn-secondary" href="{{ url_for('index') }}">Volver</a>
-    </div>
+	<div class="container" style="padding-top: 100px;">
+		{% with messages = get_flashed_messages(with_categories=true) %}
+			{% if messages %}
+				<div class="flash-messages">
+					{% for category, message in messages %}
+						<div class="flash-message flash-{{ category }}">{{ message }}</div>
+					{% endfor %}
+				</div>
+			{% endif %}
+		{% endwith %}
 
-    <div class="admin-sections">
-      <!-- Categorías -->
-      <div class="admin-card" id="categorias">
-        <h2>Categorías</h2>
-        <div class="body">
-          <div class="grid">
-            <form action="{{ url_for('admin_categorias_crear') }}" method="post">
-              <h3>Nueva Categoría</h3>
-              <input type="text" name="nombre" placeholder="Nombre" required>
-              <input type="text" name="descripcion" placeholder="Descripción (opcional)">
-              <button class="btn btn-primary" type="submit">Crear</button>
-            </form>
-            <div>
-              <h3>Listado</h3>
-              <table class="table">
-                <thead>
-                  <tr><th>ID</th><th>Nombre</th><th>Descripción</th><th>Acciones</th></tr>
-                </thead>
-                <tbody>
-                  {% for c in categorias %}
-                  <tr>
-                    <td>{{ c[0] }}</td>
-                    <td>
-                      <form class="inline" action="{{ url_for('admin_categorias_actualizar', categoria_id=c[0]) }}" method="post">
-                        <input type="text" name="nombre" value="{{ c[1] }}" required>
-                        <input type="text" name="descripcion" value="{{ c[2] or '' }}">
-                        <div class="actions">
-                          <button class="btn btn-primary" type="submit">Guardar</button>
-                        </div>
-                      </form>
-                    </td>
-                    <td class="muted">{{ c[2] }}</td>
-                    <td>
-                      <form class="inline" action="{{ url_for('admin_categorias_eliminar', categoria_id=c[0]) }}" method="post" onsubmit="return confirm('¿Eliminar categoría?')">
-                        <button class="btn btn-danger" type="submit">Eliminar</button>
-                      </form>
-                    </td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
+		<h2>Categorías</h2>
+		<div class="admin-section">
+			<form method="POST" action="{{ url_for('admin_categorias_crear') }}" class="admin-form">
+				<input type="text" name="nombre" placeholder="Nombre" required>
+				<input type="text" name="descripcion" placeholder="Descripción">
+				<button type="submit">Crear</button>
+			</form>
+			<table class="admin-table">
+				<thead>
+					<tr><th>ID</th><th>Nombre</th><th>Descripción</th><th>Acciones</th></tr>
+				</thead>
+				<tbody>
+					{% for c in categorias %}
+					<tr>
+						<td>{{ c[0] }}</td>
+						<td>
+							<form method="POST" action="{{ url_for('admin_categorias_actualizar', categoria_id=c[0]) }}" class="inline-form">
+								<input type="text" name="nombre" value="{{ c[1] }}" required>
+								<input type="text" name="descripcion" value="{{ c[2] or '' }}">
+								<button type="submit">Guardar</button>
+							</form>
+						</td>
+						<td>{{ c[2] or '' }}</td>
+						<td>
+							<form method="POST" action="{{ url_for('admin_categorias_eliminar', categoria_id=c[0]) }}" onsubmit="return confirm('¿Eliminar categoría?')">
+								<button type="submit" class="btn-danger">Eliminar</button>
+							</form>
+						</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
 
-      <!-- Productos -->
-      <div class="admin-card" id="productos">
-        <h2>Productos</h2>
-        <div class="body">
-          <div class="grid">
-            <form action="{{ url_for('admin_productos_crear') }}" method="post">
-              <h3>Nuevo Producto</h3>
-              <input type="text" name="nombre" placeholder="Nombre" required>
-              <input type="text" name="descripcion" placeholder="Descripción">
-              <input type="number" step="0.01" name="precio" placeholder="Precio" required>
-              <input type="text" name="imagen" placeholder="URL/archivo de imagen">
-              <input type="text" name="categoria" placeholder="Categoría (coincidir con nombre)">
-              <button class="btn btn-primary" type="submit">Crear</button>
-              <p class="muted">Sugerencia: usa un nombre de categoría de la tabla de categorías.</p>
-            </form>
-            <div>
-              <h3>Listado</h3>
-              <table class="table">
-                <thead>
-                  <tr><th>ID</th><th>Nombre</th><th>Precio</th><th>Categoría</th><th>Acciones</th></tr>
-                </thead>
-                <tbody>
-                  {% for p in productos %}
-                  <tr>
-                    <td>{{ p[0] }}</td>
-                    <td colspan="3">
-                      <form class="inline" action="{{ url_for('admin_productos_actualizar', producto_id=p[0]) }}" method="post">
-                        <input type="text" name="nombre" value="{{ p[1] }}" required>
-                        <input type="text" name="descripcion" value="{{ p[2] or '' }}">
-                        <input type="number" step="0.01" name="precio" value="{{ p[3] }}" required>
-                        <input type="text" name="imagen" value="{{ p[5] or '' }}" placeholder="URL/archivo de imagen">
-                        <input type="text" name="categoria" value="{{ p[4] or '' }}" placeholder="Categoría">
-                        <div class="actions">
-                          <button class="btn btn-primary" type="submit">Guardar</button>
-                        </div>
-                      </form>
-                    </td>
-                    <td>
-                      <form class="inline" action="{{ url_for('admin_productos_eliminar', producto_id=p[0]) }}" method="post" onsubmit="return confirm('¿Eliminar producto?')">
-                        <button class="btn btn-danger" type="submit">Eliminar</button>
-                      </form>
-                    </td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
+		<h2>Productos</h2>
+		<div class="admin-section">
+			<form method="POST" action="{{ url_for('admin_productos_crear') }}" class="admin-form">
+				<input type="text" name="nombre" placeholder="Nombre" required>
+				<input type="text" name="descripcion" placeholder="Descripción">
+				<input type="number" name="precio" placeholder="Precio" step="0.01" required>
+				<input type="text" name="imagen" placeholder="URL/archivo imagen">
+				<input type="text" name="categoria" placeholder="Categoría">
+				<button type="submit">Crear</button>
+			</form>
+			<table class="admin-table">
+				<thead>
+					<tr><th>ID</th><th>Nombre</th><th>Descripción</th><th>Precio</th><th>Categoría</th><th>Imagen</th><th>Acciones</th></tr>
+				</thead>
+				<tbody>
+					{% for p in productos %}
+					<tr>
+						<td>{{ p[0] }}</td>
+						<td colspan="5">
+							<form method="POST" action="{{ url_for('admin_productos_actualizar', producto_id=p[0]) }}" class="inline-form">
+								<input type="text" name="nombre" value="{{ p[1] }}" required>
+								<input type="text" name="descripcion" value="{{ p[2] or '' }}">
+								<input type="number" name="precio" value="{{ '%.2f' % p[3] }}" step="0.01" required>
+								<input type="text" name="categoria" value="{{ p[4] or '' }}">
+								<input type="text" name="imagen" value="{{ p[5] or '' }}">
+								<button type="submit">Guardar</button>
+							</form>
+						</td>
+						<td>
+							<form method="POST" action="{{ url_for('admin_productos_eliminar', producto_id=p[0]) }}" onsubmit="return confirm('¿Eliminar producto?')">
+								<button type="submit" class="btn-danger">Eliminar</button>
+							</form>
+						</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
 
-      <!-- Mozos -->
-      <div class="admin-card" id="mozos">
-        <h2>Mozos</h2>
-        <div class="body">
-          <div class="grid-3">
-            <form action="{{ url_for('admin_mozos_crear') }}" method="post">
-              <h3>Nuevo Mozo</h3>
-              <input type="text" name="nombre" placeholder="Nombre" required>
-              <input type="text" name="email" placeholder="Email">
-              <input type="text" name="telefono" placeholder="Teléfono">
-              <label><input type="checkbox" name="activo" checked> Activo</label>
-              <button class="btn btn-primary" type="submit">Crear</button>
-            </form>
-            <div style="grid-column: span 2;">
-              <h3>Listado</h3>
-              <table class="table">
-                <thead>
-                  <tr><th>ID</th><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Activo</th><th>Acciones</th></tr>
-                </thead>
-                <tbody>
-                  {% for m in mozos %}
-                  <tr>
-                    <td>{{ m[0] }}</td>
-                    <td colspan="3">
-                      <form class="inline" action="{{ url_for('admin_mozos_actualizar', mozo_id=m[0]) }}" method="post">
-                        <input type="text" name="nombre" value="{{ m[1] }}" required>
-                        <input type="text" name="email" value="{{ m[2] or '' }}">
-                        <input type="text" name="telefono" value="{{ m[3] or '' }}">
-                        <label><input type="checkbox" name="activo" {% if m[4] %}checked{% endif %}> Activo</label>
-                        <div class="actions">
-                          <button class="btn btn-primary" type="submit">Guardar</button>
-                        </div>
-                      </form>
-                    </td>
-                    <td>{{ 'Sí' if m[4] else 'No' }}</td>
-                    <td>
-                      <form class="inline" action="{{ url_for('admin_mozos_eliminar', mozo_id=m[0]) }}" method="post" onsubmit="return confirm('¿Eliminar mozo?')">
-                        <button class="btn btn-danger" type="submit">Eliminar</button>
-                      </form>
-                    </td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
+		<h2>Mozos</h2>
+		<div class="admin-section">
+			<form method="POST" action="{{ url_for('admin_mozos_crear') }}" class="admin-form">
+				<input type="text" name="nombre" placeholder="Nombre" required>
+				<input type="email" name="email" placeholder="Email">
+				<input type="text" name="telefono" placeholder="Teléfono">
+				<label style="display:inline-flex; align-items:center; gap:6px;">
+					<input type="checkbox" name="activo" checked> Activo
+				</label>
+				<button type="submit">Crear</button>
+			</form>
+			<table class="admin-table">
+				<thead>
+					<tr><th>ID</th><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Activo</th><th>Acciones</th></tr>
+				</thead>
+				<tbody>
+					{% for m in mozos %}
+					<tr>
+						<td>{{ m[0] }}</td>
+						<td colspan="4">
+							<form method="POST" action="{{ url_for('admin_mozos_actualizar', mozo_id=m[0]) }}" class="inline-form">
+								<input type="text" name="nombre" value="{{ m[1] }}" required>
+								<input type="email" name="email" value="{{ m[2] or '' }}">
+								<input type="text" name="telefono" value="{{ m[3] or '' }}">
+								<label style="display:inline-flex; align-items:center; gap:6px;">
+									<input type="checkbox" name="activo" {% if m[4] %}checked{% endif %}> Activo
+								</label>
+								<button type="submit">Guardar</button>
+							</form>
+						</td>
+						<td>
+							<form method="POST" action="{{ url_for('admin_mozos_eliminar', mozo_id=m[0]) }}" onsubmit="return confirm('¿Eliminar mozo?')">
+								<button type="submit" class="btn-danger">Eliminar</button>
+							</form>
+						</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div>
 </body>
 </html>
 

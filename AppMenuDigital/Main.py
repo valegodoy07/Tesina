@@ -31,6 +31,66 @@ def is_allowed_image(filename: str) -> bool:
 # Inicializar MySQL
 mysql = MySQL(app)
 
+# ===== Inicialización de Base de Datos =====
+def init_db() -> None:
+    try:
+        cur = mysql.connection.cursor()
+        # usuarios
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS usuarios (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                nombre VARCHAR(100) NOT NULL,
+                email VARCHAR(100) UNIQUE NOT NULL,
+                password VARCHAR(255) NOT NULL,
+                fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+        # productos
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS productos (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                nombre VARCHAR(100) NOT NULL,
+                descripcion TEXT,
+                precio DECIMAL(10,2) NOT NULL,
+                imagen VARCHAR(255),
+                categoria VARCHAR(50) DEFAULT 'general'
+            )
+            """
+        )
+        # categorias
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS categorias (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                nombre VARCHAR(100) UNIQUE NOT NULL,
+                descripcion VARCHAR(255)
+            )
+            """
+        )
+        # mozos
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS mozos (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                nombre VARCHAR(100) NOT NULL,
+                email VARCHAR(120) UNIQUE,
+                telefono VARCHAR(30),
+                activo TINYINT(1) DEFAULT 1
+            )
+            """
+        )
+        mysql.connection.commit()
+        cur.close()
+    except Exception as e:
+        print(f"Error inicializando base de datos: {e}")
+
+@app.before_first_request
+def before_first_request():
+    init_db()
+
 # Rutas de la aplicación
 @app.route('/')
 def index():

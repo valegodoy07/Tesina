@@ -62,12 +62,17 @@
 
 		<h2>Productos</h2>
 		<div class="admin-section">
-			<form method="POST" action="{{ url_for('admin_productos_crear') }}" class="admin-form">
+			<form method="POST" action="{{ url_for('admin_productos_crear') }}" class="admin-form" enctype="multipart/form-data">
 				<input type="text" name="nombre" placeholder="Nombre" required>
 				<input type="text" name="descripcion" placeholder="Descripción">
 				<input type="number" name="precio" placeholder="Precio" step="0.01" required>
-				<input type="text" name="imagen" placeholder="URL/archivo imagen">
-				<input type="text" name="categoria" placeholder="Categoría">
+				<select name="categoria">
+					<option value="">Sin categoría</option>
+					{% for c in categorias %}
+					<option value="{{ c[1] }}">{{ c[1] }}</option>
+					{% endfor %}
+				</select>
+				<input type="file" name="imagen_file" accept=".png,.jpg,.jpeg,.webp,.gif">
 				<button type="submit">Crear</button>
 			</form>
 			<table class="admin-table">
@@ -79,12 +84,17 @@
 					<tr>
 						<td>{{ p[0] }}</td>
 						<td colspan="5">
-							<form method="POST" action="{{ url_for('admin_productos_actualizar', producto_id=p[0]) }}" class="inline-form">
+						<form method="POST" action="{{ url_for('admin_productos_actualizar', producto_id=p[0]) }}" class="inline-form" enctype="multipart/form-data">
 								<input type="text" name="nombre" value="{{ p[1] }}" required>
 								<input type="text" name="descripcion" value="{{ p[2] or '' }}">
 								<input type="number" name="precio" value="{{ '%.2f' % p[3] }}" step="0.01" required>
-								<input type="text" name="categoria" value="{{ p[4] or '' }}">
-								<input type="text" name="imagen" value="{{ p[5] or '' }}">
+							<select name="categoria">
+								<option value="">Sin categoría</option>
+								{% for c in categorias %}
+								<option value="{{ c[1] }}" {% if p[4] == c[1] %}selected{% endif %}>{{ c[1] }}</option>
+								{% endfor %}
+							</select>
+							<input type="file" name="imagen_file" accept=".png,.jpg,.jpeg,.webp,.gif">
 								<button type="submit">Guardar</button>
 							</form>
 						</td>

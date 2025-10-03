@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from functools import wraps
 from flask_mysqldb import MySQL
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 from config import Config
 import os
 
@@ -14,6 +15,18 @@ app.config['MYSQL_HOST'] = Config.MYSQL_HOST
 app.config['MYSQL_USER'] = Config.MYSQL_USER
 app.config['MYSQL_PASSWORD'] = Config.MYSQL_PASSWORD
 app.config['MYSQL_DB'] = Config.MYSQL_DB
+
+# Configuración de subida de imágenes
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+UPLOAD_RELATIVE = os.path.join('static', 'images', 'uploads')
+UPLOAD_FOLDER = os.path.join(BASE_DIR, UPLOAD_RELATIVE)
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+ALLOWED_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.webp', '.gif'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+def is_allowed_image(filename: str) -> bool:
+    _, ext = os.path.splitext(filename.lower())
+    return ext in ALLOWED_EXTENSIONS
 
 # Inicializar MySQL
 mysql = MySQL(app)
@@ -169,10 +182,7 @@ def admin_required(view_func):
         if 'user_id' not in session:
             flash('Debes iniciar sesión', 'error')
             return redirect(url_for('login'))
-        # Permitir admin por bandera en sesión o usuario con id 1 como fallback
-        if not session.get('is_admin', False) and session.get('user_id') != 1:
-            flash('No tienes permisos de administrador', 'error')
-            return redirect(url_for('index'))
+        # Permitir acceso a cualquier usuario autenticado (panel de control para usuarios logueados)
         return view_func(*args, **kwargs)
     return wrapped
 
@@ -252,8 +262,21 @@ def admin_productos_crear():
     nombre = request.form.get('nombre')
     descripcion = request.form.get('descripcion')
     precio = request.form.get('precio')
-    imagen = request.form.get('imagen')
     categoria = request.form.get('categoria')
+    imagen_path_relativa = None
+    # Manejo de archivo de imagen
+    if 'imagen_file' in request.files:
+        imagen_file = request.files.get('imagen_file')
+        if imagen_file and imagen_file.filename:
+            filename = secure_filename(imagen_file.filename)
+            if is_allowed_image(filename):
+                save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                imagen_file.save(save_path)
+                # Guardamos la ruta relativa para usar con url_for('static', filename=...)
+                imagen_path_relativa = os.path.join('images', 'uploads', filename).replace('\\', '/')
+            else:
+                flash('Formato de imagen no permitido', 'error')
+                return redirect(url_for('admin_dashboard'))
     if not (nombre and precio):
         flash('Nombre y precio son obligatorios', 'error')
         return redirect(url_for('admin_dashboard'))
@@ -261,7 +284,7 @@ def admin_productos_crear():
         cur = mysql.connection.cursor()
         cur.execute(
             "INSERT INTO productos (nombre, descripcion, precio, imagen, categoria) VALUES (%s, %s, %s, %s, %s)",
-            (nombre, descripcion, precio, imagen, categoria)
+            (nombre, descripcion, precio, imagen_path_relativa, categoria)
         )
         mysql.connection.commit()
         cur.close()
@@ -277,14 +300,32 @@ def admin_productos_actualizar(producto_id: int):
     nombre = request.form.get('nombre')
     descripcion = request.form.get('descripcion')
     precio = request.form.get('precio')
-    imagen = request.form.get('imagen')
     categoria = request.form.get('categoria')
+    imagen_path_relativa = None
+    # Si llega un nuevo archivo, lo procesamos; si no, mantenemos la existente
+    if 'imagen_file' in request.files:
+        imagen_file = request.files.get('imagen_file')
+        if imagen_file and imagen_file.filename:
+            filename = secure_filename(imagen_file.filename)
+            if is_allowed_image(filename):
+                save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                imagen_file.save(save_path)
+                imagen_path_relativa = os.path.join('images', 'uploads', filename).replace('\\', '/')
+            else:
+                flash('Formato de imagen no permitido', 'error')
+                return redirect(url_for('admin_dashboard'))
     try:
         cur = mysql.connection.cursor()
-        cur.execute(
-            "UPDATE productos SET nombre=%s, descripcion=%s, precio=%s, imagen=%s, categoria=%s WHERE id=%s",
-            (nombre, descripcion, precio, imagen, categoria, producto_id)
-        )
+        if imagen_path_relativa:
+            cur.execute(
+                "UPDATE productos SET nombre=%s, descripcion=%s, precio=%s, imagen=%s, categoria=%s WHERE id=%s",
+                (nombre, descripcion, precio, imagen_path_relativa, categoria, producto_id)
+            )
+        else:
+            cur.execute(
+                "UPDATE productos SET nombre=%s, descripcion=%s, precio=%s, categoria=%s WHERE id=%s",
+                (nombre, descripcion, precio, categoria, producto_id)
+            )
         mysql.connection.commit()
         cur.close()
         flash('Producto actualizado', 'success')

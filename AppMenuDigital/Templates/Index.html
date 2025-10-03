@@ -17,13 +17,10 @@
 
   <div id="menu-lateral" class="menu-lateral">
     {% if session.get('user_id') %}
-      {% if session.get('is_admin') or session.get('user_id') == 1 %}
-        <a href="{{ url_for('admin_dashboard') }}">MI PANEL DE GESTIÓN</a>
-      {% endif %}
+      <a href="{{ url_for('admin_dashboard') }}">MI PANEL DE GESTIÓN</a>
       <a href="{{ url_for('logout') }}">CERRAR SESIÓN</a>
     {% else %}
       <a href="{{ url_for('login') }}">INICIAR SESIÓN</a>
-      <a href="{{ url_for('registro') }}">REGISTRARSE</a>
     {% endif %}
     <a href="#">CONTACTO</a>
   </div>

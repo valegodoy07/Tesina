@@ -12,7 +12,11 @@
         
         <div class="login-container">
             <h2>Iniciar Sesión</h2>
-            
+            {% if not session.get('user_id') %}
+            <div class="register-link">
+                <p>¿No tienes cuenta? <a href="{{ url_for('registro') }}">Regístrate aquí</a></p>
+            </div>
+            {% endif %}
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     <div class="flash-messages">

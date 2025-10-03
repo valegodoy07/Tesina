@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Mozo</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='Styles.css') }}">
+    <style>
+        .mozo-container { padding-top: 100px; max-width: 900px; margin: 0 auto; }
+        .pedido-form { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+        .pedido-list table { width: 100%; border-collapse: collapse; }
+        .pedido-list th, .pedido-list td { border-bottom: 1px solid #ddd; padding: 8px; }
+        .pedido-list th { text-align: left; }
+    </style>
+    </head>
+<body>
+    <div class="barra-superior">
+        <div class="menu-icono" onclick="window.location='{{ url_for('index') }}'">⟵</div>
+        Panel de Mozo
+        <div style="margin-left:auto; padding-right:16px;">
+            <a href="{{ url_for('logout') }}">Cerrar sesión</a>
+        </div>
+    </div>
+
+    <div class="mozo-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <h2>Nuevo pedido</h2>
+        <form method="POST" action="{{ url_for('mozo_pedido_crear') }}" class="pedido-form">
+            <input type="text" name="mesa" placeholder="Mesa (ej: M1)" required>
+            <input type="text" name="notas" placeholder="Notas (opcional)">
+            <button type="submit">Crear pedido</button>
+        </form>
+
+        <h2>Mis pedidos</h2>
+        <div class="pedido-list">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Mesa</th>
+                        <th>Estado</th>
+                        <th>Notas</th>
+                        <th>Creado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in pedidos %}
+                    <tr>
+                        <td>{{ p[0] }}</td>
+                        <td>{{ p[1] }}</td>
+                        <td>{{ p[2] }}</td>
+                        <td>{{ p[3] or '' }}</td>
+                        <td>{{ p[4] }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('mozo_pedido_estado', pedido_id=p[0]) }}" style="display:inline-flex; gap:6px;">
+                                <select name="estado">
+                                    <option value="abierto" {% if p[2]=='abierto' %}selected{% endif %}>Abierto</option>
+                                    <option value="en_preparacion" {% if p[2]=='en_preparacion' %}selected{% endif %}>En preparación</option>
+                                    <option value="listo" {% if p[2]=='listo' %}selected{% endif %}>Listo</option>
+                                    <option value="entregado" {% if p[2]=='entregado' %}selected{% endif %}>Entregado</option>
+                                    <option value="cerrado" {% if p[2]=='cerrado' %}selected{% endif %}>Cerrado</option>
+                                </select>
+                                <button type="submit">Actualizar</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
+
+

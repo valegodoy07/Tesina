@@ -2,7 +2,6 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from functools import wraps
 from flask_mysqldb import MySQL
 from werkzeug.security import generate_password_hash, check_password_hash
-from werkzeug.utils import secure_filename
 from config import Config
 import os
 
@@ -16,80 +15,12 @@ app.config['MYSQL_USER'] = Config.MYSQL_USER
 app.config['MYSQL_PASSWORD'] = Config.MYSQL_PASSWORD
 app.config['MYSQL_DB'] = Config.MYSQL_DB
 
-# Configuración de subida de imágenes
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-UPLOAD_RELATIVE = os.path.join('static', 'images', 'uploads')
-UPLOAD_FOLDER = os.path.join(BASE_DIR, UPLOAD_RELATIVE)
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-ALLOWED_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.webp', '.gif'}
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
-def is_allowed_image(filename: str) -> bool:
-    _, ext = os.path.splitext(filename.lower())
-    return ext in ALLOWED_EXTENSIONS
+# (revert) Sin configuración de subida de imágenes
 
 # Inicializar MySQL
 mysql = MySQL(app)
 
-# ===== Inicialización de Base de Datos =====
-def init_db() -> None:
-    try:
-        cur = mysql.connection.cursor()
-        # usuarios
-        cur.execute(
-            """
-            CREATE TABLE IF NOT EXISTS usuarios (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                nombre VARCHAR(100) NOT NULL,
-                email VARCHAR(100) UNIQUE NOT NULL,
-                password VARCHAR(255) NOT NULL,
-                fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-            """
-        )
-        # productos
-        cur.execute(
-            """
-            CREATE TABLE IF NOT EXISTS productos (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                nombre VARCHAR(100) NOT NULL,
-                descripcion TEXT,
-                precio DECIMAL(10,2) NOT NULL,
-                imagen VARCHAR(255),
-                categoria VARCHAR(50) DEFAULT 'general'
-            )
-            """
-        )
-        # categorias
-        cur.execute(
-            """
-            CREATE TABLE IF NOT EXISTS categorias (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                nombre VARCHAR(100) UNIQUE NOT NULL,
-                descripcion VARCHAR(255)
-            )
-            """
-        )
-        # mozos
-        cur.execute(
-            """
-            CREATE TABLE IF NOT EXISTS mozos (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                nombre VARCHAR(100) NOT NULL,
-                email VARCHAR(120) UNIQUE,
-                telefono VARCHAR(30),
-                activo TINYINT(1) DEFAULT 1
-            )
-            """
-        )
-        mysql.connection.commit()
-        cur.close()
-    except Exception as e:
-        print(f"Error inicializando base de datos: {e}")
-
-@app.before_first_request
-def before_first_request():
-    init_db()
+# (revert) Sin inicialización automática de tablas
 
 # Rutas de la aplicación
 @app.route('/')
@@ -176,6 +107,21 @@ def login():
                 except Exception:
                     is_admin = False
                 session['is_admin'] = is_admin
+                # Determinar rol mozo si el email pertenece a mozos activos
+                try:
+                    cur2 = mysql.connection.cursor()
+                    cur2.execute("SELECT id, activo FROM mozos WHERE email=%s", (session['email'],))
+                    mozo_row = cur2.fetchone()
+                    cur2.close()
+                    if mozo_row and (mozo_row[1] == 1 or mozo_row[1] is True):
+                        session['rol'] = 'mozo'
+                        session['mozo_id'] = mozo_row[0]
+                    elif is_admin or session.get('user_id') == 1:
+                        session['rol'] = 'admin'
+                    else:
+                        session['rol'] = 'usuario'
+                except Exception:
+                    session['rol'] = 'admin' if (is_admin or session.get('user_id') == 1) else 'usuario'
                 flash('¡Inicio de sesión exitoso!', 'success')
                 return redirect(url_for('index'))
             else:
@@ -216,7 +162,13 @@ def registro():
                 INSERT INTO usuarios (nombre, email, password)
                 VALUES (%s, %s, %s)
             """, (nombre, email, hashed_password))
-            
+            # Registrar también como mozo activo por defecto
+            try:
+                cur.execute("INSERT INTO mozos (nombre, email, activo) VALUES (%s, %s, %s)", (nombre, email, 1))
+            except Exception:
+                # Si ya existe en mozos por UNIQUE email, ignoramos
+                pass
+
             mysql.connection.commit()
             cur.close()
             
@@ -242,9 +194,58 @@ def admin_required(view_func):
         if 'user_id' not in session:
             flash('Debes iniciar sesión', 'error')
             return redirect(url_for('login'))
-        # Permitir acceso a cualquier usuario autenticado (panel de control para usuarios logueados)
+        # Permitir admin por bandera en sesión o usuario con id 1 como fallback
+        if not session.get('is_admin', False) and session.get('user_id') != 1:
+            flash('No tienes permisos de administrador', 'error')
+            return redirect(url_for('index'))
         return view_func(*args, **kwargs)
     return wrapped
+
+# ===== Utilidades de Mozo =====
+def mozo_required(view_func):
+    @wraps(view_func)
+    def wrapped(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('Debes iniciar sesión', 'error')
+            return redirect(url_for('login'))
+        if session.get('rol') != 'mozo' or not session.get('mozo_id'):
+            flash('Acceso solo para mozos', 'error')
+            return redirect(url_for('index'))
+        return view_func(*args, **kwargs)
+    return wrapped
+
+def ensure_pedidos_tables():
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS pedidos (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                mozo_id INT NOT NULL,
+                mesa VARCHAR(20) NOT NULL,
+                estado VARCHAR(20) DEFAULT 'abierto',
+                notas TEXT,
+                creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (mozo_id) REFERENCES mozos(id)
+            )
+            """
+        )
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS pedido_items (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                pedido_id INT NOT NULL,
+                producto_id INT NOT NULL,
+                cantidad INT NOT NULL DEFAULT 1,
+                FOREIGN KEY (pedido_id) REFERENCES pedidos(id),
+                FOREIGN KEY (producto_id) REFERENCES productos(id)
+            )
+            """
+        )
+        mysql.connection.commit()
+        cur.close()
+    except Exception as e:
+        print(f"Error asegurando tablas de pedidos: {e}")
 
 # ===== Panel de Control (Admin) =====
 @app.route('/admin')
@@ -264,6 +265,57 @@ def admin_dashboard():
         print(f"Error al cargar dashboard admin: {e}")
         flash('Error al cargar el panel de administración', 'error')
         return render_template('admin.html', categorias=[], productos=[], mozos=[])
+
+# ===== Panel de Mozo =====
+@app.route('/mozo')
+@mozo_required
+def mozo_dashboard():
+    ensure_pedidos_tables()
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT id, mesa, estado, notas, creado_en FROM pedidos WHERE mozo_id=%s ORDER BY id DESC", (session['mozo_id'],))
+        pedidos = cur.fetchall()
+        cur.close()
+        return render_template('mozo.html', pedidos=pedidos)
+    except Exception as e:
+        print(f"Error cargando panel mozo: {e}")
+        flash('Error al cargar panel de mozo', 'error')
+        return render_template('mozo.html', pedidos=[])
+
+@app.route('/mozo/pedidos/crear', methods=['POST'])
+@mozo_required
+def mozo_pedido_crear():
+    ensure_pedidos_tables()
+    mesa = request.form.get('mesa')
+    notas = request.form.get('notas')
+    if not mesa:
+        flash('Debes indicar la mesa', 'error')
+        return redirect(url_for('mozo_dashboard'))
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("INSERT INTO pedidos (mozo_id, mesa, notas) VALUES (%s, %s, %s)", (session['mozo_id'], mesa, notas))
+        mysql.connection.commit()
+        cur.close()
+        flash('Pedido creado', 'success')
+    except Exception as e:
+        print(f"Error creando pedido: {e}")
+        flash('Error al crear pedido', 'error')
+    return redirect(url_for('mozo_dashboard'))
+
+@app.route('/mozo/pedidos/<int:pedido_id>/estado', methods=['POST'])
+@mozo_required
+def mozo_pedido_estado(pedido_id: int):
+    nuevo_estado = request.form.get('estado', 'abierto')
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("UPDATE pedidos SET estado=%s WHERE id=%s AND mozo_id=%s", (nuevo_estado, pedido_id, session['mozo_id']))
+        mysql.connection.commit()
+        cur.close()
+        flash('Estado actualizado', 'success')
+    except Exception as e:
+        print(f"Error actualizando estado pedido: {e}")
+        flash('Error al actualizar estado', 'error')
+    return redirect(url_for('mozo_dashboard'))
 
 # ===== CRUD Categorías =====
 @app.route('/admin/categorias/crear', methods=['POST'])
@@ -322,21 +374,8 @@ def admin_productos_crear():
     nombre = request.form.get('nombre')
     descripcion = request.form.get('descripcion')
     precio = request.form.get('precio')
+    imagen = request.form.get('imagen')
     categoria = request.form.get('categoria')
-    imagen_path_relativa = None
-    # Manejo de archivo de imagen
-    if 'imagen_file' in request.files:
-        imagen_file = request.files.get('imagen_file')
-        if imagen_file and imagen_file.filename:
-            filename = secure_filename(imagen_file.filename)
-            if is_allowed_image(filename):
-                save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                imagen_file.save(save_path)
-                # Guardamos la ruta relativa para usar con url_for('static', filename=...)
-                imagen_path_relativa = os.path.join('images', 'uploads', filename).replace('\\', '/')
-            else:
-                flash('Formato de imagen no permitido', 'error')
-                return redirect(url_for('admin_dashboard'))
     if not (nombre and precio):
         flash('Nombre y precio son obligatorios', 'error')
         return redirect(url_for('admin_dashboard'))
@@ -344,7 +383,7 @@ def admin_productos_crear():
         cur = mysql.connection.cursor()
         cur.execute(
             "INSERT INTO productos (nombre, descripcion, precio, imagen, categoria) VALUES (%s, %s, %s, %s, %s)",
-            (nombre, descripcion, precio, imagen_path_relativa, categoria)
+            (nombre, descripcion, precio, imagen, categoria)
         )
         mysql.connection.commit()
         cur.close()
@@ -360,32 +399,14 @@ def admin_productos_actualizar(producto_id: int):
     nombre = request.form.get('nombre')
     descripcion = request.form.get('descripcion')
     precio = request.form.get('precio')
+    imagen = request.form.get('imagen')
     categoria = request.form.get('categoria')
-    imagen_path_relativa = None
-    # Si llega un nuevo archivo, lo procesamos; si no, mantenemos la existente
-    if 'imagen_file' in request.files:
-        imagen_file = request.files.get('imagen_file')
-        if imagen_file and imagen_file.filename:
-            filename = secure_filename(imagen_file.filename)
-            if is_allowed_image(filename):
-                save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                imagen_file.save(save_path)
-                imagen_path_relativa = os.path.join('images', 'uploads', filename).replace('\\', '/')
-            else:
-                flash('Formato de imagen no permitido', 'error')
-                return redirect(url_for('admin_dashboard'))
     try:
         cur = mysql.connection.cursor()
-        if imagen_path_relativa:
-            cur.execute(
-                "UPDATE productos SET nombre=%s, descripcion=%s, precio=%s, imagen=%s, categoria=%s WHERE id=%s",
-                (nombre, descripcion, precio, imagen_path_relativa, categoria, producto_id)
-            )
-        else:
-            cur.execute(
-                "UPDATE productos SET nombre=%s, descripcion=%s, precio=%s, categoria=%s WHERE id=%s",
-                (nombre, descripcion, precio, categoria, producto_id)
-            )
+        cur.execute(
+            "UPDATE productos SET nombre=%s, descripcion=%s, precio=%s, imagen=%s, categoria=%s WHERE id=%s",
+            (nombre, descripcion, precio, imagen, categoria, producto_id)
+        )
         mysql.connection.commit()
         cur.close()
         flash('Producto actualizado', 'success')

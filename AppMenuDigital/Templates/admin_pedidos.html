@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedidos - Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='Styles.css') }}">
+</head>
+<body>
+    <div class="barra-superior">
+        <div class="menu-icono" onclick="window.location='{{ url_for('admin_dashboard') }}'">⟵</div>
+        Pedidos de clientes
+    </div>
+    <div class="container" style="padding-top:100px;">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Cliente</th>
+                    <th>Estado</th>
+                    <th>Creado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in pedidos %}
+                <tr>
+                    <td>{{ p[0] }}</td>
+                    <td>{{ p[4] or 'Anónimo' }}</td>
+                    <td>{{ p[2] }}</td>
+                    <td>{{ p[3] }}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('admin_pedido_cambiar_estado', pedido_id=p[0]) }}" class="inline-form">
+                            <select name="estado">
+                                <option value="pendiente" {% if p[2]=='pendiente' %}selected{% endif %}>Pendiente</option>
+                                <option value="en_preparacion" {% if p[2]=='en_preparacion' %}selected{% endif %}>En preparación</option>
+                                <option value="listo" {% if p[2]=='listo' %}selected{% endif %}>Listo</option>
+                                <option value="entregado" {% if p[2]=='entregado' %}selected{% endif %}>Entregado</option>
+                                <option value="cancelado" {% if p[2]=='cancelado' %}selected{% endif %}>Cancelado</option>
+                            </select>
+                            <button type="submit">Actualizar</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
+

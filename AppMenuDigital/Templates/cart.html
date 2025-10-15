@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carrito</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='Styles.css') }}">
+</head>
+<body>
+  <div class="barra-superior">
+    <a href="{{ url_for('index') }}" class="back-button"> Volver</a>
+    Carrito de Compras
+  </div>
+
+  <div class="container" style="padding-top: 100px;">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-messages">
+          {% for category, message in messages %}
+            <div class="flash-message flash-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% if items %}
+    <form method="POST" action="{{ url_for('cart_update') }}">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Precio</th>
+            <th>Cantidad</th>
+            <th>Subtotal</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for it in items %}
+          <tr>
+            <td>{{ it.nombre }}</td>
+            <td>${{ '%.2f' % it.precio }}</td>
+            <td>
+              <input type="number" name="qty_{{ it.id }}" value="{{ it.cantidad }}" min="0" style="width:70px;">
+            </td>
+            <td>${{ '%.2f' % it.subtotal }}</td>
+            <td>
+              <form method="POST" action="{{ url_for('cart_remove', producto_id=it.id) }}">
+                <button type="submit" class="btn-danger">Eliminar</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div style="display:flex; gap:10px; margin-top:12px;">
+        <button type="submit">Actualizar cantidades</button>
+        <form method="POST" action="{{ url_for('cart_checkout') }}">
+          <button type="submit" class="btn-primary">Enviar pedido</button>
+        </form>
+      </div>
+      <h3 style="margin-top:16px;">Total: ${{ '%.2f' % total }}</h3>
+    </form>
+    {% else %}
+      <p>Tu carrito está vacío.</p>
+    {% endif %}
+  </div>
+</body>
+</html>
+

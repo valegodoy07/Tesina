@@ -26,65 +26,31 @@
 			{% endif %}
 		{% endwith %}
 
-		<h2>Categorías</h2>
-		<div class="admin-section">
-			<form method="POST" action="{{ url_for('admin_categorias_crear') }}" class="admin-form">
-				<input type="text" name="nombre" placeholder="Nombre" required>
-				<input type="text" name="descripcion" placeholder="Descripción">
-				<button type="submit">Crear</button>
-			</form>
-			<table class="admin-table">
-				<thead>
-					<tr><th>ID</th><th>Nombre</th><th>Descripción</th><th>Acciones</th></tr>
-				</thead>
-				<tbody>
-					{% for c in categorias %}
-					<tr>
-						<td>{{ c[0] }}</td>
-						<td>
-							<form method="POST" action="{{ url_for('admin_categorias_actualizar', categoria_id=c[0]) }}" class="inline-form">
-								<input type="text" name="nombre" value="{{ c[1] }}" required>
-								<input type="text" name="descripcion" value="{{ c[2] or '' }}">
-								<button type="submit">Guardar</button>
-							</form>
-						</td>
-						<td>{{ c[2] or '' }}</td>
-						<td>
-							<form method="POST" action="{{ url_for('admin_categorias_eliminar', categoria_id=c[0]) }}" onsubmit="return confirm('¿Eliminar categoría?')">
-								<button type="submit" class="btn-danger">Eliminar</button>
-							</form>
-						</td>
-					</tr>
-					{% endfor %}
-				</tbody>
-			</table>
-		</div>
+		<!-- Sección de categorías removida según requerimiento -->
 
 		<h2>Productos</h2>
 		<div class="admin-section">
 			<form method="POST" action="{{ url_for('admin_productos_crear') }}" class="admin-form">
-				<input type="text" name="nombre" placeholder="Nombre" required>
-				<input type="text" name="descripcion" placeholder="Descripción">
+				<input type="text" name="nombre" placeholder="Nombre del producto" required>
+				<input type="text" name="categoria" placeholder="Categoría (texto libre)" required>
+				<input type="text" name="imagen" placeholder="URL de imagen" required>
 				<input type="number" name="precio" placeholder="Precio" step="0.01" required>
-				<input type="text" name="imagen" placeholder="URL/archivo imagen">
-				<input type="text" name="categoria" placeholder="Categoría">
-				<button type="submit">Crear</button>
+				<button type="submit">Agregar producto</button>
 			</form>
 			<table class="admin-table">
 				<thead>
-					<tr><th>ID</th><th>Nombre</th><th>Descripción</th><th>Precio</th><th>Categoría</th><th>Imagen</th><th>Acciones</th></tr>
+					<tr><th>ID</th><th>Nombre</th><th>Categoría</th><th>Imagen</th><th>Precio</th><th>Acciones</th></tr>
 				</thead>
 				<tbody>
 					{% for p in productos %}
 					<tr>
 						<td>{{ p[0] }}</td>
-						<td colspan="5">
+						<td>
 						<form method="POST" action="{{ url_for('admin_productos_actualizar', producto_id=p[0]) }}" class="inline-form">
 								<input type="text" name="nombre" value="{{ p[1] }}" required>
-								<input type="text" name="descripcion" value="{{ p[2] or '' }}">
-								<input type="number" name="precio" value="{{ '%.2f' % p[3] }}" step="0.01" required>
-							<input type="text" name="categoria" value="{{ p[4] or '' }}">
-							<input type="text" name="imagen" value="{{ p[5] or '' }}">
+								<input type="text" name="categoria" value="{{ p[3] or '' }}" required>
+								<input type="text" name="imagen" value="{{ p[4] or '' }}" required>
+								<input type="number" name="precio" value="{{ '%.2f' % p[2] }}" step="0.01" required>
 								<button type="submit">Guardar</button>
 							</form>
 						</td>
@@ -98,6 +64,7 @@
 				</tbody>
 			</table>
 		</div>
+
 
 		<h2>Mozos</h2>
 		<div class="admin-section">

@@ -345,6 +345,32 @@ body {
   margin: 0;
 }
 
+/* Add to cart form within product card */
+.add-to-cart {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  justify-content: center;
+  align-items: center;
+}
+
+.qty-input {
+  width: 70px;
+  padding: 8px;
+  border: 2px solid #d8c1b5;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.add-to-cart .btn-primary {
+  background: linear-gradient(135deg, #713D2A, #8B4513);
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: bold;
+}
+
 .back-button {
   position: absolute;
   top: 20px;

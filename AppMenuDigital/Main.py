@@ -21,6 +21,21 @@ app.config['MYSQL_DB'] = Config.MYSQL_DB
 mysql = MySQL(app)
 
 # (revert) Sin inicialización automática de tablas
+# Context processor to expose cart count in all templates
+@app.context_processor
+def inject_cart_count():
+    try:
+        cart = session.get('cart', {})
+        total_qty = 0
+        for entry in cart.values():
+            try:
+                total_qty += int(entry.get('qty', 1))
+            except Exception:
+                total_qty += 1
+        return {'cart_count': total_qty}
+    except Exception:
+        return {'cart_count': 0}
+
 
 # Rutas de la aplicación
 @app.route('/')

@@ -40,9 +40,30 @@ def inject_cart_count():
 # Rutas de la aplicación
 @app.route('/')
 def index():
+    # Cargar dinámicamente productos por categoría para el Index (se agregan al final del bloque hardcodeado)
+    categorias = ['desayunos', 'almuerzos', 'cenas', 'meriendas', 'postres', 'bebidas']
+    productos_por_categoria = {c: [] for c in categorias}
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            SELECT id, Nombre_Menu, Precio, LOWER(COALESCE(Categoria, '')) as cat, COALESCE(Imagen, '')
+            FROM menu
+            WHERE LOWER(COALESCE(Categoria, '')) IN ('desayunos','almuerzos','cenas','meriendas','postres','bebidas')
+            ORDER BY id DESC
+        """)
+        filas = cur.fetchall()
+        for f in filas:
+            cat = (f[3] or '').lower()
+            if cat in productos_por_categoria:
+                productos_por_categoria[cat].append(f)
+        cur.close()
+    except Exception as e:
+        print(f"Error al cargar productos para index: {e}")
+
+    ctx = {'productos_por_categoria': productos_por_categoria}
     if 'user_id' in session:
-        return render_template('Index.html', usuario=session.get('nombre'))
-    return render_template('Index.html')
+        ctx['usuario'] = session.get('nombre')
+    return render_template('Index.html', **ctx)
 
 @app.route('/menu')
 def menu():

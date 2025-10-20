@@ -159,6 +159,21 @@
             <p>Pan brioche empapado en huevo con canela y azúcar</p>
             <span class="price">$9.500</span>
           </div>
+          {% if productos_por_categoria and productos_por_categoria.get('desayunos') %}
+            {% for p in productos_por_categoria.get('desayunos') %}
+              <div class="menu-item">
+                <div class="menu-item-image">
+                  {% if p[4] %}
+                    <img src="{{ p[4] }}" alt="{{ p[1] }}">
+                  {% else %}
+                    <img src="{{ url_for('static', filename='default-food.png') }}" alt="{{ p[1] }}">
+                  {% endif %}
+                </div>
+                <h4>{{ p[1] }}</h4>
+                <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
+              </div>
+            {% endfor %}
+          {% endif %}
         </div>
       </div>
     </section>
@@ -232,6 +247,21 @@
             <p>Tres tacos con carne asada, cebolla, cilantro y salsas</p>
             <span class="price">$14.500</span>
           </div>
+          {% if productos_por_categoria and productos_por_categoria.get('almuerzos') %}
+            {% for p in productos_por_categoria.get('almuerzos') %}
+              <div class="menu-item">
+                <div class="menu-item-image">
+                  {% if p[4] %}
+                    <img src="{{ p[4] }}" alt="{{ p[1] }}">
+                  {% else %}
+                    <img src="{{ url_for('static', filename='default-food.png') }}" alt="{{ p[1] }}">
+                  {% endif %}
+                </div>
+                <h4>{{ p[1] }}</h4>
+                <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
+              </div>
+            {% endfor %}
+          {% endif %}
         </div>
       </div>
     </section>
@@ -289,6 +319,21 @@
             <p>Arroz con mariscos, pollo y vegetales al estilo tradicional</p>
             <span class="price">$24.50</span>
           </div>
+          {% if productos_por_categoria and productos_por_categoria.get('cenas') %}
+            {% for p in productos_por_categoria.get('cenas') %}
+              <div class="menu-item">
+                <div class="menu-item-image">
+                  {% if p[4] %}
+                    <img src="{{ p[4] }}" alt="{{ p[1] }}">
+                  {% else %}
+                    <img src="{{ url_for('static', filename='default-food.png') }}" alt="{{ p[1] }}">
+                  {% endif %}
+                </div>
+                <h4>{{ p[1] }}</h4>
+                <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
+              </div>
+            {% endfor %}
+          {% endif %}
         </div>
       </div>
     </section>
@@ -346,6 +391,21 @@
             <p>carlito con papas copetin</p>
             <span class="price">$6.500</span>
           </div>
+          {% if productos_por_categoria and productos_por_categoria.get('meriendas') %}
+            {% for p in productos_por_categoria.get('meriendas') %}
+              <div class="menu-item">
+                <div class="menu-item-image">
+                  {% if p[4] %}
+                    <img src="{{ p[4] }}" alt="{{ p[1] }}">
+                  {% else %}
+                    <img src="{{ url_for('static', filename='default-food.png') }}" alt="{{ p[1] }}">
+                  {% endif %}
+                </div>
+                <h4>{{ p[1] }}</h4>
+                <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
+              </div>
+            {% endfor %}
+          {% endif %}
         </div>
       </div>
     </section>
@@ -403,6 +463,22 @@
             <p>Masa hojaldrada con manzanas y canela</p>
             <span class="price">$7.00</span>
           </div>
+
+          {% if postres %}
+            {% for p in postres %}
+              <div class="menu-item">
+                <div class="menu-item-image">
+                  {% if p[4] %}
+                    <img src="{{ p[4] }}" alt="{{ p[1] }}">
+                  {% else %}
+                    <img src="{{ url_for('static', filename='default-food.png') }}" alt="{{ p[1] }}">
+                  {% endif %}
+                </div>
+                <h4>{{ p[1] }}</h4>
+                <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
+              </div>
+            {% endfor %}
+          {% endif %}
         </div>
       </div>
     </section>
@@ -464,6 +540,21 @@
               <p>Té negro o verde con limón y menta</p>
               <span class="price">$2.50</span>
             </div>
+            {% if productos_por_categoria and productos_por_categoria.get('bebidas') %}
+              {% for p in productos_por_categoria.get('bebidas') %}
+                <div class="menu-item">
+                  <div class="menu-item-image">
+                    {% if p[4] %}
+                      <img src="{{ p[4] }}" alt="{{ p[1] }}">
+                    {% else %}
+                      <img src="{{ url_for('static', filename='default-food.png') }}" alt="{{ p[1] }}">
+                    {% endif %}
+                  </div>
+                  <h4>{{ p[1] }}</h4>
+                  <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
+                </div>
+              {% endfor %}
+            {% endif %}
           </div>
         </div>
 

@@ -41,14 +41,14 @@ def inject_cart_count():
 @app.route('/')
 def index():
     # Cargar dinámicamente productos por categoría para el Index (se agregan al final del bloque hardcodeado)
-    categorias = ['desayunos', 'almuerzos', 'cenas', 'meriendas', 'postres', 'bebidas']
+    categorias = ['desayunos', 'almuerzos', 'cenas', 'meriendas', 'postres', 'bebidas', 'promociones']
     productos_por_categoria = {c: [] for c in categorias}
     try:
         cur = mysql.connection.cursor()
         cur.execute("""
-            SELECT id, Nombre_Menu, Precio, LOWER(COALESCE(Categoria, '')) as cat, COALESCE(Imagen, '')
+            SELECT id, Nombre_Menu, Precio, LOWER(COALESCE(Categoria, '')) as cat, COALESCE(Imagen, ''), COALESCE(Descripcion, '')
             FROM menu
-            WHERE LOWER(COALESCE(Categoria, '')) IN ('desayunos','almuerzos','cenas','meriendas','postres','bebidas')
+            WHERE LOWER(COALESCE(Categoria, '')) IN ('desayunos','almuerzos','cenas','meriendas','postres','bebidas','promociones')
             ORDER BY id DESC
         """)
         filas = cur.fetchall()
@@ -300,6 +300,11 @@ def ensure_menu_table_upgrade():
                 cur.execute("ALTER TABLE menu ADD COLUMN Categoria VARCHAR(50) NULL")
             except Exception:
                 pass
+        if 'descripcion' not in cols:
+            try:
+                cur.execute("ALTER TABLE menu ADD COLUMN Descripcion TEXT NULL")
+            except Exception:
+                pass
         mysql.connection.commit()
         cur.close()
     except Exception as e:
@@ -312,23 +317,43 @@ def admin_dashboard():
     try:
         ensure_menu_table_upgrade()
         cur = mysql.connection.cursor()
+        
+        # Obtener productos
         try:
-            cur.execute("SELECT id, Nombre_Menu, Precio, COALESCE(Categoria, ''), COALESCE(Imagen, '') FROM menu ORDER BY id DESC")
+            cur.execute("SELECT id, Nombre_Menu, Precio, COALESCE(Categoria, ''), COALESCE(Imagen, ''), COALESCE(Descripcion, '') FROM menu ORDER BY id DESC")
             productos = cur.fetchall()
         except Exception:
             productos = []
-        mozos = []
+        
+        # Obtener estadísticas para el panel de control
+        stats = {}
         try:
-            cur.execute("SELECT id, nombre, email, telefono, activo FROM mozos ORDER BY nombre")
-            mozos = cur.fetchall()
+            # Total de productos
+            cur.execute("SELECT COUNT(*) FROM menu")
+            stats['total_productos'] = cur.fetchone()[0] or 0
         except Exception:
-            mozos = []
+            stats['total_productos'] = 0
+        
+        try:
+            # Pedidos pendientes
+            cur.execute("SELECT COUNT(*) FROM pedidos WHERE estado = 'pendiente'")
+            stats['pedidos_pendientes'] = cur.fetchone()[0] or 0
+        except Exception:
+            stats['pedidos_pendientes'] = 0
+        
+        try:
+            # Total de pedidos
+            cur.execute("SELECT COUNT(*) FROM pedidos")
+            stats['total_pedidos'] = cur.fetchone()[0] or 0
+        except Exception:
+            stats['total_pedidos'] = 0
+        
         cur.close()
-        return render_template('admin.html', categorias=[], productos=productos, mozos=mozos)
+        return render_template('admin.html', categorias=[], productos=productos, stats=stats)
     except Exception as e:
         print(f"Error al cargar dashboard admin: {e}")
         flash('Error al cargar el panel de administración', 'error')
-        return render_template('admin.html', categorias=[], productos=[], mozos=[])
+        return render_template('admin.html', categorias=[], productos=[], stats={})
 
 # ===== Panel de Mozo =====
 @app.route('/mozo')
@@ -440,6 +465,7 @@ def admin_productos_crear():
     precio = request.form.get('precio')
     categoria = request.form.get('categoria')
     imagen = request.form.get('imagen')
+    descripcion = request.form.get('descripcion', '')
     if not (nombre and precio):
         flash('Nombre y precio son obligatorios', 'error')
         return redirect(url_for('admin_dashboard'))
@@ -447,8 +473,8 @@ def admin_productos_crear():
         ensure_menu_table_upgrade()
         cur = mysql.connection.cursor()
         cur.execute(
-            "INSERT INTO menu (Nombre_Menu, Precio, Categoria, Imagen) VALUES (%s, %s, %s, %s)",
-            (nombre, precio, categoria, imagen)
+            "INSERT INTO menu (Nombre_Menu, Precio, Categoria, Imagen, Descripcion) VALUES (%s, %s, %s, %s, %s)",
+            (nombre, precio, categoria, imagen, descripcion)
         )
         mysql.connection.commit()
         cur.close()
@@ -465,12 +491,13 @@ def admin_productos_actualizar(producto_id: int):
     precio = request.form.get('precio')
     categoria = request.form.get('categoria')
     imagen = request.form.get('imagen')
+    descripcion = request.form.get('descripcion', '')
     try:
         ensure_menu_table_upgrade()
         cur = mysql.connection.cursor()
         cur.execute(
-            "UPDATE menu SET Nombre_Menu=%s, Precio=%s, Categoria=%s, Imagen=%s WHERE id=%s",
-            (nombre, precio, categoria, imagen, producto_id)
+            "UPDATE menu SET Nombre_Menu=%s, Precio=%s, Categoria=%s, Imagen=%s, Descripcion=%s WHERE id=%s",
+            (nombre, precio, categoria, imagen, descripcion, producto_id)
         )
         mysql.connection.commit()
         cur.close()
@@ -539,22 +566,38 @@ def cart_view():
         cur = mysql.connection.cursor()
         for pid, entry in cart.items():
             try:
-                cur.execute("SELECT id, Nombre_Menu, Precio FROM menu WHERE id=%s", (pid,))
-                row = cur.fetchone()
-                if not row:
-                    continue
-                cantidad = int(entry.get('qty', 1))
-                precio = float(row[2])
-                subtotal = cantidad * precio
-                total += subtotal
-                items.append({
-                    'id': row[0],
-                    'nombre': row[1],
-                    'precio': precio,
-                    'cantidad': cantidad,
-                    'subtotal': subtotal,
-                })
-            except Exception:
+                # Si es un producto temporal
+                if entry.get('temp', False):
+                    cantidad = int(entry.get('qty', 1))
+                    precio = float(entry.get('precio', 0))
+                    subtotal = cantidad * precio
+                    total += subtotal
+                    items.append({
+                        'id': pid,
+                        'nombre': entry.get('nombre', 'Producto'),
+                        'precio': precio,
+                        'cantidad': cantidad,
+                        'subtotal': subtotal,
+                    })
+                else:
+                    # Producto de la base de datos
+                    cur.execute("SELECT id, Nombre_Menu, Precio FROM menu WHERE id=%s", (pid,))
+                    row = cur.fetchone()
+                    if not row:
+                        continue
+                    cantidad = int(entry.get('qty', 1))
+                    precio = float(row[2])
+                    subtotal = cantidad * precio
+                    total += subtotal
+                    items.append({
+                        'id': row[0],
+                        'nombre': row[1],
+                        'precio': precio,
+                        'cantidad': cantidad,
+                        'subtotal': subtotal,
+                    })
+            except Exception as e:
+                print(f"Error cargando item {pid}: {e}")
                 continue
         cur.close()
     except Exception as e:
@@ -573,6 +616,32 @@ def cart_add(producto_id: int):
     session['cart'] = cart
     flash('Producto agregado al carrito', 'success')
     return redirect(request.referrer or url_for('menu'))
+
+@app.route('/cart/add/temp', methods=['POST'])
+def cart_add_temp():
+    nombre = request.form.get('nombre')
+    precio = float(request.form.get('precio', 0))
+    qty = int(request.form.get('qty', '1'))
+    categoria = request.form.get('categoria', '')
+    
+    # Crear un ID único para el producto temporal usando hash del nombre
+    import hashlib
+    temp_id = 'temp_' + hashlib.md5(nombre.encode()).hexdigest()[:10]
+    
+    cart = _get_cart()
+    if temp_id in cart:
+        cart[temp_id]['qty'] += qty
+    else:
+        cart[temp_id] = {
+            'qty': qty,
+            'nombre': nombre,
+            'precio': precio,
+            'categoria': categoria,
+            'temp': True
+        }
+    session['cart'] = cart
+    flash(f'{nombre} agregado al carrito', 'success')
+    return redirect(request.referrer or url_for('index'))
 
 @app.route('/cart/update', methods=['POST'])
 def cart_update():
@@ -635,6 +704,34 @@ def cart_checkout():
         flash('Error al procesar el pedido', 'error')
     return redirect(url_for('index'))
 
+@app.route('/api/producto/<int:producto_id>')
+def api_producto(producto_id):
+    from flask import jsonify
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            SELECT id, Nombre_Menu, Precio, Categoria, Imagen, Descripcion 
+            FROM menu 
+            WHERE id=%s
+        """, (producto_id,))
+        producto = cur.fetchone()
+        cur.close()
+        
+        if producto:
+            return jsonify({
+                'id': producto[0],
+                'nombre': producto[1],
+                'precio': float(producto[2]),
+                'categoria': producto[3],
+                'imagen': producto[4],
+                'descripcion': producto[5] or ''
+            })
+        else:
+            return jsonify({'error': 'Producto no encontrado'}), 404
+    except Exception as e:
+        print(f"Error obteniendo producto: {e}")
+        return jsonify({'error': 'Error al obtener producto'}), 500
+
 # ===== Vista de pedidos para administrador =====
 @app.route('/admin/pedidos')
 @admin_required
@@ -643,14 +740,48 @@ def admin_pedidos_list():
     pedidos = []
     try:
         cur = mysql.connection.cursor()
-        cur.execute(
-            "SELECT p.id, p.usuario_id, p.estado, p.creado_en, COALESCE(u.nombre, '') FROM pedidos p LEFT JOIN usuarios u ON p.usuario_id=u.idusuario ORDER BY p.id DESC"
-        )
+        cur.execute("""
+            SELECT p.id, p.usuario_id, p.estado, p.creado_en, COALESCE(u.nombre, ''), 
+                   (SELECT COUNT(*) FROM pedido_items WHERE pedido_id = p.id) as total_items
+            FROM pedidos p 
+            LEFT JOIN usuarios u ON p.usuario_id=u.idusuario 
+            ORDER BY p.id DESC
+        """)
         pedidos = cur.fetchall()
+        
+        # Obtener detalles de cada pedido
+        pedidos_con_detalles = []
+        for pedido in pedidos:
+            pedido_id = pedido[0]
+            try:
+                cur.execute("""
+                    SELECT pi.cantidad, pi.precio_unitario, m.Nombre_Menu
+                    FROM pedido_items pi
+                    JOIN menu m ON pi.menu_id = m.id
+                    WHERE pi.pedido_id = %s
+                """, (pedido_id,))
+                items = cur.fetchall()
+                
+                # Calcular total
+                total = sum(float(item[0]) * float(item[1]) for item in items)
+                
+                # Agregar items y total al pedido
+                pedido_list = list(pedido)
+                pedido_list.append(items)
+                pedido_list.append(total)
+                pedidos_con_detalles.append(tuple(pedido_list))
+            except Exception as e:
+                print(f"Error obteniendo items del pedido {pedido_id}: {e}")
+                pedido_list = list(pedido)
+                pedido_list.append([])
+                pedido_list.append(0.0)
+                pedidos_con_detalles.append(tuple(pedido_list))
+        
         cur.close()
     except Exception as e:
         print(f"Error listando pedidos: {e}")
-    return render_template('admin_pedidos.html', pedidos=pedidos)
+        pedidos_con_detalles = []
+    return render_template('admin_pedidos.html', pedidos=pedidos_con_detalles)
 
 @app.route('/admin/pedidos/<int:pedido_id>/estado', methods=['POST'])
 @admin_required

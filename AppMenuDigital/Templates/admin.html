@@ -26,15 +26,53 @@
 			{% endif %}
 		{% endwith %}
 
+		<!-- Panel de Control -->
+		<div class="dashboard-panel">
+			<h2 style="margin-bottom: 20px;">Panel de Control</h2>
+			<div class="stats-grid">
+				<div class="stat-card">
+					<div class="stat-icon">📦</div>
+					<div class="stat-info">
+						<div class="stat-value">{{ stats.get('total_productos', 0) }}</div>
+						<div class="stat-label">Total de Productos</div>
+					</div>
+				</div>
+				<div class="stat-card">
+					<div class="stat-icon">⏳</div>
+					<div class="stat-info">
+						<div class="stat-value">{{ stats.get('pedidos_pendientes', 0) }}</div>
+						<div class="stat-label">Pedidos Pendientes</div>
+					</div>
+				</div>
+				<div class="stat-card">
+					<div class="stat-icon">📊</div>
+					<div class="stat-info">
+						<div class="stat-value">{{ stats.get('total_pedidos', 0) }}</div>
+						<div class="stat-label">Total Pedidos</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
 		<!-- Sección de categorías removida según requerimiento -->
 
-		<h2>Productos</h2>
+		<h2>Gestionar Productos</h2>
 		<div class="admin-section">
 			<form method="POST" action="{{ url_for('admin_productos_crear') }}" class="admin-form">
 				<input type="text" name="nombre" placeholder="Nombre del producto" required>
-				<input type="text" name="categoria" placeholder="Categoría (texto libre)" required>
+				<select name="categoria" required style="padding: 10px; border-radius: 5px; border: 1px solid #ddd;">
+					<option value="">Seleccionar categoría</option>
+					<option value="desayunos">Desayunos</option>
+					<option value="almuerzos">Almuerzos</option>
+					<option value="cenas">Cenas</option>
+					<option value="meriendas">Meriendas</option>
+					<option value="postres">Postres</option>
+					<option value="bebidas">Bebidas</option>
+					<option value="promociones">Promociones</option>
+				</select>
 				<input type="text" name="imagen" placeholder="URL de imagen" required>
 				<input type="number" name="precio" placeholder="Precio" step="0.01" required>
+				<textarea name="descripcion" placeholder="Ingredientes y descripción" style="padding: 10px; border-radius: 5px; border: 1px solid #ddd; min-height: 80px;"></textarea>
 				<button type="submit">Agregar producto</button>
 			</form>
 			<table class="admin-table">
@@ -48,9 +86,18 @@
 						<td>
 						<form method="POST" action="{{ url_for('admin_productos_actualizar', producto_id=p[0]) }}" class="inline-form">
 								<input type="text" name="nombre" value="{{ p[1] }}" required>
-								<input type="text" name="categoria" value="{{ p[3] or '' }}" required>
+								<select name="categoria" required style="padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
+									<option value="desayunos" {% if p[3] == 'desayunos' %}selected{% endif %}>Desayunos</option>
+									<option value="almuerzos" {% if p[3] == 'almuerzos' %}selected{% endif %}>Almuerzos</option>
+									<option value="cenas" {% if p[3] == 'cenas' %}selected{% endif %}>Cenas</option>
+									<option value="meriendas" {% if p[3] == 'meriendas' %}selected{% endif %}>Meriendas</option>
+									<option value="postres" {% if p[3] == 'postres' %}selected{% endif %}>Postres</option>
+									<option value="bebidas" {% if p[3] == 'bebidas' %}selected{% endif %}>Bebidas</option>
+									<option value="promociones" {% if p[3] == 'promociones' %}selected{% endif %}>Promociones</option>
+								</select>
 								<input type="text" name="imagen" value="{{ p[4] or '' }}" required>
 								<input type="number" name="precio" value="{{ '%.2f' % p[2] }}" step="0.01" required>
+								<textarea name="descripcion" style="padding: 8px; border-radius: 5px; border: 1px solid #ddd; min-height: 60px;">{{ p[5] or '' }}</textarea>
 								<button type="submit">Guardar</button>
 							</form>
 						</td>
@@ -65,49 +112,10 @@
 			</table>
 		</div>
 
-
-		<h2>Mozos</h2>
-		<div class="admin-section">
-			<form method="POST" action="{{ url_for('admin_mozos_crear') }}" class="admin-form">
-				<input type="text" name="nombre" placeholder="Nombre" required>
-				<input type="email" name="email" placeholder="Email">
-				<input type="text" name="telefono" placeholder="Teléfono">
-				<label style="display:inline-flex; align-items:center; gap:6px;">
-					<input type="checkbox" name="activo" checked> Activo
-				</label>
-				<button type="submit">Crear</button>
-			</form>
-			<table class="admin-table">
-				<thead>
-					<tr><th>ID</th><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Activo</th><th>Acciones</th></tr>
-				</thead>
-				<tbody>
-					{% for m in mozos %}
-					<tr>
-						<td>{{ m[0] }}</td>
-						<td colspan="4">
-							<form method="POST" action="{{ url_for('admin_mozos_actualizar', mozo_id=m[0]) }}" class="inline-form">
-								<input type="text" name="nombre" value="{{ m[1] }}" required>
-								<input type="email" name="email" value="{{ m[2] or '' }}">
-								<input type="text" name="telefono" value="{{ m[3] or '' }}">
-								<label style="display:inline-flex; align-items:center; gap:6px;">
-									<input type="checkbox" name="activo" {% if m[4] %}checked{% endif %}> Activo
-								</label>
-								<button type="submit">Guardar</button>
-							</form>
-						</td>
-						<td>
-							<form method="POST" action="{{ url_for('admin_mozos_eliminar', mozo_id=m[0]) }}" onsubmit="return confirm('¿Eliminar mozo?')">
-								<button type="submit" class="btn-danger">Eliminar</button>
-							</form>
-						</td>
-					</tr>
-					{% endfor %}
-				</tbody>
-			</table>
+		<h2>Pedidos</h2>
+		<div style="margin-bottom: 20px;">
+			<a href="{{ url_for('admin_pedidos_list') }}" style="display: inline-block; padding: 10px 20px; background: #713D2A; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">Ver Todos los Pedidos</a>
 		</div>
 	</div>
 </body>
 </html>
-
-

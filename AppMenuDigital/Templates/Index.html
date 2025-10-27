@@ -12,7 +12,9 @@
     <div class="menu-icono" onclick="toggleMenu()">☰</div>
     SABORES QUE TE INVITAN A QUEDARTE
     
-    <div class="user-info"></div>
+    <div class="user-info">
+      <a href="{{ url_for('cart_view') }}" style="background: rgba(255, 255, 255, 0.2); padding: 5px 15px; border-radius: 5px;">🛒 Carrito ({{ cart_count }})</a>
+    </div>
   </div>
 
   <div id="menu-lateral" class="menu-lateral">
@@ -111,7 +113,25 @@
       <div class="container">
         <h2>Desayunos</h2>
         <div class="menu-items">
-          <div class="menu-item">
+          <!-- Productos dinámicos desde BD -->
+          {% if productos_por_categoria.get('desayunos') %}
+            {% for p in productos_por_categoria['desayunos'] %}
+              <div class="menu-item" data-product-id="{{ p[0] }}">
+                <div class="menu-item-image">
+                  {% if p[4] %}
+                    <img src="{{ p[4] }}" alt="{{ p[1] }}">
+                  {% else %}
+                    <img src="{{ url_for('static', filename='images/default-food.png') }}" alt="{{ p[1] }}">
+                  {% endif %}
+                </div>
+                <h4>{{ p[1] }}</h4>
+                <p></p>
+                <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
+              </div>
+            {% endfor %}
+          {% endif %}
+          
+          <div class="menu-item" onclick="addToCartDirectly('Desayuno Continental', 8500, 'desayunos')">
             <div class="menu-item-image">
               <img src="../static/images/continental.png" alt="Desayuno Continental">
             </div>
@@ -119,7 +139,7 @@
             <p>Pan tostado, mermelada, café, y yogurt</p>
             <span class="price">$8.500</span>
           </div>
-          <div class="menu-item">
+          <div class="menu-item" onclick="addToCartDirectly('Huevos Benedictinos', 6000, 'desayunos')">
             <div class="menu-item-image">
               <img src="../static/images/huevos-benedictinos.png" alt="Huevos Benedictinos">
             </div>
@@ -127,7 +147,7 @@
             <p>Huevos pochados sobre pan inglés con salsa holandesa</p>
             <span class="price">$6.000</span>
           </div>
-          <div class="menu-item">
+          <div class="menu-item" onclick="addToCartDirectly('Pancakes con Frutas', 10500, 'desayunos')">
             <div class="menu-item-image">
               <img src="../static/images/Pancakes.jpg" alt="Pancakes con Frutas">
             </div>
@@ -135,7 +155,7 @@
             <p>Pancakes esponjosos con frutas frescas y miel</p>
             <span class="price">$10.500</span>
           </div>
-          <div class="menu-item">
+          <div class="menu-item" onclick="addToCartDirectly('Omelette del Chef', 7000, 'desayunos')">
             <div class="menu-item-image">
               <img src="../static/images/ommelette.jpg" alt="Omelette">
             </div>
@@ -143,7 +163,7 @@
             <p>Huevos batidos con jamón, queso y vegetales frescos</p>
             <span class="price">$7.000</span>
           </div>
-          <div class="menu-item">
+          <div class="menu-item" onclick="addToCartDirectly('Waffles Belgas', 13000, 'desayunos')">
             <div class="menu-item-image">
               <img src="../static/images/waffles.jpg" alt="Waffles Belgas">
             </div>
@@ -151,7 +171,7 @@
             <p>Waffles crujientes con sirope de arce y frutos rojos</p>
             <span class="price">$13.000</span>
           </div>
-          <div class="menu-item">
+          <div class="menu-item" onclick="addToCartDirectly('Tostada Francesa', 9500, 'desayunos')">
             <div class="menu-item-image">
               <img src="../static/images/tostadas.png" alt="Tostada Francesa">
             </div>
@@ -159,21 +179,6 @@
             <p>Pan brioche empapado en huevo con canela y azúcar</p>
             <span class="price">$9.500</span>
           </div>
-          {% if productos_por_categoria and productos_por_categoria.get('desayunos') %}
-            {% for p in productos_por_categoria.get('desayunos') %}
-              <div class="menu-item">
-                <div class="menu-item-image">
-                  {% if p[4] %}
-                    <img src="{{ p[4] }}" alt="{{ p[1] }}">
-                  {% else %}
-                    <img src="{{ url_for('static', filename='default-food.png') }}" alt="{{ p[1] }}">
-                  {% endif %}
-                </div>
-                <h4>{{ p[1] }}</h4>
-                <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
-              </div>
-            {% endfor %}
-          {% endif %}
         </div>
       </div>
     </section>
@@ -183,7 +188,25 @@
       <div class="container">
         <h2>Almuerzos</h2>
         <div class="menu-items">
-          <div class="menu-item">
+          <!-- Productos dinámicos desde BD -->
+          {% if productos_por_categoria.get('almuerzos') %}
+            {% for p in productos_por_categoria['almuerzos'] %}
+              <div class="menu-item" data-product-id="{{ p[0] }}">
+                <div class="menu-item-image">
+                  {% if p[4] %}
+                    <img src="{{ p[4] }}" alt="{{ p[1] }}">
+                  {% else %}
+                    <img src="{{ url_for('static', filename='images/default-food.png') }}" alt="{{ p[1] }}">
+                  {% endif %}
+                </div>
+                <h4>{{ p[1] }}</h4>
+                <p></p>
+                <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
+              </div>
+            {% endfor %}
+          {% endif %}
+          
+          <div class="menu-item" onclick="addToCartDirectly('Pollo a la Plancha', 15000, 'almuerzos')">
             <div class="menu-item-image">
               <img src="../static/images/pollo.png" alt="Pollo a la Plancha y papas fritas">
             </div>
@@ -191,7 +214,7 @@
             <p>Pechuga de pollo con arroz y ensalada mixta</p>
             <span class="price">$15.000</span>
           </div>
-          <div class="menu-item">
+          <div class="menu-item" onclick="addToCartDirectly('Pasta Carbonara', 13500, 'almuerzos')">
             <div class="menu-item-image">
               <img src="../static/images/pasta.png" alt="Pasta Carbonara">
             </div>
@@ -199,7 +222,7 @@
             <p>Spaghetti con tocino, huevo y queso parmesano</p>
             <span class="price">$13.500</span>
           </div>
-          <div class="menu-item">
+          <div class="menu-item" onclick="addToCartDirectly('Hamburguesa Clásica', 14000, 'almuerzos')">
             <div class="menu-item-image">
               <img src="../static/images/hamburguesa.png" alt="Hamburguesa Clásica">
             </div>
@@ -207,7 +230,7 @@
             <p>Carne de res, lechuga, tomate, cebolla y papas fritas</p>
             <span class="price">$14.000</span>
           </div>
-          <div class="menu-item">
+          <div class="menu-item" onclick="addToCartDirectly('Ensalada César Premium', 12500, 'almuerzos')">
             <div class="menu-item-image">
               <img src="../static/images/cesar.png" alt="Ensalada César">
             </div>
@@ -215,7 +238,7 @@
             <p>Lechuga romana, pollo, crutones, parmesano y aderezo césar</p>
             <span class="price">$12.500</span>
           </div>
-          <div class="menu-item">
+          <div class="menu-item" onclick="addToCartDirectly('Wrap de Pollo', 11000, 'almuerzos')">
             <div class="menu-item-image">
               <img src="../static/images/wrap.png" alt="Wrap de Pollo">
             </div>
@@ -223,7 +246,7 @@
             <p>Tortilla de trigo con pollo, vegetales frescos y salsa especial</p>
             <span class="price">$11.000</span>
           </div>
-          <div class="menu-item">
+          <div class="menu-item" onclick="addToCartDirectly('Sándwich Club', 13000, 'almuerzos')">
             <div class="menu-item-image">
               <img src="../static/images/club.png" alt="Sándwich Club">
             </div>
@@ -231,7 +254,7 @@
             <p>Pollo, tocino, lechuga, tomate y mayonesa en pan tostado</p>
             <span class="price">$13.000</span>
           </div>
-          <div class="menu-item">
+          <div class="menu-item" onclick="addToCartDirectly('Pizza Margherita', 16500, 'almuerzos')">
             <div class="menu-item-image">
               <img src="../static/images/pizza.ñpng.avif" alt="Pizza Margherita">
             </div>
@@ -239,7 +262,7 @@
             <p>Masa artesanal con tomate, mozzarella fresca y albahaca</p>
             <span class="price">$16.50</span>
           </div>
-          <div class="menu-item">
+          <div class="menu-item" onclick="addToCartDirectly('Tacos de Carne Asada', 14500, 'almuerzos')">
             <div class="menu-item-image">
               <img src="../static/images/tacos.png" alt="Tacos de Carne">
             </div>
@@ -247,21 +270,6 @@
             <p>Tres tacos con carne asada, cebolla, cilantro y salsas</p>
             <span class="price">$14.500</span>
           </div>
-          {% if productos_por_categoria and productos_por_categoria.get('almuerzos') %}
-            {% for p in productos_por_categoria.get('almuerzos') %}
-              <div class="menu-item">
-                <div class="menu-item-image">
-                  {% if p[4] %}
-                    <img src="{{ p[4] }}" alt="{{ p[1] }}">
-                  {% else %}
-                    <img src="{{ url_for('static', filename='default-food.png') }}" alt="{{ p[1] }}">
-                  {% endif %}
-                </div>
-                <h4>{{ p[1] }}</h4>
-                <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
-              </div>
-            {% endfor %}
-          {% endif %}
         </div>
       </div>
     </section>
@@ -271,7 +279,25 @@
       <div class="container">
         <h2>Cenas</h2>
         <div class="menu-items">
-          <div class="menu-item">
+          <!-- Productos dinámicos desde BD -->
+          {% if productos_por_categoria.get('cenas') %}
+            {% for p in productos_por_categoria['cenas'] %}
+              <div class="menu-item" data-product-id="{{ p[0] }}">
+                <div class="menu-item-image">
+                  {% if p[4] %}
+                    <img src="{{ p[4] }}" alt="{{ p[1] }}">
+                  {% else %}
+                    <img src="{{ url_for('static', filename='images/default-food.png') }}" alt="{{ p[1] }}">
+                  {% endif %}
+                </div>
+                <h4>{{ p[1] }}</h4>
+                <p></p>
+                <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
+              </div>
+            {% endfor %}
+          {% endif %}
+          
+          <div class="menu-item" onclick="addToCartDirectly('Salmon a la Parrilla', 22000, 'cenas')">
             <div class="menu-item-image">
               <img src="../static/images/salmon.png" alt="Salmon a la Parrilla">
             </div>
@@ -279,7 +305,7 @@
             <p>Salmón fresco con vegetales asados y puré de papa</p>
             <span class="price">$22.000</span>
           </div>
-          <div class="menu-item">
+          <div class="menu-item" onclick="addToCartDirectly('Ribeye Steak', 25000, 'cenas')">
             <div class="menu-item-image">
               <img src="../static/images/carne.png" alt="Ribeye Steak">
             </div>
@@ -287,7 +313,7 @@
             <p>Carne de res premium con chimichurri y papas</p>
             <span class="price">$25.00</span>
           </div>
-          <div class="menu-item">
+          <div class="menu-item" onclick="addToCartDirectly('Risotto de Hongos', 18500, 'cenas')">
             <div class="menu-item-image">
               <img src="../static/images/rissoto.png" alt="Risotto de Hongos">
             </div>
@@ -295,7 +321,7 @@
             <p>Arroz cremoso con hongos porcini y queso parmesano</p>
             <span class="price">$18.50</span>
           </div>
-          <div class="menu-item">
+          <div class="menu-item" onclick="addToCartDirectly('Pasta Alfredo', 19000, 'cenas')">
             <div class="menu-item-image">
               <img src="../static/images/alfredo.png" alt="Pasta Alfredo">
             </div>
@@ -303,7 +329,7 @@
             <p>Fettuccine con salsa cremosa de parmesano y pollo</p>
             <span class="price">$19.00</span>
           </div>
-          <div class="menu-item">
+          <div class="menu-item" onclick="addToCartDirectly('Cordero Asado', 28000, 'cenas')">
             <div class="menu-item-image">
               <img src="../static/images/cordero.png" alt="Cordero Asado">
             </div>
@@ -311,7 +337,7 @@
             <p>Pierna de cordero con hierbas aromáticas y vegetales</p>
             <span class="price">$28.00</span>
           </div>
-          <div class="menu-item">
+          <div class="menu-item" onclick="addToCartDirectly('Paella Valenciana', 24500, 'cenas')">
             <div class="menu-item-image">
               <img src="../static/images/paella.png" alt="Paella Valenciana">
             </div>
@@ -319,21 +345,6 @@
             <p>Arroz con mariscos, pollo y vegetales al estilo tradicional</p>
             <span class="price">$24.50</span>
           </div>
-          {% if productos_por_categoria and productos_por_categoria.get('cenas') %}
-            {% for p in productos_por_categoria.get('cenas') %}
-              <div class="menu-item">
-                <div class="menu-item-image">
-                  {% if p[4] %}
-                    <img src="{{ p[4] }}" alt="{{ p[1] }}">
-                  {% else %}
-                    <img src="{{ url_for('static', filename='default-food.png') }}" alt="{{ p[1] }}">
-                  {% endif %}
-                </div>
-                <h4>{{ p[1] }}</h4>
-                <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
-              </div>
-            {% endfor %}
-          {% endif %}
         </div>
       </div>
     </section>
@@ -343,6 +354,24 @@
       <div class="container">
         <h2>Meriendas</h2>
         <div class="menu-items">
+          <!-- Productos dinámicos desde BD -->
+          {% if productos_por_categoria.get('meriendas') %}
+            {% for p in productos_por_categoria['meriendas'] %}
+              <div class="menu-item" data-product-id="{{ p[0] }}">
+                <div class="menu-item-image">
+                  {% if p[4] %}
+                    <img src="{{ p[4] }}" alt="{{ p[1] }}">
+                  {% else %}
+                    <img src="{{ url_for('static', filename='images/default-food.png') }}" alt="{{ p[1] }}">
+                  {% endif %}
+                </div>
+                <h4>{{ p[1] }}</h4>
+                <p></p>
+                <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
+              </div>
+            {% endfor %}
+          {% endif %}
+          
           <div class="menu-item">
             <div class="menu-item-image">
               <img src="../static/images/pankaes.png" alt="Pancakes">
@@ -391,94 +420,33 @@
             <p>carlito con papas copetin</p>
             <span class="price">$6.500</span>
           </div>
-          {% if productos_por_categoria and productos_por_categoria.get('meriendas') %}
-            {% for p in productos_por_categoria.get('meriendas') %}
-              <div class="menu-item">
-                <div class="menu-item-image">
-                  {% if p[4] %}
-                    <img src="{{ p[4] }}" alt="{{ p[1] }}">
-                  {% else %}
-                    <img src="{{ url_for('static', filename='default-food.png') }}" alt="{{ p[1] }}">
-                  {% endif %}
-                </div>
-                <h4>{{ p[1] }}</h4>
-                <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
-              </div>
-            {% endfor %}
-          {% endif %}
         </div>
       </div>
     </section>
 
-    <!-- Postres -->
+    <!-- Postres (dinámico desde DB) -->
     <section id="postres" class="menu-section">
       <div class="container">
         <h2>Postres</h2>
         <div class="menu-items">
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="../static/images/tiramisu.webp" alt="Tiramisu">
-            </div>
-            <h4>Tiramisu</h4>
-            <p>Postre italiano con café y mascarpone</p>
-            <span class="price">$7.50</span>
-          </div>
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="../static/images/cheescake.jpg" alt="Cheesecake de Fresa">
-            </div>
-            <h4>Cheesecake de Fresa</h4>
-            <p>Tarta de queso con coulis de fresa</p>
-            <span class="price">$6.50</span>
-          </div>
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=400&h=300&fit=crop" alt="Brownie con Helado">
-            </div>
-            <h4>Brownie con Helado</h4>
-            <p>Brownie de chocolate con helado de vainilla</p>
-            <span class="price">$8.00</span>
-          </div>
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="../static/images/fla.png" alt="Flan de Caramelo">
-            </div>
-            <h4>Flan de Caramelo</h4>
-            <p>Postre tradicional con caramelo líquido</p>
-            <span class="price">$5.50</span>
-          </div>
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="../static/images/prosfitelores.png" alt="Profiteroles">
-            </div>
-            <h4>Profiteroles</h4>
-            <p>Bolitas de masa con helado y chocolate</p>
-            <span class="price">$9.00</span>
-          </div>
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="../static/images/manzana.png" alt="Tarta de Manzana">
-            </div>
-            <h4>Tarta de Manzana</h4>
-            <p>Masa hojaldrada con manzanas y canela</p>
-            <span class="price">$7.00</span>
-          </div>
-
-          {% if postres %}
-            {% for p in postres %}
-              <div class="menu-item">
+          <!-- Productos dinámicos desde BD -->
+          {% if productos_por_categoria.get('postres') %}
+            {% for p in productos_por_categoria['postres'] %}
+              <div class="menu-item" data-product-id="{{ p[0] }}">
                 <div class="menu-item-image">
                   {% if p[4] %}
                     <img src="{{ p[4] }}" alt="{{ p[1] }}">
                   {% else %}
-                    <img src="{{ url_for('static', filename='default-food.png') }}" alt="{{ p[1] }}">
+                    <img src="{{ url_for('static', filename='images/default-food.png') }}" alt="{{ p[1] }}">
                   {% endif %}
                 </div>
                 <h4>{{ p[1] }}</h4>
+                <p></p>
                 <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
               </div>
             {% endfor %}
           {% endif %}
+          
         </div>
       </div>
     </section>
@@ -487,6 +455,26 @@
     <section id="bebidas" class="menu-section">
       <div class="container">
         <h2>Bebidas</h2>
+        
+        <!-- Productos dinámicos desde BD -->
+        {% if productos_por_categoria.get('bebidas') %}
+          <div class="menu-items">
+            {% for p in productos_por_categoria['bebidas'] %}
+              <div class="menu-item" data-product-id="{{ p[0] }}">
+                <div class="menu-item-image">
+                  {% if p[4] %}
+                    <img src="{{ p[4] }}" alt="{{ p[1] }}">
+                  {% else %}
+                    <img src="{{ url_for('static', filename='images/default-food.png') }}" alt="{{ p[1] }}">
+                  {% endif %}
+                </div>
+                <h4>{{ p[1] }}</h4>
+                <p></p>
+                <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
         
         <!-- Bebidas Frías -->
         <div class="beverage-category">
@@ -540,21 +528,6 @@
               <p>Té negro o verde con limón y menta</p>
               <span class="price">$2.50</span>
             </div>
-            {% if productos_por_categoria and productos_por_categoria.get('bebidas') %}
-              {% for p in productos_por_categoria.get('bebidas') %}
-                <div class="menu-item">
-                  <div class="menu-item-image">
-                    {% if p[4] %}
-                      <img src="{{ p[4] }}" alt="{{ p[1] }}">
-                    {% else %}
-                      <img src="{{ url_for('static', filename='default-food.png') }}" alt="{{ p[1] }}">
-                    {% endif %}
-                  </div>
-                  <h4>{{ p[1] }}</h4>
-                  <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
-                </div>
-              {% endfor %}
-            {% endif %}
           </div>
         </div>
 
@@ -675,6 +648,24 @@
       <div class="container">
         <h2>Promociones del Día</h2>
         <div class="menu-items">
+          <!-- Productos dinámicos desde BD -->
+          {% if productos_por_categoria.get('promociones') %}
+            {% for p in productos_por_categoria['promociones'] %}
+              <div class="menu-item promo-item" data-product-id="{{ p[0] }}">
+                <div class="menu-item-image">
+                  {% if p[4] %}
+                    <img src="{{ p[4] }}" alt="{{ p[1] }}">
+                  {% else %}
+                    <img src="{{ url_for('static', filename='images/default-food.png') }}" alt="{{ p[1] }}">
+                  {% endif %}
+                </div>
+                <h4>{{ p[1] }}</h4>
+                <p></p>
+                <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
+              </div>
+            {% endfor %}
+          {% endif %}
+          
           <div class="menu-item promo-item">
             <div class="menu-item-image">
               <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Combo Desayuno">
@@ -864,5 +855,253 @@
       });
     });
   </script>
+
+  <!-- Modal de detalle de producto -->
+  <div id="productModal" class="product-modal" style="display: none;">
+    <div class="modal-content">
+      <span class="close-modal" onclick="closeProductModal()">&times;</span>
+      <div id="modalContent">
+        <div class="modal-product-image">
+          <img id="modalProductImage" src="" alt="">
+        </div>
+        <h2 id="modalProductName"></h2>
+        <div class="modal-product-price">$<span id="modalProductPrice"></span></div>
+        <div class="modal-product-description">
+          <p id="modalProductDescription"></p>
+        </div>
+        <div class="modal-add-to-cart">
+          <label for="quantity">Cantidad:</label>
+          <input type="number" id="quantity" name="quantity" min="1" value="1" style="width: 80px; padding: 8px; margin: 10px;">
+          <button onclick="addToCartFromModal()" class="btn-add-cart">Añadir al carrito</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentProduct = null;
+
+    function showProductDetail(productId) {
+      fetch(`/api/producto/${productId}`)
+        .then(response => response.json())
+        .then(data => {
+          currentProduct = data;
+          document.getElementById('modalProductImage').src = data.imagen || '{{ url_for("static", filename="images/default-food.png") }}';
+          document.getElementById('modalProductName').textContent = data.nombre;
+          document.getElementById('modalProductPrice').textContent = data.precio.toLocaleString('es-CL');
+          document.getElementById('modalProductDescription').textContent = data.descripcion || 'Sin descripción disponible';
+          document.getElementById('productModal').style.display = 'block';
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Error al cargar el producto');
+        });
+    }
+
+    function closeProductModal() {
+      document.getElementById('productModal').style.display = 'none';
+      currentProduct = null;
+      document.getElementById('quantity').value = 1;
+    }
+
+    function addToCartFromModal() {
+      if (!currentProduct) return;
+      const quantity = parseInt(document.getElementById('quantity').value);
+      
+      // Crear formulario para añadir al carrito
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = `/cart/add/${currentProduct.id}`;
+      
+      const qtyInput = document.createElement('input');
+      qtyInput.type = 'hidden';
+      qtyInput.name = 'qty';
+      qtyInput.value = quantity;
+      form.appendChild(qtyInput);
+      
+      document.body.appendChild(form);
+      form.submit();
+    }
+
+    function addToCartDirectly(productName, price, categoria) {
+      // Mostrar confirmación
+      const quantity = prompt(`¿Cuántas unidades de "${productName}" deseas agregar?`, '1');
+      
+      if (!quantity || isNaN(quantity) || parseInt(quantity) <= 0) {
+        alert('Por favor, ingresa una cantidad válida');
+        return;
+      }
+
+      // Crear formulario para añadir al carrito vía POST especial
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = '/cart/add/temp';
+      
+      const nameInput = document.createElement('input');
+      nameInput.type = 'hidden';
+      nameInput.name = 'nombre';
+      nameInput.value = productName;
+      form.appendChild(nameInput);
+      
+      const priceInput = document.createElement('input');
+      priceInput.type = 'hidden';
+      priceInput.name = 'precio';
+      priceInput.value = price;
+      form.appendChild(priceInput);
+      
+      const qtyInput = document.createElement('input');
+      qtyInput.type = 'hidden';
+      qtyInput.name = 'qty';
+      qtyInput.value = quantity;
+      form.appendChild(qtyInput);
+      
+      const catInput = document.createElement('input');
+      catInput.type = 'hidden';
+      catInput.name = 'categoria';
+      catInput.value = categoria;
+      form.appendChild(catInput);
+      
+      document.body.appendChild(form);
+      form.submit();
+    }
+
+    // Cerrar modal al hacer clic fuera
+    window.onclick = function(event) {
+      const modal = document.getElementById('productModal');
+      if (event.target == modal) {
+        closeProductModal();
+      }
+    }
+
+    // Agregar event listeners a los productos para abrir el modal
+    document.addEventListener('DOMContentLoaded', function() {
+      // Agregar onclick a los productos dinámicos
+      const menuItems = document.querySelectorAll('.menu-item');
+      menuItems.forEach(item => {
+        // Añadir cursor pointer
+        item.style.cursor = 'pointer';
+        item.onclick = function() {
+          const productId = this.getAttribute('data-product-id');
+          if (productId) {
+            showProductDetail(productId);
+          }
+        };
+      });
+    });
+  </script>
+
+  <style>
+    .product-modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.7);
+    }
+
+    .modal-content {
+      background-color: #fff;
+      margin: 5% auto;
+      padding: 30px;
+      border-radius: 15px;
+      width: 90%;
+      max-width: 600px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      position: relative;
+      animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+      from {
+        transform: translateY(-50px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .close-modal {
+      position: absolute;
+      right: 20px;
+      top: 15px;
+      font-size: 35px;
+      font-weight: bold;
+      color: #713D2A;
+      cursor: pointer;
+    }
+
+    .close-modal:hover {
+      color: #8B5A3C;
+    }
+
+    .modal-product-image {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-product-image img {
+      width: 100%;
+      max-height: 300px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+
+    .modal-product-price {
+      font-size: 28px;
+      font-weight: bold;
+      color: #713D2A;
+      margin: 15px 0;
+    }
+
+    .modal-product-description {
+      margin: 20px 0;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      min-height: 80px;
+    }
+
+    .modal-product-description p {
+      margin: 0;
+      color: #666;
+      line-height: 1.6;
+    }
+
+    .modal-add-to-cart {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-top: 25px;
+      padding-top: 20px;
+      border-top: 2px solid #f0f0f0;
+    }
+
+    .modal-add-to-cart label {
+      font-weight: bold;
+      color: #713D2A;
+    }
+
+    .btn-add-cart {
+      background-color: #713D2A;
+      color: white;
+      padding: 12px 30px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      transition: background-color 0.3s;
+    }
+
+    .btn-add-cart:hover {
+      background-color: #8B5A3C;
+    }
+  </style>
 </body>
 </html>

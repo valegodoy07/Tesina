@@ -531,6 +531,7 @@ def ensure_client_orders_tables():
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 usuario_id INT NULL,
                 estado VARCHAR(20) DEFAULT 'pendiente',
+                mesa VARCHAR(50) NULL,
                 creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (usuario_id) REFERENCES usuarios(idusuario)
             )
@@ -607,12 +608,21 @@ def cart_view():
 @app.route('/cart/add/<int:producto_id>', methods=['POST'])
 def cart_add(producto_id: int):
     qty = int(request.form.get('qty', '1'))
+    mesa = request.form.get('mesa', '')
     cart = _get_cart()
     key = str(producto_id)
+    
+    # Guardar la mesa en la sesión si no existe ya
+    if mesa and 'mesa_carrito' not in session:
+        session['mesa_carrito'] = mesa
+    elif not mesa and 'mesa_carrito' in session:
+        mesa = session['mesa_carrito']
+    
     if key in cart:
         cart[key]['qty'] = int(cart[key].get('qty', 1)) + qty
     else:
         cart[key] = {'qty': qty}
+    
     session['cart'] = cart
     flash('Producto agregado al carrito', 'success')
     return redirect(request.referrer or url_for('menu'))
@@ -678,26 +688,49 @@ def cart_checkout():
     if not cart:
         flash('El carrito está vacío', 'error')
         return redirect(url_for('cart_view'))
+    
+    # Obtener la mesa del formulario
+    mesa = request.form.get('mesa', '').strip()
+    if not mesa:
+        flash('Debes indicar el número de mesa', 'error')
+        return redirect(url_for('cart_view'))
+    
     ensure_client_orders_tables()
     try:
         cur = mysql.connection.cursor()
-        cur.execute("INSERT INTO pedidos (usuario_id, estado) VALUES (%s, %s)", (session.get('user_id'), 'pendiente'))
+        # Verificar si la columna mesa existe, si no, agregarla
+        try:
+            cur.execute("DESCRIBE pedidos")
+            cols = [row[0].lower() for row in cur.fetchall()]
+            if 'mesa' not in cols:
+                cur.execute("ALTER TABLE pedidos ADD COLUMN mesa VARCHAR(50) NULL")
+                mysql.connection.commit()
+        except Exception:
+            pass
+        
+        cur.execute("INSERT INTO pedidos (usuario_id, estado, mesa) VALUES (%s, %s, %s)", (session.get('user_id'), 'pendiente', mesa))
         pedido_id = cur.lastrowid
         for pid, entry in cart.items():
-            cur.execute("SELECT Precio FROM menu WHERE id=%s", (pid,))
-            row = cur.fetchone()
-            if not row:
+            try:
+                int(pid)  # Verificar que es un ID válido
+                cur.execute("SELECT Precio FROM menu WHERE id=%s", (pid,))
+                row = cur.fetchone()
+                if not row:
+                    continue
+                precio = float(row[0])
+                cantidad = int(entry.get('qty', 1))
+                cur.execute(
+                    "INSERT INTO pedido_items (pedido_id, menu_id, cantidad, precio_unitario) VALUES (%s, %s, %s, %s)",
+                    (pedido_id, pid, cantidad, precio)
+                )
+            except ValueError:
+                # Ignorar IDs no numéricos (productos temporales)
                 continue
-            precio = float(row[0])
-            cantidad = int(entry.get('qty', 1))
-            cur.execute(
-                "INSERT INTO pedido_items (pedido_id, menu_id, cantidad, precio_unitario) VALUES (%s, %s, %s, %s)",
-                (pedido_id, pid, cantidad, precio)
-            )
         mysql.connection.commit()
         cur.close()
-        # Vaciar carrito
+        # Vaciar carrito y mesa
         session['cart'] = {}
+        session.pop('mesa_carrito', None)
         flash('Pedido enviado correctamente', 'success')
     except Exception as e:
         print(f"Error en checkout: {e}")
@@ -740,9 +773,19 @@ def admin_pedidos_list():
     pedidos = []
     try:
         cur = mysql.connection.cursor()
+        # Verificar si la columna mesa existe
+        try:
+            cur.execute("DESCRIBE pedidos")
+            cols = [row[0].lower() for row in cur.fetchall()]
+            if 'mesa' not in cols:
+                cur.execute("ALTER TABLE pedidos ADD COLUMN mesa VARCHAR(50) NULL")
+                mysql.connection.commit()
+        except Exception:
+            pass
+        
         cur.execute("""
             SELECT p.id, p.usuario_id, p.estado, p.creado_en, COALESCE(u.nombre, ''), 
-                   (SELECT COUNT(*) FROM pedido_items WHERE pedido_id = p.id) as total_items
+                   COALESCE(p.mesa, ''), (SELECT COUNT(*) FROM pedido_items WHERE pedido_id = p.id) as total_items
             FROM pedidos p 
             LEFT JOIN usuarios u ON p.usuario_id=u.idusuario 
             ORDER BY p.id DESC

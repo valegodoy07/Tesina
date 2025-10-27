@@ -26,6 +26,7 @@
             <thead>
                 <tr>
                     <th>ID Pedido</th>
+                    <th>Mesa</th>
                     <th>Cliente</th>
                     <th>Items</th>
                     <th>Estado</th>
@@ -38,6 +39,7 @@
                 {% for p in pedidos %}
                 <tr>
                     <td><strong>#{{ p[0] }}</strong></td>
+                    <td><strong style="color: #713D2A;">{{ p[5] or 'N/A' }}</strong></td>
                     <td>{{ p[4] or 'Anónimo' }}</td>
                     <td>
                         {% if p|length > 6 and p[6] %}

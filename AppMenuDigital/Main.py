@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from functools import wraps
-from flask_mysqldb import MySQL
+import pymysql
 from werkzeug.security import generate_password_hash, check_password_hash
 from config import Config
 import os
@@ -15,10 +15,36 @@ app.config['MYSQL_USER'] = Config.MYSQL_USER
 app.config['MYSQL_PASSWORD'] = Config.MYSQL_PASSWORD
 app.config['MYSQL_DB'] = Config.MYSQL_DB
 
+# Clase MySQL personalizada usando pymysql
+class MySQL:
+    def __init__(self, app=None):
+        self.app = app
+    
+    @property
+    def connection(self):
+        return pymysql.connect(
+            host=self.app.config['localhost'],
+            port=self.app.config['MYSQL_PORT'],
+            user=self.app.config['ROOT'],
+            password=self.app.config['ROOT'],
+            database=self.app.config['menu_digital'],
+            cursorclass=pymysql.cursors.DictCursor,
+            autocommit=False
+        )
+mysql = MySQL(app)
 # (revert) Sin configuración de subida de imágenes
 
 # Inicializar MySQL
-mysql = MySQL(app)
+# Función para obtener conexión a la base de datos
+def get_db_connection():
+    connection = pymysql.connect(
+        host=app.config['MYSQL_HOST'],
+        user=app.config['MYSQL_USER'],
+        password=app.config['MYSQL_PASSWORD'],
+        database=app.config['MYSQL_DB'],
+        cursorclass=pymysql.cursors.DictCursor
+    )
+    return connection
 
 # (revert) Sin inicialización automática de tablas
 # Context processor to expose cart count in all templates

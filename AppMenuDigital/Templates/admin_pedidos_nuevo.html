@@ -66,16 +66,25 @@
                     <td>{{ p[4].strftime('%d/%m/%Y %H:%M') if p[4] else 'N/A' }}</td>
                     <td><strong>${{ '%.2f'|format(p[6]) }}</strong></td>
                     <td>
-                        <form method="POST" action="{{ url_for('admin_pedido_cambiar_estado', pedido_id=p[0]) }}" style="display: inline-flex; gap: 5px; align-items: center;">
-                            <select name="estado" style="padding: 5px; border-radius: 5px; border: 1px solid #ddd;">
-                                <option value="pendiente" {% if p[3]=='pendiente' %}selected{% endif %}>Pendiente</option>
-                                <option value="en_preparacion" {% if p[3]=='en_preparacion' %}selected{% endif %}>En Preparación</option>
-                                <option value="listo" {% if p[3]=='listo' %}selected{% endif %}>Listo</option>
-                                <option value="entregado" {% if p[3]=='entregado' %}selected{% endif %}>Entregado</option>
-                                <option value="cancelado" {% if p[3]=='cancelado' %}selected{% endif %}>Cancelado</option>
-                            </select>
-                            <button type="submit" style="padding: 5px 15px; background: #713D2A; color: white; border: none; border-radius: 5px; cursor: pointer;">Actualizar</button>
-                        </form>
+                        <div style="display:flex; gap:8px; align-items:center; flex-wrap: wrap;">
+                            <form method="POST" action="{{ url_for('admin_pedido_cambiar_estado', pedido_id=p[0]) }}" style="display: inline-flex; gap: 5px; align-items: center;">
+                                <select name="estado" style="padding: 5px; border-radius: 5px; border: 1px solid #ddd;">
+                                    <option value="pendiente" {% if p[3]=='pendiente' %}selected{% endif %}>Pendiente</option>
+                                    <option value="en_preparacion" {% if p[3]=='en_preparacion' %}selected{% endif %}>En Preparación</option>
+                                    <option value="listo" {% if p[3]=='listo' %}selected{% endif %}>Listo</option>
+                                    <option value="entregado" {% if p[3]=='entregado' %}selected{% endif %}>Entregado</option>
+                                    <option value="cancelado" {% if p[3]=='cancelado' %}selected{% endif %}>Cancelado</option>
+                                </select>
+                                <button type="submit" style="padding: 5px 15px; background: #713D2A; color: white; border: none; border-radius: 5px; cursor: pointer;">Actualizar</button>
+                            </form>
+                            {% if p[3] == 'entregado' %}
+                            <form method="POST" action="{{ url_for('admin_pedido_eliminar', pedido_id=p[0]) }}" onsubmit="return confirm('¿Eliminar pedido #{{ p[0] }}? Esta acción no se puede deshacer.');">
+                                <button type="submit" style="padding: 5px 15px; background: #d63031; color: white; border: none; border-radius: 5px; cursor: pointer;">Eliminar</button>
+                            </form>
+                            {% else %}
+                            <span style="color:#999; font-size:12px;">Para eliminar: marcar como Entregado</span>
+                            {% endif %}
+                        </div>
                     </td>
                 </tr>
                 {% endfor %}

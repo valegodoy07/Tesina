@@ -839,6 +839,36 @@ def admin_pedido_cambiar_estado(pedido_id: int):
         flash('Error al actualizar estado del pedido', 'error')
     return redirect(url_for('admin_pedidos_nuevo'))
 
+# Eliminar pedido (solo si ya fue entregado)
+@app.route('/admin/pedidos/<int:pedido_id>/eliminar', methods=['POST'])
+@admin_required
+def admin_pedido_eliminar(pedido_id: int):
+    try:
+        cur = mysql.connection.cursor()
+        # Verificar estado del pedido
+        cur.execute("SELECT estado FROM pedidos WHERE id=%s", (pedido_id,))
+        row = cur.fetchone()
+        if not row:
+            cur.close()
+            flash('Pedido no encontrado', 'error')
+            return redirect(url_for('admin_pedidos_nuevo'))
+        estado = (row[0] or '').lower()
+        if estado != 'entregado':
+            cur.close()
+            flash('Solo se pueden eliminar pedidos entregados', 'error')
+            return redirect(url_for('admin_pedidos_nuevo'))
+
+        # Borrar primero items, luego pedido
+        cur.execute("DELETE FROM pedido_items WHERE pedido_id=%s", (pedido_id,))
+        cur.execute("DELETE FROM pedidos WHERE id=%s", (pedido_id,))
+        mysql.connection.commit()
+        cur.close()
+        flash('Pedido eliminado', 'success')
+    except Exception as e:
+        print(f"Error eliminando pedido {pedido_id}: {e}")
+        flash('Error al eliminar pedido', 'error')
+    return redirect(url_for('admin_pedidos_nuevo'))
+
 # ===== CRUD Mozos =====
 @app.route('/admin/mozos/crear', methods=['POST'])
 @admin_required

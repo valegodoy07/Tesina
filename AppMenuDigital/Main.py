@@ -41,14 +41,14 @@ def inject_cart_count():
 @app.route('/')
 def index():
     # Cargar dinámicamente productos por categoría para el Index (se agregan al final del bloque hardcodeado)
-    categorias = ['desayunos', 'almuerzos', 'cenas', 'meriendas', 'postres', 'bebidas', 'promociones']
+    categorias = ['desayunos', 'almuerzos', 'cenas', 'meriendas', 'postres', 'bebidas', 'comida_sin_tac', 'promociones']
     productos_por_categoria = {c: [] for c in categorias}
     try:
         cur = mysql.connection.cursor()
         cur.execute("""
             SELECT id, Nombre_Menu, Precio, LOWER(COALESCE(Categoria, '')) as cat, COALESCE(Imagen, ''), COALESCE(Descripcion, '')
             FROM menu
-            WHERE LOWER(COALESCE(Categoria, '')) IN ('desayunos','almuerzos','cenas','meriendas','postres','bebidas','promociones')
+            WHERE LOWER(COALESCE(Categoria, '')) IN ('desayunos','almuerzos','cenas','meriendas','postres','bebidas','comida_sin_tac','promociones')
             ORDER BY id DESC
         """)
         filas = cur.fetchall()
@@ -83,7 +83,7 @@ def menu():
 def categoria(nombre: str):
     # Normalizamos nombre para plantilla
     nombre_lower = nombre.lower()
-    categorias_validas = ['desayunos', 'almuerzos', 'meriendas', 'cenas', 'postres', 'bebidas', 'promociones']
+    categorias_validas = ['desayunos', 'almuerzos', 'meriendas', 'cenas', 'postres', 'bebidas', 'comida_sin_tac', 'promociones']
     if nombre_lower not in categorias_validas:
         flash('Categoría no encontrada', 'error')
         return redirect(url_for('index'))

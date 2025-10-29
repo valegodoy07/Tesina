@@ -96,6 +96,13 @@
           <p>Refrescantes y deliciosas</p>
         </div>
 
+        <!-- Comida sin TAC -->
+        <div class="category-card" onclick="toggleCategory('comida_sin_tac')">
+          <div class="category-icon"></div>
+          <h3>Comida sin TAC</h3>
+          <p>Opciones libres de gluten</p>
+        </div>
+
         <!-- Promociones -->
         <div class="category-card promotion-card" onclick="toggleCategory('promociones')">
           <div class="category-icon"></div>
@@ -264,6 +271,32 @@
             {% endfor %}
           </div>
         {% endif %}
+      </div>
+    </section>
+
+    <!-- Comida sin TAC -->
+    <section id="comida_sin_tac" class="menu-section">
+      <div class="container">
+        <h2>Comida sin TAC</h2>
+        <div class="menu-items">
+          <!-- Productos dinámicos desde BD -->
+          {% if productos_por_categoria.get('comida_sin_tac') %}
+            {% for p in productos_por_categoria['comida_sin_tac'] %}
+              <div class="menu-item" data-product-id="{{ p[0] }}">
+                <div class="menu-item-image">
+                  {% if p[4] %}
+                    <img src="{{ p[4] }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
+                  {% else %}
+                    <img src="{{ url_for('static', filename='images/default-food.png') }}" alt="{{ p[1] }}" loading="lazy">
+                  {% endif %}
+                </div>
+                <h4>{{ p[1] }}</h4>
+                <p></p>
+                <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
+              </div>
+            {% endfor %}
+          {% endif %}
+        </div>
       </div>
     </section>
 

@@ -68,6 +68,7 @@
 					<option value="meriendas">Meriendas</option>
 					<option value="postres">Postres</option>
 					<option value="bebidas">Bebidas</option>
+					<option value="comida_sin_tac">Comida sin TAC</option>
 					<option value="promociones">Promociones</option>
 				</select>
 				<input type="text" name="imagen" id="imagen-crear" placeholder="URL de imagen o enlace de Google Drive" required>
@@ -96,6 +97,7 @@
 									<option value="meriendas" {% if p[3] == 'meriendas' %}selected{% endif %}>Meriendas</option>
 									<option value="postres" {% if p[3] == 'postres' %}selected{% endif %}>Postres</option>
 									<option value="bebidas" {% if p[3] == 'bebidas' %}selected{% endif %}>Bebidas</option>
+									<option value="comida_sin_tac" {% if p[3] == 'comida_sin_tac' %}selected{% endif %}>Comida sin TAC</option>
 									<option value="promociones" {% if p[3] == 'promociones' %}selected{% endif %}>Promociones</option>
 								</select>
 								<input type="text" name="imagen" class="imagen-editar" value="{{ p[4] or '' }}" required>
@@ -104,9 +106,18 @@
 								<button type="submit">Guardar</button>
 							</form>
 						</td>
+						<td style="text-transform: capitalize;">{{ p[3] or 'Sin categoría' }}</td>
 						<td>
-							<form method="POST" action="{{ url_for('admin_productos_eliminar', producto_id=p[0]) }}" onsubmit="return confirm('¿Eliminar producto?')">
-								<button type="submit" class="btn-danger">Eliminar</button>
+							{% if p[4] %}
+								<img src="{{ p[4] }}" alt="{{ p[1] }}" style="max-width: 80px; max-height: 80px; border-radius: 5px; object-fit: cover; border: 2px solid #ddd;">
+							{% else %}
+								<span style="color: #999; font-size: 12px;">Sin imagen</span>
+							{% endif %}
+						</td>
+						<td><strong style="color: #713D2A;">${{ '%.2f'|format(p[2]) }}</strong></td>
+						<td>
+							<form method="POST" action="{{ url_for('admin_productos_eliminar', producto_id=p[0]) }}" onsubmit="return confirm('¿Estás seguro de eliminar el producto \"{{ p[1] }}\"?\n\nEsta acción no se puede deshacer.');" style="display: inline;">
+								<button type="submit" style="padding: 10px 20px; background: #d63031; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">🗑️ Eliminar</button>
 							</form>
 						</td>
 					</tr>

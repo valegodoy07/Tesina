@@ -256,7 +256,7 @@ def ensure_pedidos_tables():
         cur = mysql.connection.cursor()
         cur.execute(
             """
-            CREATE TABLE IF NOT EXISTS pedidos (
+            CREATE TABLE IF NOT EXISTS pedidos_mozo (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 mozo_id INT NOT NULL,
                 mesa VARCHAR(20) NOT NULL,
@@ -269,12 +269,12 @@ def ensure_pedidos_tables():
         )
         cur.execute(
             """
-            CREATE TABLE IF NOT EXISTS pedido_items (
+            CREATE TABLE IF NOT EXISTS pedido_items_mozo (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 pedido_id INT NOT NULL,
                 producto_id INT NOT NULL,
                 cantidad INT NOT NULL DEFAULT 1,
-                FOREIGN KEY (pedido_id) REFERENCES pedidos(id),
+                FOREIGN KEY (pedido_id) REFERENCES pedidos_mozo(id),
                 FOREIGN KEY (producto_id) REFERENCES productos(id)
             )
             """
@@ -315,6 +315,11 @@ def ensure_menu_table_upgrade():
 @admin_required
 def admin_dashboard():
     try:
+        # Asegurar tablas necesarias para métricas
+        try:
+            ensure_client_orders_tables()
+        except Exception:
+            pass
         ensure_menu_table_upgrade()
         cur = mysql.connection.cursor()
         
@@ -362,7 +367,7 @@ def mozo_dashboard():
     ensure_pedidos_tables()
     try:
         cur = mysql.connection.cursor()
-        cur.execute("SELECT id, mesa, estado, notas, creado_en FROM pedidos WHERE mozo_id=%s ORDER BY id DESC", (session['mozo_id'],))
+        cur.execute("SELECT id, mesa, estado, notas, creado_en FROM pedidos_mozo WHERE mozo_id=%s ORDER BY id DESC", (session['mozo_id'],))
         pedidos = cur.fetchall()
         cur.close()
         return render_template('mozo.html', pedidos=pedidos)
@@ -382,7 +387,7 @@ def mozo_pedido_crear():
         return redirect(url_for('mozo_dashboard'))
     try:
         cur = mysql.connection.cursor()
-        cur.execute("INSERT INTO pedidos (mozo_id, mesa, notas) VALUES (%s, %s, %s)", (session['mozo_id'], mesa, notas))
+        cur.execute("INSERT INTO pedidos_mozo (mozo_id, mesa, notas) VALUES (%s, %s, %s)", (session['mozo_id'], mesa, notas))
         mysql.connection.commit()
         cur.close()
         flash('Pedido creado', 'success')
@@ -397,7 +402,7 @@ def mozo_pedido_estado(pedido_id: int):
     nuevo_estado = request.form.get('estado', 'abierto')
     try:
         cur = mysql.connection.cursor()
-        cur.execute("UPDATE pedidos SET estado=%s WHERE id=%s AND mozo_id=%s", (nuevo_estado, pedido_id, session['mozo_id']))
+        cur.execute("UPDATE pedidos_mozo SET estado=%s WHERE id=%s AND mozo_id=%s", (nuevo_estado, pedido_id, session['mozo_id']))
         mysql.connection.commit()
         cur.close()
         flash('Estado actualizado', 'success')
@@ -766,14 +771,12 @@ def api_producto(producto_id):
         return jsonify({'error': 'Error al obtener producto'}), 500
 
 # ===== Vista de pedidos para administrador =====
-@app.route('/admin/pedidos')
+@app.route('/admin/pedidos-nuevo')
 @admin_required
-def admin_pedidos_list():
+def admin_pedidos_nuevo():
     ensure_client_orders_tables()
-    pedidos = []
     try:
         cur = mysql.connection.cursor()
-        # Verificar si la columna mesa existe
         try:
             cur.execute("DESCRIBE pedidos")
             cols = [row[0].lower() for row in cur.fetchall()]
@@ -782,49 +785,44 @@ def admin_pedidos_list():
                 mysql.connection.commit()
         except Exception:
             pass
-        
-        cur.execute("""
-            SELECT p.id, p.usuario_id, p.estado, p.creado_en, COALESCE(u.nombre, ''), 
-                   COALESCE(p.mesa, ''), (SELECT COUNT(*) FROM pedido_items WHERE pedido_id = p.id) as total_items
-            FROM pedidos p 
-            LEFT JOIN usuarios u ON p.usuario_id=u.idusuario 
+
+        cur.execute(
+            """
+            SELECT p.id, COALESCE(p.mesa, '') AS mesa, COALESCE(u.nombre, '') AS cliente,
+                   p.estado, p.creado_en
+            FROM pedidos p
+            LEFT JOIN usuarios u ON p.usuario_id = u.idusuario
             ORDER BY p.id DESC
-        """)
-        pedidos = cur.fetchall()
-        
-        # Obtener detalles de cada pedido
-        pedidos_con_detalles = []
-        for pedido in pedidos:
-            pedido_id = pedido[0]
+            """
+        )
+        base_rows = cur.fetchall()
+
+        pedidos = []
+        for row in base_rows:
+            pedido_id = row[0]
             try:
-                cur.execute("""
+                cur.execute(
+                    """
                     SELECT pi.cantidad, pi.precio_unitario, m.Nombre_Menu
                     FROM pedido_items pi
                     JOIN menu m ON pi.menu_id = m.id
                     WHERE pi.pedido_id = %s
-                """, (pedido_id,))
+                    """,
+                    (pedido_id,)
+                )
                 items = cur.fetchall()
-                
-                # Calcular total
-                total = sum(float(item[0]) * float(item[1]) for item in items)
-                
-                # Agregar items y total al pedido
-                pedido_list = list(pedido)
-                pedido_list.append(items)
-                pedido_list.append(total)
-                pedidos_con_detalles.append(tuple(pedido_list))
-            except Exception as e:
-                print(f"Error obteniendo items del pedido {pedido_id}: {e}")
-                pedido_list = list(pedido)
-                pedido_list.append([])
-                pedido_list.append(0.0)
-                pedidos_con_detalles.append(tuple(pedido_list))
-        
+                total = sum(float(it[0]) * float(it[1]) for it in items)
+            except Exception:
+                items = []
+                total = 0.0
+
+            pedidos.append((row[0], row[1], row[2], row[3], row[4], items, total))
+
         cur.close()
     except Exception as e:
-        print(f"Error listando pedidos: {e}")
-        pedidos_con_detalles = []
-    return render_template('admin_pedidos.html', pedidos=pedidos_con_detalles)
+        print(f"Error listando pedidos nuevo: {e}")
+        pedidos = []
+    return render_template('admin_pedidos_nuevo.html', pedidos=pedidos)
 
 @app.route('/admin/pedidos/<int:pedido_id>/estado', methods=['POST'])
 @admin_required
@@ -839,7 +837,7 @@ def admin_pedido_cambiar_estado(pedido_id: int):
     except Exception as e:
         print(f"Error actualizando estado de pedido: {e}")
         flash('Error al actualizar estado del pedido', 'error')
-    return redirect(url_for('admin_pedidos_list'))
+    return redirect(url_for('admin_pedidos_nuevo'))
 
 # ===== CRUD Mozos =====
 @app.route('/admin/mozos/crear', methods=['POST'])

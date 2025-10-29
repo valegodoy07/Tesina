@@ -70,7 +70,10 @@
 					<option value="bebidas">Bebidas</option>
 					<option value="promociones">Promociones</option>
 				</select>
-				<input type="text" name="imagen" placeholder="URL de imagen" required>
+				<input type="text" name="imagen" id="imagen-crear" placeholder="URL de imagen o enlace de Google Drive" required>
+				<small style="color: #666; font-size: 12px; display: block; margin-top: 5px;">
+					💡 Puedes pegar un enlace de Google Drive y se convertirá automáticamente
+				</small>
 				<input type="number" name="precio" placeholder="Precio" step="0.01" required>
 				<textarea name="descripcion" placeholder="Ingredientes y descripción" style="padding: 10px; border-radius: 5px; border: 1px solid #ddd; min-height: 80px;"></textarea>
 				<button type="submit">Agregar producto</button>
@@ -95,7 +98,7 @@
 									<option value="bebidas" {% if p[3] == 'bebidas' %}selected{% endif %}>Bebidas</option>
 									<option value="promociones" {% if p[3] == 'promociones' %}selected{% endif %}>Promociones</option>
 								</select>
-								<input type="text" name="imagen" value="{{ p[4] or '' }}" required>
+								<input type="text" name="imagen" class="imagen-editar" value="{{ p[4] or '' }}" required>
 								<input type="number" name="precio" value="{{ '%.2f' % p[2] }}" step="0.01" required>
 								<textarea name="descripcion" style="padding: 8px; border-radius: 5px; border: 1px solid #ddd; min-height: 60px;">{{ p[5] or '' }}</textarea>
 								<button type="submit">Guardar</button>
@@ -112,10 +115,88 @@
 			</table>
 		</div>
 
-		<h2>Pedidos</h2>
-		<div style="margin-bottom: 20px;">
-			<a href="{{ url_for('admin_pedidos_list') }}" style="display: inline-block; padding: 10px 20px; background: #713D2A; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">Ver Todos los Pedidos</a>
-		</div>
 	</div>
+
+	<script>
+		// Función para convertir enlaces de Google Drive al formato de visualización directa
+		function convertGoogleDriveLink(url) {
+			// Patrón para detectar enlaces de Google Drive
+			// Ejemplos: 
+			// https://drive.google.com/file/d/FILE_ID/view?usp=sharing
+			// https://drive.google.com/open?id=FILE_ID
+			// https://drive.google.com/file/d/FILE_ID/edit?usp=sharing
+			
+			const patterns = [
+				/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/,  // Formato estándar
+				/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/,  // Formato alternativo
+				/drive\.google\.com\/uc\?id=([a-zA-Z0-9_-]+)/,    // Ya en formato directo
+			];
+			
+			// Intentar extraer el ID del archivo
+			for (let pattern of patterns) {
+				const match = url.match(pattern);
+				if (match && match[1]) {
+					// Convertir al formato de visualización directa
+					return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+				}
+			}
+			
+			// Si no es un enlace de Drive, devolver el original
+			return url;
+		}
+		
+		// Función para procesar cuando se pega texto
+		function handlePaste(event) {
+			const input = event.target;
+			setTimeout(() => {
+				const value = input.value;
+				if (value && value.includes('drive.google.com')) {
+					const converted = convertGoogleDriveLink(value);
+					if (converted !== value) {
+						input.value = converted;
+						// Mostrar indicador visual
+						input.style.border = '2px solid #00b894';
+						setTimeout(() => {
+							input.style.border = '1px solid #ddd';
+						}, 2000);
+					}
+				}
+			}, 10);
+		}
+		
+		// Función para procesar cuando se cambia el valor manualmente
+		function handleInput(event) {
+			const input = event.target;
+			const value = input.value;
+			if (value && value.includes('drive.google.com') && !value.includes('uc?export=view')) {
+				// Solo convertir si no está ya en el formato correcto
+				const converted = convertGoogleDriveLink(value);
+				if (converted !== value) {
+					input.value = converted;
+					input.style.border = '2px solid #00b894';
+					setTimeout(() => {
+						input.style.border = '1px solid #ddd';
+					}, 2000);
+				}
+			}
+		}
+		
+		// Agregar event listeners cuando la página cargue
+		document.addEventListener('DOMContentLoaded', function() {
+			// Para el formulario de creación
+			const imagenCrear = document.getElementById('imagen-crear');
+			if (imagenCrear) {
+				imagenCrear.addEventListener('paste', handlePaste);
+				imagenCrear.addEventListener('blur', handleInput);
+			}
+			
+			// Para los formularios de edición
+			const imagenesEditar = document.querySelectorAll('.imagen-editar');
+			imagenesEditar.forEach(input => {
+				input.addEventListener('paste', handlePaste);
+				input.addEventListener('blur', handleInput);
+			});
+		});
+	</script>
 </body>
 </html>

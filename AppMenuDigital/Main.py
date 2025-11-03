@@ -7,14 +7,6 @@ import os
 
 app = Flask(__name__)
 
-# Configuración de la aplicación
-app.config['SECRET_KEY'] = Config.SECRET_KEY
-app.config['MYSQL_PORT'] = Config.MYSQL_PORT
-app.config['MYSQL_HOST'] = Config.MYSQL_HOST
-app.config['MYSQL_USER'] = Config.MYSQL_USER
-app.config['MYSQL_PASSWORD'] = Config.MYSQL_PASSWORD
-app.config['MYSQL_DB'] = Config.MYSQL_DB
-
 # Clase MySQL personalizada usando pymysql
 class MySQL:
     def __init__(self, app=None):
@@ -22,12 +14,13 @@ class MySQL:
     
     @property
     def connection(self):
+        import pymysql
         return pymysql.connect(
-            host=self.app.config['localhost'],
+            host=self.app.config['MYSQL_HOST'],
             port=self.app.config['MYSQL_PORT'],
-            user=self.app.config['ROOT'],
-            password=self.app.config['ROOT'],
-            database=self.app.config['menu_digital'],
+            user=self.app.config['MYSQL_USER'],
+            password=self.app.config['MYSQL_PASSWORD'],
+            database=self.app.config['MYSQL_DB'],
             cursorclass=pymysql.cursors.DictCursor,
             autocommit=False
         )

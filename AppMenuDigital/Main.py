@@ -95,16 +95,28 @@ def inject_cart_count():
 # Rutas de la aplicación
 @app.route('/')
 def index():
-    # Cargar dinámicamente productos por categoría para el Index (se agregan al final del bloque hardcodeado)
     categorias = ['desayunos', 'almuerzos', 'cenas', 'meriendas', 'postres', 'bebidas', 'comida_sin_tac', 'promociones']
     productos_por_categoria = {c: [] for c in categorias}
     try:
-        ensure_menu_table_exists()
         cur = mysql.connection.cursor()
+        # Asegurar que existe la tabla productos
         cur.execute("""
-            SELECT id, Nombre_Menu, Precio, LOWER(COALESCE(Categoria, '')) as cat, COALESCE(Imagen, ''), COALESCE(Descripcion, '')
-            FROM menu
-            WHERE LOWER(COALESCE(Categoria, '')) IN ('desayunos','almuerzos','cenas','meriendas','postres','bebidas','comida_sin_tac','promociones')
+            CREATE TABLE IF NOT EXISTS productos (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                nombre VARCHAR(150) NOT NULL,
+                descripcion TEXT NULL,
+                precio DECIMAL(10,2) NOT NULL,
+                imagen VARCHAR(255) NULL,
+                categoria VARCHAR(50) NULL
+            )
+        """)
+        mysql.connection.commit()
+        
+        # Leer de la tabla productos
+        cur.execute("""
+            SELECT id, nombre, precio, LOWER(COALESCE(categoria, '')) as cat, COALESCE(imagen, ''), COALESCE(descripcion, '')
+            FROM productos
+            WHERE LOWER(COALESCE(categoria, '')) IN ('desayunos','almuerzos','cenas','meriendas','postres','bebidas','comida_sin_tac','promociones')
             ORDER BY id DESC
         """)
         filas = cur.fetchall()
@@ -461,6 +473,26 @@ def ensure_menu_table_exists():
     except Exception as e:
         print(f"Error creando tabla menu si no existe: {e}")
 
+def ensure_productos_table_exists():
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS productos (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                nombre VARCHAR(150) NOT NULL,
+                descripcion TEXT NULL,
+                precio DECIMAL(10,2) NOT NULL,
+                imagen VARCHAR(255) NULL,
+                categoria VARCHAR(50) NULL
+            )
+            """
+        )
+        mysql.connection.commit()
+        cur.close()
+    except Exception as e:
+        print(f"Error creando tabla productos si no existe: {e}")
+
 # ===== Panel de Control (Admin) =====
 @app.route('/admin')
 @admin_required
@@ -515,11 +547,52 @@ def admin_dashboard():
 @app.route('/mozo')
 @mozo_required
 def mozo_dashboard():
-    ensure_pedidos_tables()
+    ensure_client_orders_tables()
     try:
         cur = mysql.connection.cursor()
-        cur.execute("SELECT id, mesa, estado, notas, creado_en FROM pedidos_mozo WHERE mozo_id=%s ORDER BY id DESC", (session['mozo_id'],))
-        pedidos = cur.fetchall()
+        # Asegurar que la columna mesa existe
+        try:
+            cur.execute("DESCRIBE pedidos")
+            cols = [row[0].lower() for row in cur.fetchall()]
+            if 'mesa' not in cols:
+                cur.execute("ALTER TABLE pedidos ADD COLUMN mesa VARCHAR(50) NULL")
+                mysql.connection.commit()
+        except Exception:
+            pass
+
+        # Obtener pedidos de clientes (no pedidos del mozo)
+        cur.execute(
+            """
+            SELECT p.id, COALESCE(p.mesa, '') AS mesa, COALESCE(u.nombre, '') AS cliente,
+                   p.estado, p.creado_en
+            FROM pedidos p
+            LEFT JOIN usuarios u ON p.usuario_id = u.id
+            ORDER BY p.id DESC
+            """
+        )
+        base_rows = cur.fetchall()
+
+        pedidos = []
+        for row in base_rows:
+            pedido_id = row[0]
+            try:
+                cur.execute(
+                    """
+                    SELECT pi.cantidad, pi.precio_unitario, m.Nombre_Menu
+                    FROM pedido_items pi
+                    JOIN menu m ON pi.menu_id = m.id
+                    WHERE pi.pedido_id = %s
+                    """,
+                    (pedido_id,)
+                )
+                items = cur.fetchall()
+                total = sum(float(it[0]) * float(it[1]) for it in items)
+            except Exception:
+                items = []
+                total = 0.0
+
+            pedidos.append((row[0], row[1], row[2], row[3], row[4], items, total))
+
         cur.close()
         return render_template('mozo.html', pedidos=pedidos)
     except Exception as e:
@@ -527,25 +600,11 @@ def mozo_dashboard():
         flash('Error al cargar panel de mozo', 'error')
         return render_template('mozo.html', pedidos=[])
 
-@app.route('/mozo/pedidos/crear', methods=['POST'])
-@mozo_required
-def mozo_pedido_crear():
-    ensure_pedidos_tables()
-    mesa = request.form.get('mesa')
-    notas = request.form.get('notas')
-    if not mesa:
-        flash('Debes indicar la mesa', 'error')
-        return redirect(url_for('mozo_dashboard'))
-    try:
-        cur = mysql.connection.cursor()
-        cur.execute("INSERT INTO pedidos_mozo (mozo_id, mesa, notas) VALUES (%s, %s, %s)", (session['mozo_id'], mesa, notas))
-        mysql.connection.commit()
-        cur.close()
-        flash('Pedido creado', 'success')
-    except Exception as e:
-        print(f"Error creando pedido: {e}")
-        flash('Error al crear pedido', 'error')
-    return redirect(url_for('mozo_dashboard'))
+# Esta ruta ya no se necesita - comentada porque no se crean pedidos desde el panel de mozos
+# @app.route('/mozo/pedidos/crear', methods=['POST'])
+# @mozo_required
+# def mozo_pedido_crear():
+#     ...
 
 @app.route('/mozo/productos/crear', methods=['POST'])
 @mozo_required
@@ -571,8 +630,20 @@ def mozo_productos_crear():
         flash('Debes seleccionar una categoría válida', 'error')
         return redirect(url_for('mozo_dashboard'))
     try:
-        ensure_menu_table_exists()
-        ensure_menu_table_upgrade()
+        # Asegurar que existe la tabla productos
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS productos (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                nombre VARCHAR(150) NOT NULL,
+                descripcion TEXT NULL,
+                precio DECIMAL(10,2) NOT NULL,
+                imagen VARCHAR(255) NULL,
+                categoria VARCHAR(50) NULL
+            )
+        """)
+        mysql.connection.commit()
+        
         # Manejo de subida de archivo
         f = request.files.get('imagen_file')
         if f and getattr(f, 'filename', ''):
@@ -581,42 +652,49 @@ def mozo_productos_crear():
             _, ext = os.path.splitext(filename)
             if ext.lower() not in _ALLOWED_IMAGE_EXTS:
                 flash('Formato de imagen no permitido', 'error')
+                cur.close()
                 return redirect(url_for('mozo_dashboard'))
             dest = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             try:
                 f.save(dest)
-                # Guardamos ruta relativa para usar con url_for('static', filename=...)
                 imagen = f"images/{filename}"
             except Exception as e:
                 print(f"Error guardando imagen: {e}")
                 flash('No se pudo guardar la imagen', 'error')
+                cur.close()
                 return redirect(url_for('mozo_dashboard'))
-        cur = mysql.connection.cursor()
+        
+        # Insertar en la tabla productos
         cur.execute(
-            "INSERT INTO menu (Nombre_Menu, Precio, Categoria, Imagen, Descripcion) VALUES (%s, %s, %s, %s, %s)",
-            (nombre, precio_val, categoria, imagen, descripcion)
+            "INSERT INTO productos (nombre, descripcion, precio, imagen, categoria) VALUES (%s, %s, %s, %s, %s)",
+            (nombre, descripcion, precio_val, imagen, categoria)
         )
+        product_id = cur.lastrowid
         mysql.connection.commit()
-        print(f"[mozo_productos_crear] insert OK id={cur.lastrowid} nombre={nombre} cat={categoria}")
+        print(f"[mozo_productos_crear] Producto insertado en 'productos' - id={product_id} nombre={nombre} cat={categoria} precio={precio_val}")
         cur.close()
-        flash('Producto agregado al menú', 'success')
+        flash(f'Producto "{nombre}" agregado al menú correctamente', 'success')
     except Exception as e:
         print(f"Error mozo creando producto: {e}")
+        import traceback
+        traceback.print_exc()
         flash('Error al agregar producto', 'error')
     return redirect(url_for('mozo_dashboard'))
 
-@app.route('/mozo/pedidos/<int:pedido_id>/estado', methods=['POST'])
+@app.route('/mozo/pedidos-cliente/<int:pedido_id>/estado', methods=['POST'])
 @mozo_required
-def mozo_pedido_estado(pedido_id: int):
-    nuevo_estado = request.form.get('estado', 'abierto')
+def mozo_pedido_cliente_estado(pedido_id: int):
+    """Permite a los mozos actualizar el estado de pedidos de clientes"""
+    nuevo_estado = request.form.get('estado', 'pendiente')
     try:
+        ensure_client_orders_tables()
         cur = mysql.connection.cursor()
-        cur.execute("UPDATE pedidos_mozo SET estado=%s WHERE id=%s AND mozo_id=%s", (nuevo_estado, pedido_id, session['mozo_id']))
+        cur.execute("UPDATE pedidos SET estado=%s WHERE id=%s", (nuevo_estado, pedido_id))
         mysql.connection.commit()
         cur.close()
-        flash('Estado actualizado', 'success')
+        flash('Estado del pedido actualizado', 'success')
     except Exception as e:
-        print(f"Error actualizando estado pedido: {e}")
+        print(f"Error actualizando estado pedido cliente: {e}")
         flash('Error al actualizar estado', 'error')
     return redirect(url_for('mozo_dashboard'))
 
@@ -953,30 +1031,34 @@ def cart_checkout():
 
 @app.route('/api/producto/<int:producto_id>')
 def api_producto(producto_id):
-    from flask import jsonify
     try:
+        ensure_productos_table_exists()
         cur = mysql.connection.cursor()
         cur.execute("""
-            SELECT id, Nombre_Menu, Precio, Categoria, Imagen, Descripcion 
-            FROM menu 
-            WHERE id=%s
+            SELECT id, nombre, precio, COALESCE(categoria, ''), COALESCE(imagen, ''), COALESCE(descripcion, '')
+            FROM productos WHERE id = %s
         """, (producto_id,))
-        producto = cur.fetchone()
+        row = cur.fetchone()
         cur.close()
         
-        if producto:
+        if row:
+            imagen_url = row[4]
+            # Si la imagen es una ruta relativa (images/...), convertirla a URL completa
+            if imagen_url and not imagen_url.startswith('http://') and not imagen_url.startswith('https://'):
+                imagen_url = url_for('static', filename=imagen_url)
+            
             return jsonify({
-                'id': producto[0],
-                'nombre': producto[1],
-                'precio': float(producto[2]),
-                'categoria': producto[3],
-                'imagen': producto[4],
-                'descripcion': producto[5] or ''
+                'id': row[0],
+                'nombre': row[1],
+                'precio': float(row[2]),
+                'categoria': row[3],
+                'imagen': imagen_url,
+                'descripcion': row[5] or 'Sin descripción disponible'
             })
         else:
             return jsonify({'error': 'Producto no encontrado'}), 404
     except Exception as e:
-        print(f"Error obteniendo producto: {e}")
+        print(f"Error al obtener producto: {e}")
         return jsonify({'error': 'Error al obtener producto'}), 500
 
 # ===== Vista de pedidos para administrador =====

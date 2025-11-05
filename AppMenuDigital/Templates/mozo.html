@@ -6,11 +6,255 @@
     <title>Panel de Mozo</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='Styles.css') }}">
     <style>
-        .mozo-container { padding-top: 100px; max-width: 900px; margin: 0 auto; }
-        .pedido-form { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
-        .pedido-list table { width: 100%; border-collapse: collapse; }
-        .pedido-list th, .pedido-list td { border-bottom: 1px solid #ddd; padding: 8px; }
-        .pedido-list th { text-align: left; }
+        .mozo-container { 
+            padding-top: 100px; 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 100px 20px 40px;
+        }
+        
+        .section-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .section-card h2 {
+            margin-top: 0;
+            color: #713D2A;
+            font-size: 26px;
+            border-bottom: 3px solid #713D2A;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .producto-form { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px; 
+            margin-bottom: 20px; 
+        }
+        
+        .producto-form input,
+        .producto-form select {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .producto-form input:focus,
+        .producto-form select:focus {
+            outline: none;
+            border-color: #713D2A;
+        }
+        
+        .producto-form button {
+            grid-column: 1 / -1;
+            padding: 15px;
+            background: #713D2A;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .producto-form button:hover {
+            background: #5a2f1f;
+        }
+        
+        .pedidos-grid {
+            display: grid;
+            gap: 25px;
+        }
+        
+        .pedido-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 25px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .pedido-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+        }
+        
+        .pedido-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        .pedido-id {
+            font-size: 22px;
+            font-weight: bold;
+            color: #713D2A;
+        }
+        
+        .estado-badge {
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 13px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .estado-pendiente { background: #ffeaa7; color: #d63031; }
+        .estado-en_preparacion { background: #74b9ff; color: white; }
+        .estado-listo { background: #00b894; color: white; }
+        .estado-entregado { background: #636e72; color: white; }
+        .estado-cancelado { background: #d63031; color: white; }
+        
+        .pedido-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .info-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+        
+        .info-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .pedido-items {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .pedido-items h4 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #713D2A;
+            font-size: 18px;
+        }
+        
+        .item-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .item-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .item-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .item-name {
+            flex: 1;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .item-qty {
+            color: #666;
+            margin: 0 15px;
+            font-weight: bold;
+        }
+        
+        .item-price {
+            color: #713D2A;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .pedido-total {
+            text-align: right;
+            font-size: 24px;
+            font-weight: bold;
+            color: #713D2A;
+            padding-top: 15px;
+            border-top: 3px solid #713D2A;
+            margin-top: 15px;
+        }
+        
+        .pedido-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        
+        .pedido-actions select {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            flex: 1;
+            min-width: 180px;
+            cursor: pointer;
+        }
+        
+        .pedido-actions button {
+            padding: 12px 25px;
+            background: #713D2A;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .pedido-actions button:hover {
+            background: #5a2f1f;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #999;
+        }
+        
+        .empty-state-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+        
+        .empty-state h3 {
+            color: #666;
+            margin-bottom: 10px;
+        }
     </style>
     </head>
 <body>
@@ -18,7 +262,7 @@
         <div class="menu-icono" onclick="window.location='{{ url_for('index') }}'">⟵</div>
         Panel de Mozo
         <div style="margin-left:auto; padding-right:16px;">
-            <a href="{{ url_for('logout') }}">Cerrar sesión</a>
+            <a href="{{ url_for('logout') }}" style="color: white; text-decoration: none;">Cerrar sesión</a>
         </div>
     </div>
 
@@ -33,71 +277,103 @@
             {% endif %}
         {% endwith %}
 
-        <h2>Nuevo pedido</h2>
-        <form method="POST" action="{{ url_for('mozo_pedido_crear') }}" class="pedido-form">
-            <input type="text" name="mesa" placeholder="Mesa (ej: M1)" required>
-            <input type="text" name="notas" placeholder="Notas (opcional)">
-            <button type="submit">Crear pedido</button>
-        </form>
-
-        <h2>Agregar producto al menú</h2>
-        <form method="POST" action="{{ url_for('mozo_productos_crear') }}" class="pedido-form" enctype="multipart/form-data">
+        <!-- Sección: Agregar Productos -->
+        <div class="section-card">
+            <h2>➕ Agregar Producto al Menú</h2>
+            <form method="POST" action="{{ url_for('mozo_productos_crear') }}" enctype="multipart/form-data" class="producto-form">
             <input type="text" name="nombre" placeholder="Nombre del producto" required>
             <input type="number" step="0.01" name="precio" placeholder="Precio" required>
             <select name="categoria" required>
-                <option value="">Categoría</option>
+                    <option value="">Seleccionar categoría</option>
                 <option value="desayunos">Desayunos</option>
                 <option value="almuerzos">Almuerzos</option>
                 <option value="meriendas">Meriendas</option>
                 <option value="cenas">Cenas</option>
                 <option value="postres">Postres</option>
                 <option value="bebidas">Bebidas</option>
-                <option value="comida_sin_tac">Comida_sin_tac</option>
+                    <option value="comida_sin_tac">Comida sin TACC</option>
                 <option value="promociones">Promociones</option>
             </select>
             <input type="text" name="imagen" placeholder="URL de imagen (opcional)">
             <input type="file" name="imagen_file" accept="image/*">
             <input type="text" name="descripcion" placeholder="Descripción (opcional)">
-            <button type="submit">Agregar</button>
+                <button type="submit">Agregar Producto</button>
         </form>
+        </div>
 
-        <h2>Mis pedidos</h2>
-        <div class="pedido-list">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Mesa</th>
-                        <th>Estado</th>
-                        <th>Notas</th>
-                        <th>Creado</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
+        <!-- Sección: Pedidos de Clientes -->
+        <div class="section-card">
+            <h2>📋 Pedidos de Clientes</h2>
+            {% if pedidos and pedidos|length > 0 %}
+                <div class="pedidos-grid">
                     {% for p in pedidos %}
-                    <tr>
-                        <td>{{ p[0] }}</td>
-                        <td>{{ p[1] }}</td>
-                        <td>{{ p[2] }}</td>
-                        <td>{{ p[3] or '' }}</td>
-                        <td>{{ p[4] }}</td>
-                        <td>
-                            <form method="POST" action="{{ url_for('mozo_pedido_estado', pedido_id=p[0]) }}" style="display:inline-flex; gap:6px;">
-                                <select name="estado">
-                                    <option value="abierto" {% if p[2]=='abierto' %}selected{% endif %}>Abierto</option>
-                                    <option value="en_preparacion" {% if p[2]=='en_preparacion' %}selected{% endif %}>En preparación</option>
-                                    <option value="listo" {% if p[2]=='listo' %}selected{% endif %}>Listo</option>
-                                    <option value="entregado" {% if p[2]=='entregado' %}selected{% endif %}>Entregado</option>
-                                    <option value="cerrado" {% if p[2]=='cerrado' %}selected{% endif %}>Cerrado</option>
+                    <div class="pedido-card">
+                        <div class="pedido-header">
+                            <div class="pedido-id">Pedido #{{ p[0] }}</div>
+                            <span class="estado-badge estado-{{ p[3] }}">
+                                {{ p[3]|replace('_', ' ')|title }}
+                            </span>
+                        </div>
+                        
+                        <div class="pedido-info">
+                            <div class="info-item">
+                                <span class="info-label">Mesa</span>
+                                <span class="info-value">{{ p[1] or 'N/A' }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Cliente</span>
+                                <span class="info-value">{{ p[2] or 'Anónimo' }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Fecha</span>
+                                <span class="info-value">{{ p[4].strftime('%d/%m/%Y %H:%M') if p[4] else 'N/A' }}</span>
+                            </div>
+                        </div>
+                        
+                        {% if p[5] and p[5]|length > 0 %}
+                        <div class="pedido-items">
+                            <h4>Items del Pedido:</h4>
+                            <ul class="item-list">
+                                {% for item in p[5] %}
+                                <li>
+                                    <span class="item-name">{{ item[2] }}</span>
+                                    <span class="item-qty">x{{ item[0] }}</span>
+                                    <span class="item-price">${{ '%.2f'|format(item[1]) }}</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            <div class="pedido-total">
+                                Total: ${{ '%.2f'|format(p[6]) }}
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="pedido-items">
+                            <p style="color: #999; margin: 0; text-align: center;">Sin items en este pedido</p>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="pedido-actions">
+                            <form method="POST" action="{{ url_for('mozo_pedido_cliente_estado', pedido_id=p[0]) }}" style="display: flex; gap: 12px; width: 100%; align-items: center;">
+                                <select name="estado" required>
+                                    <option value="pendiente" {% if p[3]=='pendiente' %}selected{% endif %}>Pendiente</option>
+                                    <option value="en_preparacion" {% if p[3]=='en_preparacion' %}selected{% endif %}>En Preparación</option>
+                                    <option value="listo" {% if p[3]=='listo' %}selected{% endif %}>Listo</option>
+                                    <option value="entregado" {% if p[3]=='entregado' %}selected{% endif %}>Entregado</option>
+                                    <option value="cancelado" {% if p[3]=='cancelado' %}selected{% endif %}>Cancelado</option>
                                 </select>
-                                <button type="submit">Actualizar</button>
+                                <button type="submit">Actualizar Estado</button>
                             </form>
-                        </td>
-                    </tr>
+                        </div>
+                    </div>
                     {% endfor %}
-                </tbody>
-            </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">📭</div>
+                    <h3>No hay pedidos de clientes</h3>
+                    <p>Los pedidos realizados por los clientes aparecerán aquí</p>
+                </div>
+            {% endif %}
         </div>
     </div>
 </body>

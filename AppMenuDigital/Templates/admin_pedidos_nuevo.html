@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedidos - Administración</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='Styles.css') }}">
+</head>
+<body>
+    <div class="barra-superior">
+        <div class="menu-icono" onclick="window.location='{{ url_for('admin_dashboard') }}'">⟵</div>
+        Todos los Pedidos
+    </div>
+    <div class="container" style="padding-top:100px;">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>ID Pedido</th>
+                    <th>Mesa</th>
+                    <th>Cliente</th>
+                    <th>Items</th>
+                    <th>Estado</th>
+                    <th>Fecha</th>
+                    <th>Total</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in pedidos %}
+                <tr>
+                    <td><strong>#{{ p[0] }}</strong></td>
+                    <td><strong style="color: #713D2A;">{{ p[1] or 'N/A' }}</strong></td>
+                    <td>{{ p[2] or 'Anónimo' }}</td>
+                    <td>
+                        {% if p[5] and p[5]|length > 0 %}
+                            <ul style="margin: 0; padding-left: 20px; font-size: 12px;">
+                                {% for item in p[5] %}
+                                <li>{{ item[2] }} x{{ item[0] }} - ${{ '%.2f'|format(item[1]) }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <span style="color: #999;">Sin items</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span style="padding: 5px 15px; border-radius: 5px; font-size: 12px; 
+                        {% if p[3] == 'pendiente' %}background: #ffeaa7; color: #d63031;
+                        {% elif p[3] == 'en_preparacion' %}background: #74b9ff; color: white;
+                        {% elif p[3] == 'listo' %}background: #00b894; color: white;
+                        {% elif p[3] == 'entregado' %}background: #636e72; color: white;
+                        {% elif p[3] == 'cancelado' %}background: #d63031; color: white;
+                        {% else %}background: #ddd; color: #666;{% endif %}">
+                            {{ p[3]|title }}
+                        </span>
+                    </td>
+                    <td>{{ p[4].strftime('%d/%m/%Y %H:%M') if p[4] else 'N/A' }}</td>
+                    <td><strong>${{ '%.2f'|format(p[6]) }}</strong></td>
+                    <td>
+                        <div style="display:flex; gap:8px; align-items:center; flex-wrap: wrap;">
+                            <form method="POST" action="{{ url_for('admin_pedido_cambiar_estado', pedido_id=p[0]) }}" style="display: inline-flex; gap: 5px; align-items: center;">
+                                <select name="estado" style="padding: 5px; border-radius: 5px; border: 1px solid #ddd;">
+                                    <option value="pendiente" {% if p[3]=='pendiente' %}selected{% endif %}>Pendiente</option>
+                                    <option value="en_preparacion" {% if p[3]=='en_preparacion' %}selected{% endif %}>En Preparación</option>
+                                    <option value="listo" {% if p[3]=='listo' %}selected{% endif %}>Listo</option>
+                                    <option value="entregado" {% if p[3]=='entregado' %}selected{% endif %}>Entregado</option>
+                                    <option value="cancelado" {% if p[3]=='cancelado' %}selected{% endif %}>Cancelado</option>
+                                </select>
+                                <button type="submit" style="padding: 5px 15px; background: #713D2A; color: white; border: none; border-radius: 5px; cursor: pointer;">Actualizar</button>
+                            </form>
+                            {% if p[3] == 'entregado' %}
+                            <form method="POST" action="{{ url_for('admin_pedido_eliminar', pedido_id=p[0]) }}" onsubmit="return confirm('¿Eliminar pedido #{{ p[0] }}? Esta acción no se puede deshacer.');">
+                                <button type="submit" style="padding: 5px 15px; background: #d63031; color: white; border: none; border-radius: 5px; cursor: pointer;">Eliminar</button>
+                            </form>
+                            {% else %}
+                            <span style="color:#999; font-size:12px;">Para eliminar: marcar como Entregado</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
+
+
+

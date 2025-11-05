@@ -5,11 +5,11 @@ class Config:
     # Configuración de la aplicación
     SECRET_KEY = secrets.token_hex(32)  # Genera una clave secreta de 64 caracteres hexadecimales
     
-    # Configuración de MySQL para XAMPP
+    # Configuración de MySQL para XAMPP (por defecto puerto 3306 y password vacía)
     MYSQL_HOST = 'localhost'
     MYSQL_PORT = 3307
     MYSQL_USER = 'root'
-    MYSQL_PASSWORD = 'admin123'  # Contraseña vacía por defecto en XAMPP
+    MYSQL_PASSWORD = 'admin123'  # Ajusta aquí si tu password es diferente
     MYSQL_DB = 'menudigital'  # Nombre de tu base de datos existente
     
     # Configuración del servidor

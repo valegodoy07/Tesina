@@ -26,15 +26,57 @@
 			{% endif %}
 		{% endwith %}
 
+		<!-- Panel de Control -->
+		<div class="dashboard-panel">
+			<h2 style="margin-bottom: 20px;">Panel de Control</h2>
+			<div class="stats-grid">
+				<div class="stat-card">
+					<div class="stat-icon">📦</div>
+					<div class="stat-info">
+						<div class="stat-value">{{ stats.get('total_productos', 0) }}</div>
+						<div class="stat-label">Total de Productos</div>
+					</div>
+				</div>
+				<div class="stat-card">
+					<div class="stat-icon">⏳</div>
+					<div class="stat-info">
+						<div class="stat-value">{{ stats.get('pedidos_pendientes', 0) }}</div>
+						<div class="stat-label">Pedidos Pendientes</div>
+					</div>
+				</div>
+				<div class="stat-card">
+					<div class="stat-icon">📊</div>
+					<div class="stat-info">
+						<div class="stat-value">{{ stats.get('total_pedidos', 0) }}</div>
+						<div class="stat-label">Total Pedidos</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
 		<!-- Sección de categorías removida según requerimiento -->
 
-		<h2>Productos</h2>
+		<h2>Gestionar Productos</h2>
 		<div class="admin-section">
 			<form method="POST" action="{{ url_for('admin_productos_crear') }}" class="admin-form">
 				<input type="text" name="nombre" placeholder="Nombre del producto" required>
-				<input type="text" name="categoria" placeholder="Categoría (texto libre)" required>
-				<input type="text" name="imagen" placeholder="URL de imagen" required>
+				<select name="categoria" required style="padding: 10px; border-radius: 5px; border: 1px solid #ddd;">
+					<option value="">Seleccionar categoría</option>
+					<option value="desayunos">Desayunos</option>
+					<option value="almuerzos">Almuerzos</option>
+					<option value="cenas">Cenas</option>
+					<option value="meriendas">Meriendas</option>
+					<option value="postres">Postres</option>
+					<option value="bebidas">Bebidas</option>
+					<option value="comida_sin_tac">Comida sin TAC</option>
+					<option value="promociones">Promociones</option>
+				</select>
+				<input type="text" name="imagen" id="imagen-crear" placeholder="URL de imagen o enlace de Google Drive" required>
+				<small style="color: #666; font-size: 12px; display: block; margin-top: 5px;">
+					💡 Puedes pegar un enlace de Google Drive y se convertirá automáticamente
+				</small>
 				<input type="number" name="precio" placeholder="Precio" step="0.01" required>
+				<textarea name="descripcion" placeholder="Ingredientes y descripción" style="padding: 10px; border-radius: 5px; border: 1px solid #ddd; min-height: 80px;"></textarea>
 				<button type="submit">Agregar producto</button>
 			</form>
 			<table class="admin-table">
@@ -48,15 +90,34 @@
 						<td>
 						<form method="POST" action="{{ url_for('admin_productos_actualizar', producto_id=p[0]) }}" class="inline-form">
 								<input type="text" name="nombre" value="{{ p[1] }}" required>
-								<input type="text" name="categoria" value="{{ p[3] or '' }}" required>
-								<input type="text" name="imagen" value="{{ p[4] or '' }}" required>
+								<select name="categoria" required style="padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
+									<option value="desayunos" {% if p[3] == 'desayunos' %}selected{% endif %}>Desayunos</option>
+									<option value="almuerzos" {% if p[3] == 'almuerzos' %}selected{% endif %}>Almuerzos</option>
+									<option value="cenas" {% if p[3] == 'cenas' %}selected{% endif %}>Cenas</option>
+									<option value="meriendas" {% if p[3] == 'meriendas' %}selected{% endif %}>Meriendas</option>
+									<option value="postres" {% if p[3] == 'postres' %}selected{% endif %}>Postres</option>
+									<option value="bebidas" {% if p[3] == 'bebidas' %}selected{% endif %}>Bebidas</option>
+									<option value="comida_sin_tac" {% if p[3] == 'comida_sin_tac' %}selected{% endif %}>Comida sin TAC</option>
+									<option value="promociones" {% if p[3] == 'promociones' %}selected{% endif %}>Promociones</option>
+								</select>
+								<input type="text" name="imagen" class="imagen-editar" value="{{ p[4] or '' }}" required>
 								<input type="number" name="precio" value="{{ '%.2f' % p[2] }}" step="0.01" required>
+								<textarea name="descripcion" style="padding: 8px; border-radius: 5px; border: 1px solid #ddd; min-height: 60px;">{{ p[5] or '' }}</textarea>
 								<button type="submit">Guardar</button>
 							</form>
 						</td>
+						<td style="text-transform: capitalize;">{{ p[3] or 'Sin categoría' }}</td>
 						<td>
-							<form method="POST" action="{{ url_for('admin_productos_eliminar', producto_id=p[0]) }}" onsubmit="return confirm('¿Eliminar producto?')">
-								<button type="submit" class="btn-danger">Eliminar</button>
+							{% if p[4] %}
+								<img src="{{ p[4] }}" alt="{{ p[1] }}" style="max-width: 80px; max-height: 80px; border-radius: 5px; object-fit: cover; border: 2px solid #ddd;">
+							{% else %}
+								<span style="color: #999; font-size: 12px;">Sin imagen</span>
+							{% endif %}
+						</td>
+						<td><strong style="color: #713D2A;">${{ '%.2f'|format(p[2]) }}</strong></td>
+						<td>
+							<form method="POST" action="{{ url_for('admin_productos_eliminar', producto_id=p[0]) }}" onsubmit="return confirm('¿Estás seguro de eliminar el producto \"{{ p[1] }}\"?\n\nEsta acción no se puede deshacer.');" style="display: inline;">
+								<button type="submit" style="padding: 10px 20px; background: #d63031; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">🗑️ Eliminar</button>
 							</form>
 						</td>
 					</tr>
@@ -65,49 +126,93 @@
 			</table>
 		</div>
 
-
-		<h2>Mozos</h2>
-		<div class="admin-section">
-			<form method="POST" action="{{ url_for('admin_mozos_crear') }}" class="admin-form">
-				<input type="text" name="nombre" placeholder="Nombre" required>
-				<input type="email" name="email" placeholder="Email">
-				<input type="text" name="telefono" placeholder="Teléfono">
-				<label style="display:inline-flex; align-items:center; gap:6px;">
-					<input type="checkbox" name="activo" checked> Activo
-				</label>
-				<button type="submit">Crear</button>
-			</form>
-			<table class="admin-table">
-				<thead>
-					<tr><th>ID</th><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Activo</th><th>Acciones</th></tr>
-				</thead>
-				<tbody>
-					{% for m in mozos %}
-					<tr>
-						<td>{{ m[0] }}</td>
-						<td colspan="4">
-							<form method="POST" action="{{ url_for('admin_mozos_actualizar', mozo_id=m[0]) }}" class="inline-form">
-								<input type="text" name="nombre" value="{{ m[1] }}" required>
-								<input type="email" name="email" value="{{ m[2] or '' }}">
-								<input type="text" name="telefono" value="{{ m[3] or '' }}">
-								<label style="display:inline-flex; align-items:center; gap:6px;">
-									<input type="checkbox" name="activo" {% if m[4] %}checked{% endif %}> Activo
-								</label>
-								<button type="submit">Guardar</button>
-							</form>
-						</td>
-						<td>
-							<form method="POST" action="{{ url_for('admin_mozos_eliminar', mozo_id=m[0]) }}" onsubmit="return confirm('¿Eliminar mozo?')">
-								<button type="submit" class="btn-danger">Eliminar</button>
-							</form>
-						</td>
-					</tr>
-					{% endfor %}
-				</tbody>
-			</table>
+		<h2>Pedidos</h2>
+		<div style="margin-bottom: 20px;">
+			<a href="{{ url_for('admin_pedidos_nuevo') }}" style="display: inline-block; padding: 12px 25px; background: #713D2A; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">📋 Ver Todos los Pedidos</a>
 		</div>
+
 	</div>
+
+	<script>
+		// Función para convertir enlaces de Google Drive al formato de visualización directa
+		function convertGoogleDriveLink(url) {
+			// Patrón para detectar enlaces de Google Drive
+			// Ejemplos: 
+			// https://drive.google.com/file/d/FILE_ID/view?usp=sharing
+			// https://drive.google.com/open?id=FILE_ID
+			// https://drive.google.com/file/d/FILE_ID/edit?usp=sharing
+			
+			const patterns = [
+				/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/,  // Formato estándar
+				/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/,  // Formato alternativo
+				/drive\.google\.com\/uc\?id=([a-zA-Z0-9_-]+)/,    // Ya en formato directo
+			];
+			
+			// Intentar extraer el ID del archivo
+			for (let pattern of patterns) {
+				const match = url.match(pattern);
+				if (match && match[1]) {
+					// Convertir al formato de visualización directa
+					return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+				}
+			}
+			
+			// Si no es un enlace de Drive, devolver el original
+			return url;
+		}
+		
+		// Función para procesar cuando se pega texto
+		function handlePaste(event) {
+			const input = event.target;
+			setTimeout(() => {
+				const value = input.value;
+				if (value && value.includes('drive.google.com')) {
+					const converted = convertGoogleDriveLink(value);
+					if (converted !== value) {
+						input.value = converted;
+						// Mostrar indicador visual
+						input.style.border = '2px solid #00b894';
+						setTimeout(() => {
+							input.style.border = '1px solid #ddd';
+						}, 2000);
+					}
+				}
+			}, 10);
+		}
+		
+		// Función para procesar cuando se cambia el valor manualmente
+		function handleInput(event) {
+			const input = event.target;
+			const value = input.value;
+			if (value && value.includes('drive.google.com') && !value.includes('uc?export=view')) {
+				// Solo convertir si no está ya en el formato correcto
+				const converted = convertGoogleDriveLink(value);
+				if (converted !== value) {
+					input.value = converted;
+					input.style.border = '2px solid #00b894';
+					setTimeout(() => {
+						input.style.border = '1px solid #ddd';
+					}, 2000);
+				}
+			}
+		}
+		
+		// Agregar event listeners cuando la página cargue
+		document.addEventListener('DOMContentLoaded', function() {
+			// Para el formulario de creación
+			const imagenCrear = document.getElementById('imagen-crear');
+			if (imagenCrear) {
+				imagenCrear.addEventListener('paste', handlePaste);
+				imagenCrear.addEventListener('blur', handleInput);
+			}
+			
+			// Para los formularios de edición
+			const imagenesEditar = document.querySelectorAll('.imagen-editar');
+			imagenesEditar.forEach(input => {
+				input.addEventListener('paste', handlePaste);
+				input.addEventListener('blur', handleInput);
+			});
+		});
+	</script>
 </body>
 </html>
-
-

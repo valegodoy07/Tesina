@@ -25,30 +25,55 @@
         <table class="admin-table">
             <thead>
                 <tr>
-                    <th>ID</th>
+                    <th>ID Pedido</th>
+                    <th>Mesa</th>
                     <th>Cliente</th>
+                    <th>Items</th>
                     <th>Estado</th>
-                    <th>Creado</th>
+                    <th>Fecha</th>
+                    <th>Total</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 {% for p in pedidos %}
                 <tr>
-                    <td>{{ p[0] }}</td>
+                    <td><strong>#{{ p[0] }}</strong></td>
+                    <td><strong style="color: #713D2A;">{{ p[5] or 'N/A' }}</strong></td>
                     <td>{{ p[4] or 'Anónimo' }}</td>
-                    <td>{{ p[2] }}</td>
+                    <td>
+                        {% if p|length > 6 and p[6] %}
+                            <ul style="margin: 0; padding-left: 20px;">
+                                {% for item in p[6] %}
+                                <li>{{ item[2] }} x{{ item[0] }} - ${{ '%.2f'|format(item[1]) }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span style="padding: 5px 15px; border-radius: 5px; font-size: 12px; 
+                        {% if p[2] == 'pendiente' %}background: #ffeaa7; color: #d63031;
+                        {% elif p[2] == 'en_preparacion' %}background: #74b9ff; color: white;
+                        {% elif p[2] == 'listo' %}background: #00b894; color: white;
+                        {% elif p[2] == 'entregado' %}background: #636e72; color: white;
+                        {% else %}background: #d63031; color: white;{% endif %}">
+                            {{ p[2]|title }}
+                        </span>
+                    </td>
                     <td>{{ p[3] }}</td>
                     <td>
+                        <strong>${% if p|length > 7 %}{{ '%.2f'|format(p[7]) }}{% else %}0.00{% endif %}</strong>
+                    </td>
+                    <td>
                         <form method="POST" action="{{ url_for('admin_pedido_cambiar_estado', pedido_id=p[0]) }}" class="inline-form">
-                            <select name="estado">
+                            <select name="estado" style="padding: 5px; border-radius: 5px;">
                                 <option value="pendiente" {% if p[2]=='pendiente' %}selected{% endif %}>Pendiente</option>
                                 <option value="en_preparacion" {% if p[2]=='en_preparacion' %}selected{% endif %}>En preparación</option>
                                 <option value="listo" {% if p[2]=='listo' %}selected{% endif %}>Listo</option>
                                 <option value="entregado" {% if p[2]=='entregado' %}selected{% endif %}>Entregado</option>
                                 <option value="cancelado" {% if p[2]=='cancelado' %}selected{% endif %}>Cancelado</option>
                             </select>
-                            <button type="submit">Actualizar</button>
+                            <button type="submit" style="padding: 5px 15px; margin-left: 5px;">Actualizar</button>
                         </form>
                     </td>
                 </tr>

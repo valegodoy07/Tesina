@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>P&C Restobar</title>
+  <title>P&C</title>
+  <title>RESTOBAR</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='Styles.css') }}">
 </head>
 <body>
@@ -12,7 +13,9 @@
     <div class="menu-icono" onclick="toggleMenu()">☰</div>
     SABORES QUE TE INVITAN A QUEDARTE
     
-    <div class="user-info"></div>
+    <div class="user-info">
+      <a href="{{ url_for('cart_view') }}" style="background: rgba(255, 255, 255, 0.2); padding: 5px 15px; border-radius: 5px;">🛒 Carrito ({{ cart_count }})</a>
+    </div>
   </div>
 
   <div id="menu-lateral" class="menu-lateral">
@@ -93,6 +96,13 @@
           <p>Refrescantes y deliciosas</p>
         </div>
 
+        <!-- Comida sin TAC -->
+        <div class="category-card" onclick="toggleCategory('comida_sin_tac')">
+          <div class="category-icon"></div>
+          <h3>Comida sin TAC</h3>
+          <p>Opciones libres de gluten</p>
+        </div>
+
         <!-- Promociones -->
         <div class="category-card promotion-card" onclick="toggleCategory('promociones')">
           <div class="category-icon"></div>
@@ -111,65 +121,19 @@
       <div class="container">
         <h2>Desayunos</h2>
         <div class="menu-items">
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="../static/images/continental.png" alt="Desayuno Continental">
-            </div>
-            <h4>Desayuno Continental</h4>
-            <p>Pan tostado, mermelada, café, y yogurt</p>
-            <span class="price">$8.500</span>
-          </div>
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="../static/images/huevos-benedictinos.png" alt="Huevos Benedictinos">
-            </div>
-            <h4>Huevos Benedictinos</h4>
-            <p>Huevos pochados sobre pan inglés con salsa holandesa</p>
-            <span class="price">$6.000</span>
-          </div>
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="../static/images/Pancakes.jpg" alt="Pancakes con Frutas">
-            </div>
-            <h4>Pancakes con Frutas</h4>
-            <p>Pancakes esponjosos con frutas frescas y miel</p>
-            <span class="price">$10.500</span>
-          </div>
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="../static/images/ommelette.jpg" alt="Omelette">
-            </div>
-            <h4>Omelette del Chef</h4>
-            <p>Huevos batidos con jamón, queso y vegetales frescos</p>
-            <span class="price">$7.000</span>
-          </div>
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="../static/images/waffles.jpg" alt="Waffles Belgas">
-            </div>
-            <h4>Waffles Belgas</h4>
-            <p>Waffles crujientes con sirope de arce y frutos rojos</p>
-            <span class="price">$13.000</span>
-          </div>
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="../static/images/tostadas.png" alt="Tostada Francesa">
-            </div>
-            <h4>Tostada Francesa</h4>
-            <p>Pan brioche empapado en huevo con canela y azúcar</p>
-            <span class="price">$9.500</span>
-          </div>
-          {% if productos_por_categoria and productos_por_categoria.get('desayunos') %}
-            {% for p in productos_por_categoria.get('desayunos') %}
-              <div class="menu-item">
+          <!-- Productos dinámicos desde BD -->
+          {% if productos_por_categoria.get('desayunos') %}
+            {% for p in productos_por_categoria['desayunos'] %}
+              <div class="menu-item" data-product-id="{{ p[0] }}">
                 <div class="menu-item-image">
                   {% if p[4] %}
-                    <img src="{{ p[4] }}" alt="{{ p[1] }}">
+                    <img src="{{ p[4] }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
                   {% else %}
-                    <img src="{{ url_for('static', filename='default-food.png') }}" alt="{{ p[1] }}">
+                    <img src="{{ url_for('static', filename='images/default-food.png') }}" alt="{{ p[1] }}" loading="lazy">
                   {% endif %}
                 </div>
                 <h4>{{ p[1] }}</h4>
+                <p></p>
                 <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
               </div>
             {% endfor %}
@@ -183,81 +147,19 @@
       <div class="container">
         <h2>Almuerzos</h2>
         <div class="menu-items">
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="../static/images/pollo.png" alt="Pollo a la Plancha y papas fritas">
-            </div>
-            <h4>Pollo a la Plancha</h4>
-            <p>Pechuga de pollo con arroz y ensalada mixta</p>
-            <span class="price">$15.000</span>
-          </div>
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="../static/images/pasta.png" alt="Pasta Carbonara">
-            </div>
-            <h4>Pasta Carbonara</h4>
-            <p>Spaghetti con tocino, huevo y queso parmesano</p>
-            <span class="price">$13.500</span>
-          </div>
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="../static/images/hamburguesa.png" alt="Hamburguesa Clásica">
-            </div>
-            <h4>Hamburguesa Clásica</h4>
-            <p>Carne de res, lechuga, tomate, cebolla y papas fritas</p>
-            <span class="price">$14.000</span>
-          </div>
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="../static/images/cesar.png" alt="Ensalada César">
-            </div>
-            <h4>Ensalada César Premium</h4>
-            <p>Lechuga romana, pollo, crutones, parmesano y aderezo césar</p>
-            <span class="price">$12.500</span>
-          </div>
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="../static/images/wrap.png" alt="Wrap de Pollo">
-            </div>
-            <h4>Wrap de Pollo</h4>
-            <p>Tortilla de trigo con pollo, vegetales frescos y salsa especial</p>
-            <span class="price">$11.000</span>
-          </div>
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="../static/images/club.png" alt="Sándwich Club">
-            </div>
-            <h4>Sándwich Club</h4>
-            <p>Pollo, tocino, lechuga, tomate y mayonesa en pan tostado</p>
-            <span class="price">$13.000</span>
-          </div>
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="../static/images/pizza.ñpng.avif" alt="Pizza Margherita">
-            </div>
-            <h4>Pizza Margherita</h4>
-            <p>Masa artesanal con tomate, mozzarella fresca y albahaca</p>
-            <span class="price">$16.50</span>
-          </div>
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="../static/images/tacos.png" alt="Tacos de Carne">
-            </div>
-            <h4>Tacos de Carne Asada</h4>
-            <p>Tres tacos con carne asada, cebolla, cilantro y salsas</p>
-            <span class="price">$14.500</span>
-          </div>
-          {% if productos_por_categoria and productos_por_categoria.get('almuerzos') %}
-            {% for p in productos_por_categoria.get('almuerzos') %}
-              <div class="menu-item">
+          <!-- Productos dinámicos desde BD -->
+          {% if productos_por_categoria.get('almuerzos') %}
+            {% for p in productos_por_categoria['almuerzos'] %}
+              <div class="menu-item" data-product-id="{{ p[0] }}">
                 <div class="menu-item-image">
                   {% if p[4] %}
-                    <img src="{{ p[4] }}" alt="{{ p[1] }}">
+                    <img src="{{ p[4] }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
                   {% else %}
-                    <img src="{{ url_for('static', filename='default-food.png') }}" alt="{{ p[1] }}">
+                    <img src="{{ url_for('static', filename='images/default-food.png') }}" alt="{{ p[1] }}" loading="lazy">
                   {% endif %}
                 </div>
                 <h4>{{ p[1] }}</h4>
+                <p></p>
                 <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
               </div>
             {% endfor %}
@@ -271,65 +173,19 @@
       <div class="container">
         <h2>Cenas</h2>
         <div class="menu-items">
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="../static/images/salmon.png" alt="Salmon a la Parrilla">
-            </div>
-            <h4>Salmon a la Parrilla</h4>
-            <p>Salmón fresco con vegetales asados y puré de papa</p>
-            <span class="price">$22.000</span>
-          </div>
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="../static/images/carne.png" alt="Ribeye Steak">
-            </div>
-            <h4>Ribeye Steak</h4>
-            <p>Carne de res premium con chimichurri y papas</p>
-            <span class="price">$25.00</span>
-          </div>
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="../static/images/rissoto.png" alt="Risotto de Hongos">
-            </div>
-            <h4>Risotto de Hongos</h4>
-            <p>Arroz cremoso con hongos porcini y queso parmesano</p>
-            <span class="price">$18.50</span>
-          </div>
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="../static/images/alfredo.png" alt="Pasta Alfredo">
-            </div>
-            <h4>Pasta Alfredo</h4>
-            <p>Fettuccine con salsa cremosa de parmesano y pollo</p>
-            <span class="price">$19.00</span>
-          </div>
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="../static/images/cordero.png" alt="Cordero Asado">
-            </div>
-            <h4>Cordero Asado</h4>
-            <p>Pierna de cordero con hierbas aromáticas y vegetales</p>
-            <span class="price">$28.00</span>
-          </div>
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="../static/images/paella.png" alt="Paella Valenciana">
-            </div>
-            <h4>Paella Valenciana</h4>
-            <p>Arroz con mariscos, pollo y vegetales al estilo tradicional</p>
-            <span class="price">$24.50</span>
-          </div>
-          {% if productos_por_categoria and productos_por_categoria.get('cenas') %}
-            {% for p in productos_por_categoria.get('cenas') %}
-              <div class="menu-item">
+          <!-- Productos dinámicos desde BD -->
+          {% if productos_por_categoria.get('cenas') %}
+            {% for p in productos_por_categoria['cenas'] %}
+              <div class="menu-item" data-product-id="{{ p[0] }}">
                 <div class="menu-item-image">
                   {% if p[4] %}
-                    <img src="{{ p[4] }}" alt="{{ p[1] }}">
+                    <img src="{{ p[4] }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
                   {% else %}
-                    <img src="{{ url_for('static', filename='default-food.png') }}" alt="{{ p[1] }}">
+                    <img src="{{ url_for('static', filename='images/default-food.png') }}" alt="{{ p[1] }}" loading="lazy">
                   {% endif %}
                 </div>
                 <h4>{{ p[1] }}</h4>
+                <p></p>
                 <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
               </div>
             {% endfor %}
@@ -343,65 +199,19 @@
       <div class="container">
         <h2>Meriendas</h2>
         <div class="menu-items">
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="../static/images/pankaes.png" alt="Pancakes">
-            </div>
-            <h4>Empanadas (3 unidades)</h4>
-            <p>Carne, pollo o queso</p>
-            <span class="price">$6.00</span>
-          </div>
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="../static/images/bowlyoguert.png" alt="Yogurt con frutas">
-            </div>
-            <h4>Croissants Artesanales</h4>
-            <p>Mantequilla, jamón y queso o dulces</p>
-            <span class="price">$4.500</span>
-          </div>
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="../static/images/palta.png" alt="Tostada de palta y huevo">
-            </div>
-            <h4>Quesadillas</h4>
-            <p>Tortilla de maíz con queso y pollo</p>
-            <span class="price">$7.500</span>
-          </div>
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="../static/images/alfajores.png" alt="Alfajores de maicena">
-            </div>
-            <h4>Alfajores</h4>
-            <p>3 alfajores de maicena</p>
-            <span class="price">$8.000</span>
-          </div>
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="../static/images/torta.png" alt="Porcion de torta">
-            </div>
-            <h4>Porcion de torta</h4>
-            <p></p>
-            <span class="price">$5.000</span>
-          </div>
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="../static/images/Carlitos.png" alt="Carlitos">
-            </div>
-            <h4>Carlitos</h4>
-            <p>carlito con papas copetin</p>
-            <span class="price">$6.500</span>
-          </div>
-          {% if productos_por_categoria and productos_por_categoria.get('meriendas') %}
-            {% for p in productos_por_categoria.get('meriendas') %}
-              <div class="menu-item">
+          <!-- Productos dinámicos desde BD -->
+          {% if productos_por_categoria.get('meriendas') %}
+            {% for p in productos_por_categoria['meriendas'] %}
+              <div class="menu-item" data-product-id="{{ p[0] }}">
                 <div class="menu-item-image">
                   {% if p[4] %}
-                    <img src="{{ p[4] }}" alt="{{ p[1] }}">
+                    <img src="{{ p[4] }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
                   {% else %}
-                    <img src="{{ url_for('static', filename='default-food.png') }}" alt="{{ p[1] }}">
+                    <img src="{{ url_for('static', filename='images/default-food.png') }}" alt="{{ p[1] }}" loading="lazy">
                   {% endif %}
                 </div>
                 <h4>{{ p[1] }}</h4>
+                <p></p>
                 <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
               </div>
             {% endfor %}
@@ -410,75 +220,29 @@
       </div>
     </section>
 
-    <!-- Postres -->
+    <!-- Postres (dinámico desde DB) -->
     <section id="postres" class="menu-section">
       <div class="container">
         <h2>Postres</h2>
         <div class="menu-items">
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="../static/images/tiramisu.webp" alt="Tiramisu">
-            </div>
-            <h4>Tiramisu</h4>
-            <p>Postre italiano con café y mascarpone</p>
-            <span class="price">$7.50</span>
-          </div>
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="../static/images/cheescake.jpg" alt="Cheesecake de Fresa">
-            </div>
-            <h4>Cheesecake de Fresa</h4>
-            <p>Tarta de queso con coulis de fresa</p>
-            <span class="price">$6.50</span>
-          </div>
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=400&h=300&fit=crop" alt="Brownie con Helado">
-            </div>
-            <h4>Brownie con Helado</h4>
-            <p>Brownie de chocolate con helado de vainilla</p>
-            <span class="price">$8.00</span>
-          </div>
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="../static/images/fla.png" alt="Flan de Caramelo">
-            </div>
-            <h4>Flan de Caramelo</h4>
-            <p>Postre tradicional con caramelo líquido</p>
-            <span class="price">$5.50</span>
-          </div>
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="../static/images/prosfitelores.png" alt="Profiteroles">
-            </div>
-            <h4>Profiteroles</h4>
-            <p>Bolitas de masa con helado y chocolate</p>
-            <span class="price">$9.00</span>
-          </div>
-          <div class="menu-item">
-            <div class="menu-item-image">
-              <img src="../static/images/manzana.png" alt="Tarta de Manzana">
-            </div>
-            <h4>Tarta de Manzana</h4>
-            <p>Masa hojaldrada con manzanas y canela</p>
-            <span class="price">$7.00</span>
-          </div>
-
-          {% if postres %}
-            {% for p in postres %}
-              <div class="menu-item">
+          <!-- Productos dinámicos desde BD -->
+          {% if productos_por_categoria.get('postres') %}
+            {% for p in productos_por_categoria['postres'] %}
+              <div class="menu-item" data-product-id="{{ p[0] }}">
                 <div class="menu-item-image">
                   {% if p[4] %}
-                    <img src="{{ p[4] }}" alt="{{ p[1] }}">
+                    <img src="{{ p[4] }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
                   {% else %}
-                    <img src="{{ url_for('static', filename='default-food.png') }}" alt="{{ p[1] }}">
+                    <img src="{{ url_for('static', filename='images/default-food.png') }}" alt="{{ p[1] }}" loading="lazy">
                   {% endif %}
                 </div>
                 <h4>{{ p[1] }}</h4>
+                <p></p>
                 <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
               </div>
             {% endfor %}
           {% endif %}
+          
         </div>
       </div>
     </section>
@@ -488,184 +252,50 @@
       <div class="container">
         <h2>Bebidas</h2>
         
-        <!-- Bebidas Frías -->
-        <div class="beverage-category">
-          <h3>Bebidas Frías</h3>
+        <!-- Productos dinámicos desde BD -->
+        {% if productos_por_categoria.get('bebidas') %}
           <div class="menu-items">
-            <div class="menu-item">
-              <div class="menu-item-image">
-                <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Jugos Naturales">
-              </div>
-              <h4>Jugos Naturales</h4>
-              <p>Naranja, manzana, piña o maracuyá</p>
-              <span class="price">$4.00</span>
-            </div>
-            <div class="menu-item">
-              <div class="menu-item-image">
-                <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Limonada Natural">
-              </div>
-              <h4>Limonada Natural</h4>
-              <p>Refrescante limonada con menta</p>
-              <span class="price">$3.50</span>
-            </div>
-            <div class="menu-item">
-              <div class="menu-item-image">
-                <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Smoothies">
-              </div>
-              <h4>Smoothies</h4>
-              <p>Fresa, mango, banana o mixto</p>
-              <span class="price">$5.50</span>
-            </div>
-            <div class="menu-item">
-              <div class="menu-item-image">
-                <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Agua de Coco">
-              </div>
-              <h4>Agua de Coco</h4>
-              <p>Refrescante agua de coco natural</p>
-              <span class="price">$4.50</span>
-            </div>
-            <div class="menu-item">
-              <div class="menu-item-image">
-                <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Granizado de Frutas">
-              </div>
-              <h4>Granizado de Frutas</h4>
-              <p>Hielo raspado con frutas tropicales</p>
-              <span class="price">$3.00</span>
-            </div>
-            <div class="menu-item">
-              <div class="menu-item-image">
-                <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Té Helado">
-              </div>
-              <h4>Té Helado</h4>
-              <p>Té negro o verde con limón y menta</p>
-              <span class="price">$2.50</span>
-            </div>
-            {% if productos_por_categoria and productos_por_categoria.get('bebidas') %}
-              {% for p in productos_por_categoria.get('bebidas') %}
-                <div class="menu-item">
-                  <div class="menu-item-image">
-                    {% if p[4] %}
-                      <img src="{{ p[4] }}" alt="{{ p[1] }}">
-                    {% else %}
-                      <img src="{{ url_for('static', filename='default-food.png') }}" alt="{{ p[1] }}">
-                    {% endif %}
-                  </div>
-                  <h4>{{ p[1] }}</h4>
-                  <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
+            {% for p in productos_por_categoria['bebidas'] %}
+              <div class="menu-item" data-product-id="{{ p[0] }}">
+                <div class="menu-item-image">
+                  {% if p[4] %}
+                    <img src="{{ p[4] }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
+                  {% else %}
+                    <img src="{{ url_for('static', filename='images/default-food.png') }}" alt="{{ p[1] }}" loading="lazy">
+                  {% endif %}
                 </div>
-              {% endfor %}
-            {% endif %}
+                <h4>{{ p[1] }}</h4>
+                <p></p>
+                <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
+              </div>
+            {% endfor %}
           </div>
-        </div>
+        {% endif %}
+      </div>
+    </section>
 
-        <!-- Bebidas Calientes -->
-        <div class="beverage-category">
-          <h3>Bebidas Calientes</h3>
-          <div class="menu-items">
-            <div class="menu-item">
-              <div class="menu-item-image">
-                <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Café Americano">
+    <!-- Comida sin TAC -->
+    <section id="comida_sin_tac" class="menu-section">
+      <div class="container">
+        <h2>Comida sin TAC</h2>
+        <div class="menu-items">
+          <!-- Productos dinámicos desde BD -->
+          {% if productos_por_categoria.get('comida_sin_tac') %}
+            {% for p in productos_por_categoria['comida_sin_tac'] %}
+              <div class="menu-item" data-product-id="{{ p[0] }}">
+                <div class="menu-item-image">
+                  {% if p[4] %}
+                    <img src="{{ p[4] }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
+                  {% else %}
+                    <img src="{{ url_for('static', filename='images/default-food.png') }}" alt="{{ p[1] }}" loading="lazy">
+                  {% endif %}
+                </div>
+                <h4>{{ p[1] }}</h4>
+                <p></p>
+                <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
               </div>
-              <h4>Café Americano</h4>
-              <p>Café negro caliente</p>
-              <span class="price">$2.50</span>
-            </div>
-            <div class="menu-item">
-              <div class="menu-item-image">
-                <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Cappuccino">
-              </div>
-              <h4>Cappuccino</h4>
-              <p>Espresso con leche vaporizada y espuma</p>
-              <span class="price">$3.50</span>
-            </div>
-            <div class="menu-item">
-              <div class="menu-item-image">
-                <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Latte">
-              </div>
-              <h4>Latte</h4>
-              <p>Espresso con leche caliente y arte latte</p>
-              <span class="price">$4.00</span>
-            </div>
-            <div class="menu-item">
-              <div class="menu-item-image">
-                <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Té de Hierbas">
-              </div>
-              <h4>Té de Hierbas</h4>
-              <p>Manzanilla, menta, jengibre o canela</p>
-              <span class="price">$2.00</span>
-            </div>
-            <div class="menu-item">
-              <div class="menu-item-image">
-                <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Chocolate Caliente">
-              </div>
-              <h4>Chocolate Caliente</h4>
-              <p>Chocolate artesanal con malvaviscos</p>
-              <span class="price">$4.50</span>
-            </div>
-            <div class="menu-item">
-              <div class="menu-item-image">
-                <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Café Mocha">
-              </div>
-              <h4>Café Mocha</h4>
-              <p>Espresso con chocolate y leche vaporizada</p>
-              <span class="price">$4.50</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Bebidas Alcohólicas -->
-        <div class="beverage-category">
-          <h3>Bebidas Alcohólicas</h3>
-          <div class="menu-items">
-            <div class="menu-item">
-              <div class="menu-item-image">
-                <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Cerveza Nacional">
-              </div>
-              <h4>Cerveza Nacional</h4>
-              <p>Corona, Modelo o Tecate</p>
-              <span class="price">$3.50</span>
-            </div>
-            <div class="menu-item">
-              <div class="menu-item-image">
-                <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Cerveza Importada">
-              </div>
-              <h4>Cerveza Importada</h4>
-              <p>Heineken, Stella Artois o Budweiser</p>
-              <span class="price">$4.50</span>
-            </div>
-            <div class="menu-item">
-              <div class="menu-item-image">
-                <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Vino Tinto">
-              </div>
-              <h4>Vino Tinto</h4>
-              <p>Malbec, Cabernet o Merlot</p>
-              <span class="price">$6.00</span>
-            </div>
-            <div class="menu-item">
-              <div class="menu-item-image">
-                <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Vino Blanco">
-              </div>
-              <h4>Vino Blanco</h4>
-              <p>Chardonnay, Sauvignon Blanc o Pinot Grigio</p>
-              <span class="price">$6.00</span>
-            </div>
-            <div class="menu-item">
-              <div class="menu-item-image">
-                <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Cócteles">
-              </div>
-              <h4>Cócteles</h4>
-              <p>Mojito, Margarita, Piña Colada o Daiquiri</p>
-              <span class="price">$8.00</span>
-            </div>
-            <div class="menu-item">
-              <div class="menu-item-image">
-                <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Whisky Premium">
-              </div>
-              <h4>Whisky Premium</h4>
-              <p>Johnnie Walker, Chivas Regal o Jack Daniel's</p>
-              <span class="price">$12.00</span>
-            </div>
-          </div>
+            {% endfor %}
+          {% endif %}
         </div>
       </div>
     </section>
@@ -675,59 +305,23 @@
       <div class="container">
         <h2>Promociones del Día</h2>
         <div class="menu-items">
-          <div class="menu-item promo-item">
-            <div class="menu-item-image">
-              <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Combo Desayuno">
-            </div>
-            <h4>Combo Desayuno</h4>
-            <p>Desayuno continental + café + jugo</p>
-            <span class="price original-price">$12.00</span>
-            <span class="price promo-price">$9.50</span>
-          </div>
-          <div class="menu-item promo-item">
-            <div class="menu-item-image">
-              <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Almuerzo Ejecutivo">
-            </div>
-            <h4>Almuerzo Ejecutivo</h4>
-            <p>Plato principal + postre + bebida</p>
-            <span class="price original-price">$20.00</span>
-            <span class="price promo-price">$16.00</span>
-          </div>
-          <div class="menu-item promo-item">
-            <div class="menu-item-image">
-              <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Happy Hour">
-            </div>
-            <h4>Happy Hour</h4>
-            <p>2x1 en bebidas de 5:00 PM a 7:00 PM</p>
-            <span class="price promo-price">50% OFF</span>
-          </div>
-          <div class="menu-item promo-item">
-            <div class="menu-item-image">
-              <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Combo Familiar">
-            </div>
-            <h4>Combo Familiar</h4>
-            <p>2 pizzas medianas + 4 bebidas</p>
-            <span class="price original-price">$35.00</span>
-            <span class="price promo-price">$28.00</span>
-          </div>
-          <div class="menu-item promo-item">
-            <div class="menu-item-image">
-              <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Martes de Pasta">
-            </div>
-            <h4>Martes de Pasta</h4>
-            <p>Cualquier pasta + bebida + postre</p>
-            <span class="price original-price">$18.00</span>
-            <span class="price promo-price">$14.00</span>
-          </div>
-          <div class="menu-item promo-item">
-            <div class="menu-item-image">
-              <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop" alt="Desayuno Express">
-            </div>
-            <h4>Desayuno Express</h4>
-            <p>Desayuno continental + café en 15 minutos</p>
-            <span class="price original-price">$10.00</span>
-            <span class="price promo-price">$7.50</span>
-          </div>
+          <!-- Productos dinámicos desde BD -->
+          {% if productos_por_categoria.get('promociones') %}
+            {% for p in productos_por_categoria['promociones'] %}
+              <div class="menu-item promo-item" data-product-id="{{ p[0] }}">
+                <div class="menu-item-image">
+                  {% if p[4] %}
+                    <img src="{{ p[4] }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
+                  {% else %}
+                    <img src="{{ url_for('static', filename='images/default-food.png') }}" alt="{{ p[1] }}" loading="lazy">
+                  {% endif %}
+                </div>
+                <h4>{{ p[1] }}</h4>
+                <p></p>
+                <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
+              </div>
+            {% endfor %}
+          {% endif %}
         </div>
       </div>
     </section>
@@ -864,5 +458,272 @@
       });
     });
   </script>
+
+  <!-- Modal de detalle de producto -->
+  <div id="productModal" class="product-modal" style="display: none;">
+    <div class="modal-content">
+      <span class="close-modal" onclick="closeProductModal()">&times;</span>
+      <div id="modalContent">
+        <div class="modal-product-image">
+          <img id="modalProductImage" src="" alt="">
+        </div>
+        <h2 id="modalProductName"></h2>
+        <div class="modal-product-price">$<span id="modalProductPrice"></span></div>
+        <div class="modal-product-description">
+          <p id="modalProductDescription"></p>
+        </div>
+        <div class="modal-add-to-cart">
+          <div style="margin-bottom: 10px;">
+            <label for="quantity">Cantidad:</label>
+            <input type="number" id="quantity" name="quantity" min="1" value="1" style="width: 80px; padding: 8px; margin: 10px;">
+          </div>
+          <div style="margin-bottom: 10px;">
+            <label for="mesa">Mesa:</label>
+            <input type="text" id="mesa" name="mesa" placeholder="Ej: Mesa 1" required style="width: 150px; padding: 8px; margin: 10px;">
+          </div>
+          <button onclick="addToCartFromModal()" class="btn-add-cart">Añadir al carrito</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentProduct = null;
+
+    function showProductDetail(productId) {
+      fetch(`/api/producto/${productId}`)
+        .then(response => response.json())
+        .then(data => {
+          currentProduct = data;
+          document.getElementById('modalProductImage').src = data.imagen || '{{ url_for("static", filename="images/default-food.png") }}';
+          document.getElementById('modalProductName').textContent = data.nombre;
+          document.getElementById('modalProductPrice').textContent = data.precio.toLocaleString('es-CL');
+          document.getElementById('modalProductDescription').textContent = data.descripcion || 'Sin descripción disponible';
+          document.getElementById('productModal').style.display = 'block';
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Error al cargar el producto');
+        });
+    }
+
+    function closeProductModal() {
+      document.getElementById('productModal').style.display = 'none';
+      currentProduct = null;
+      document.getElementById('quantity').value = 1;
+      document.getElementById('mesa').value = '';
+    }
+
+    function addToCartFromModal() {
+      if (!currentProduct) return;
+      const quantity = parseInt(document.getElementById('quantity').value);
+      const mesa = document.getElementById('mesa').value;
+      
+      if (!mesa || mesa.trim() === '') {
+        alert('Por favor, ingresa el número de mesa');
+        return;
+      }
+      
+      // Crear formulario para añadir al carrito
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = `/cart/add/${currentProduct.id}`;
+      
+      const qtyInput = document.createElement('input');
+      qtyInput.type = 'hidden';
+      qtyInput.name = 'qty';
+      qtyInput.value = quantity;
+      form.appendChild(qtyInput);
+      
+      const mesaInput = document.createElement('input');
+      mesaInput.type = 'hidden';
+      mesaInput.name = 'mesa';
+      mesaInput.value = mesa;
+      form.appendChild(mesaInput);
+      
+      document.body.appendChild(form);
+      form.submit();
+    }
+
+    function addToCartDirectly(productName, price, categoria) {
+      // Mostrar confirmación
+      const quantity = prompt(`¿Cuántas unidades de "${productName}" deseas agregar?`, '1');
+      
+      if (!quantity || isNaN(quantity) || parseInt(quantity) <= 0) {
+        alert('Por favor, ingresa una cantidad válida');
+        return;
+      }
+
+      // Crear formulario para añadir al carrito vía POST especial
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = '/cart/add/temp';
+      
+      const nameInput = document.createElement('input');
+      nameInput.type = 'hidden';
+      nameInput.name = 'nombre';
+      nameInput.value = productName;
+      form.appendChild(nameInput);
+      
+      const priceInput = document.createElement('input');
+      priceInput.type = 'hidden';
+      priceInput.name = 'precio';
+      priceInput.value = price;
+      form.appendChild(priceInput);
+      
+      const qtyInput = document.createElement('input');
+      qtyInput.type = 'hidden';
+      qtyInput.name = 'qty';
+      qtyInput.value = quantity;
+      form.appendChild(qtyInput);
+      
+      const catInput = document.createElement('input');
+      catInput.type = 'hidden';
+      catInput.name = 'categoria';
+      catInput.value = categoria;
+      form.appendChild(catInput);
+      
+      document.body.appendChild(form);
+      form.submit();
+    }
+
+    // Cerrar modal al hacer clic fuera
+    window.onclick = function(event) {
+      const modal = document.getElementById('productModal');
+      if (event.target == modal) {
+        closeProductModal();
+      }
+    }
+
+    // Agregar event listeners a los productos para abrir el modal
+    document.addEventListener('DOMContentLoaded', function() {
+      // Agregar onclick a los productos dinámicos
+      const menuItems = document.querySelectorAll('.menu-item');
+      menuItems.forEach(item => {
+        // Añadir cursor pointer
+        item.style.cursor = 'pointer';
+        item.onclick = function() {
+          const productId = this.getAttribute('data-product-id');
+          if (productId) {
+            showProductDetail(productId);
+          }
+        };
+      });
+    });
+  </script>
+
+  <style>
+    .product-modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.7);
+    }
+
+    .modal-content {
+      background-color: #fff;
+      margin: 5% auto;
+      padding: 30px;
+      border-radius: 15px;
+      width: 90%;
+      max-width: 600px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      position: relative;
+      animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+      from {
+        transform: translateY(-50px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .close-modal {
+      position: absolute;
+      right: 20px;
+      top: 15px;
+      font-size: 35px;
+      font-weight: bold;
+      color: #713D2A;
+      cursor: pointer;
+    }
+
+    .close-modal:hover {
+      color: #8B5A3C;
+    }
+
+    .modal-product-image {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-product-image img {
+      width: 100%;
+      max-height: 300px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+
+    .modal-product-price {
+      font-size: 28px;
+      font-weight: bold;
+      color: #713D2A;
+      margin: 15px 0;
+    }
+
+    .modal-product-description {
+      margin: 20px 0;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      min-height: 80px;
+    }
+
+    .modal-product-description p {
+      margin: 0;
+      color: #666;
+      line-height: 1.6;
+    }
+
+    .modal-add-to-cart {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-top: 25px;
+      padding-top: 20px;
+      border-top: 2px solid #f0f0f0;
+    }
+
+    .modal-add-to-cart label {
+      font-weight: bold;
+      color: #713D2A;
+    }
+
+    .btn-add-cart {
+      background-color: #713D2A;
+      color: white;
+      padding: 12px 30px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      transition: background-color 0.3s;
+    }
+
+    .btn-add-cart:hover {
+      background-color: #8B5A3C;
+    }
+  </style>
 </body>
 </html>

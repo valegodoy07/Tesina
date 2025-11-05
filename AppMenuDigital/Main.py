@@ -1,9 +1,12 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from functools import wraps
-from flask_mysqldb import MySQL
 from werkzeug.security import generate_password_hash, check_password_hash
-from config import Config
+try:
+    from .config import Config
+except ImportError:
+    from config import Config
 import os
+import pymysql
 
 app = Flask(__name__)
 
@@ -15,10 +18,37 @@ app.config['MYSQL_USER'] = Config.MYSQL_USER
 app.config['MYSQL_PASSWORD'] = Config.MYSQL_PASSWORD
 app.config['MYSQL_DB'] = Config.MYSQL_DB
 
+# Clase MySQL personalizada usando pymysql
+class MySQL:
+    def __init__(self, app=None):
+        self.app = app
+    
+    @property
+    def connection(self):
+        return pymysql.connect(
+            host=self.app.config['MYSQL_HOST'],
+            port=self.app.config['MYSQL_PORT'],
+            user=self.app.config['MYSQL_USER'],
+            password=self.app.config['MYSQL_PASSWORD'],
+            database=self.app.config['MYSQL_DB'],
+            autocommit=False,
+            charset='utf8mb4',
+            connect_timeout=5
+        )
+mysql = MySQL(app)
 # (revert) Sin configuración de subida de imágenes
 
 # Inicializar MySQL
-mysql = MySQL(app)
+# Función para obtener conexión a la base de datos
+def get_db_connection():
+    connection = pymysql.connect(
+        host=app.config['MYSQL_HOST'],
+        user=app.config['MYSQL_USER'],
+        password=app.config['MYSQL_PASSWORD'],
+        database=app.config['MYSQL_DB'],
+        cursorclass=pymysql.cursors.DictCursor
+    )
+    return connection
 
 # (revert) Sin inicialización automática de tablas
 # Context processor to expose cart count in all templates
@@ -41,14 +71,14 @@ def inject_cart_count():
 @app.route('/')
 def index():
     # Cargar dinámicamente productos por categoría para el Index (se agregan al final del bloque hardcodeado)
-    categorias = ['desayunos', 'almuerzos', 'cenas', 'meriendas', 'postres', 'bebidas']
+    categorias = ['desayunos', 'almuerzos', 'cenas', 'meriendas', 'postres', 'bebidas', 'comida_sin_tac', 'promociones']
     productos_por_categoria = {c: [] for c in categorias}
     try:
         cur = mysql.connection.cursor()
         cur.execute("""
-            SELECT id, Nombre_Menu, Precio, LOWER(COALESCE(Categoria, '')) as cat, COALESCE(Imagen, '')
+            SELECT id, Nombre_Menu, Precio, LOWER(COALESCE(Categoria, '')) as cat, COALESCE(Imagen, ''), COALESCE(Descripcion, '')
             FROM menu
-            WHERE LOWER(COALESCE(Categoria, '')) IN ('desayunos','almuerzos','cenas','meriendas','postres','bebidas')
+            WHERE LOWER(COALESCE(Categoria, '')) IN ('desayunos','almuerzos','cenas','meriendas','postres','bebidas','comida_sin_tac','promociones')
             ORDER BY id DESC
         """)
         filas = cur.fetchall()
@@ -83,7 +113,7 @@ def menu():
 def categoria(nombre: str):
     # Normalizamos nombre para plantilla
     nombre_lower = nombre.lower()
-    categorias_validas = ['desayunos', 'almuerzos', 'meriendas', 'cenas', 'postres', 'bebidas', 'promociones']
+    categorias_validas = ['desayunos', 'almuerzos', 'meriendas', 'cenas', 'postres', 'bebidas', 'comida_sin_tac', 'promociones']
     if nombre_lower not in categorias_validas:
         flash('Categoría no encontrada', 'error')
         return redirect(url_for('index'))
@@ -184,6 +214,7 @@ def registro():
             return render_template('Registro.html')
         
         try:
+            ensure_core_tables()
             cur = mysql.connection.cursor()
             
             # Verificar si el email ya existe
@@ -217,6 +248,25 @@ def registro():
             flash('Error al registrar usuario', 'error')
     
     return render_template('Registro.html')
+
+def ensure_core_tables():
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS usuarios (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                nombre VARCHAR(100) NOT NULL,
+                email VARCHAR(100) UNIQUE NOT NULL,
+                password VARCHAR(255) NOT NULL,
+                fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+        mysql.connection.commit()
+        cur.close()
+    except Exception as e:
+        print(f"Error asegurando tabla usuarios: {e}")
 
 @app.route('/logout')
 def logout():
@@ -256,7 +306,7 @@ def ensure_pedidos_tables():
         cur = mysql.connection.cursor()
         cur.execute(
             """
-            CREATE TABLE IF NOT EXISTS pedidos (
+            CREATE TABLE IF NOT EXISTS pedidos_mozo (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 mozo_id INT NOT NULL,
                 mesa VARCHAR(20) NOT NULL,
@@ -269,12 +319,12 @@ def ensure_pedidos_tables():
         )
         cur.execute(
             """
-            CREATE TABLE IF NOT EXISTS pedido_items (
+            CREATE TABLE IF NOT EXISTS pedido_items_mozo (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 pedido_id INT NOT NULL,
                 producto_id INT NOT NULL,
                 cantidad INT NOT NULL DEFAULT 1,
-                FOREIGN KEY (pedido_id) REFERENCES pedidos(id),
+                FOREIGN KEY (pedido_id) REFERENCES pedidos_mozo(id),
                 FOREIGN KEY (producto_id) REFERENCES productos(id)
             )
             """
@@ -300,6 +350,11 @@ def ensure_menu_table_upgrade():
                 cur.execute("ALTER TABLE menu ADD COLUMN Categoria VARCHAR(50) NULL")
             except Exception:
                 pass
+        if 'descripcion' not in cols:
+            try:
+                cur.execute("ALTER TABLE menu ADD COLUMN Descripcion TEXT NULL")
+            except Exception:
+                pass
         mysql.connection.commit()
         cur.close()
     except Exception as e:
@@ -310,25 +365,50 @@ def ensure_menu_table_upgrade():
 @admin_required
 def admin_dashboard():
     try:
+        # Asegurar tablas necesarias para métricas
+        try:
+            ensure_client_orders_tables()
+        except Exception:
+            pass
         ensure_menu_table_upgrade()
         cur = mysql.connection.cursor()
+        
+        # Obtener productos
         try:
-            cur.execute("SELECT id, Nombre_Menu, Precio, COALESCE(Categoria, ''), COALESCE(Imagen, '') FROM menu ORDER BY id DESC")
+            cur.execute("SELECT id, Nombre_Menu, Precio, COALESCE(Categoria, ''), COALESCE(Imagen, ''), COALESCE(Descripcion, '') FROM menu ORDER BY id DESC")
             productos = cur.fetchall()
         except Exception:
             productos = []
-        mozos = []
+        
+        # Obtener estadísticas para el panel de control
+        stats = {}
         try:
-            cur.execute("SELECT id, nombre, email, telefono, activo FROM mozos ORDER BY nombre")
-            mozos = cur.fetchall()
+            # Total de productos
+            cur.execute("SELECT COUNT(*) FROM menu")
+            stats['total_productos'] = cur.fetchone()[0] or 0
         except Exception:
-            mozos = []
+            stats['total_productos'] = 0
+        
+        try:
+            # Pedidos pendientes
+            cur.execute("SELECT COUNT(*) FROM pedidos WHERE estado = 'pendiente'")
+            stats['pedidos_pendientes'] = cur.fetchone()[0] or 0
+        except Exception:
+            stats['pedidos_pendientes'] = 0
+        
+        try:
+            # Total de pedidos
+            cur.execute("SELECT COUNT(*) FROM pedidos")
+            stats['total_pedidos'] = cur.fetchone()[0] or 0
+        except Exception:
+            stats['total_pedidos'] = 0
+        
         cur.close()
-        return render_template('admin.html', categorias=[], productos=productos, mozos=mozos)
+        return render_template('admin.html', categorias=[], productos=productos, stats=stats)
     except Exception as e:
         print(f"Error al cargar dashboard admin: {e}")
         flash('Error al cargar el panel de administración', 'error')
-        return render_template('admin.html', categorias=[], productos=[], mozos=[])
+        return render_template('admin.html', categorias=[], productos=[], stats={})
 
 # ===== Panel de Mozo =====
 @app.route('/mozo')
@@ -337,7 +417,7 @@ def mozo_dashboard():
     ensure_pedidos_tables()
     try:
         cur = mysql.connection.cursor()
-        cur.execute("SELECT id, mesa, estado, notas, creado_en FROM pedidos WHERE mozo_id=%s ORDER BY id DESC", (session['mozo_id'],))
+        cur.execute("SELECT id, mesa, estado, notas, creado_en FROM pedidos_mozo WHERE mozo_id=%s ORDER BY id DESC", (session['mozo_id'],))
         pedidos = cur.fetchall()
         cur.close()
         return render_template('mozo.html', pedidos=pedidos)
@@ -357,7 +437,7 @@ def mozo_pedido_crear():
         return redirect(url_for('mozo_dashboard'))
     try:
         cur = mysql.connection.cursor()
-        cur.execute("INSERT INTO pedidos (mozo_id, mesa, notas) VALUES (%s, %s, %s)", (session['mozo_id'], mesa, notas))
+        cur.execute("INSERT INTO pedidos_mozo (mozo_id, mesa, notas) VALUES (%s, %s, %s)", (session['mozo_id'], mesa, notas))
         mysql.connection.commit()
         cur.close()
         flash('Pedido creado', 'success')
@@ -372,7 +452,7 @@ def mozo_pedido_estado(pedido_id: int):
     nuevo_estado = request.form.get('estado', 'abierto')
     try:
         cur = mysql.connection.cursor()
-        cur.execute("UPDATE pedidos SET estado=%s WHERE id=%s AND mozo_id=%s", (nuevo_estado, pedido_id, session['mozo_id']))
+        cur.execute("UPDATE pedidos_mozo SET estado=%s WHERE id=%s AND mozo_id=%s", (nuevo_estado, pedido_id, session['mozo_id']))
         mysql.connection.commit()
         cur.close()
         flash('Estado actualizado', 'success')
@@ -440,6 +520,7 @@ def admin_productos_crear():
     precio = request.form.get('precio')
     categoria = request.form.get('categoria')
     imagen = request.form.get('imagen')
+    descripcion = request.form.get('descripcion', '')
     if not (nombre and precio):
         flash('Nombre y precio son obligatorios', 'error')
         return redirect(url_for('admin_dashboard'))
@@ -447,8 +528,8 @@ def admin_productos_crear():
         ensure_menu_table_upgrade()
         cur = mysql.connection.cursor()
         cur.execute(
-            "INSERT INTO menu (Nombre_Menu, Precio, Categoria, Imagen) VALUES (%s, %s, %s, %s)",
-            (nombre, precio, categoria, imagen)
+            "INSERT INTO menu (Nombre_Menu, Precio, Categoria, Imagen, Descripcion) VALUES (%s, %s, %s, %s, %s)",
+            (nombre, precio, categoria, imagen, descripcion)
         )
         mysql.connection.commit()
         cur.close()
@@ -465,12 +546,13 @@ def admin_productos_actualizar(producto_id: int):
     precio = request.form.get('precio')
     categoria = request.form.get('categoria')
     imagen = request.form.get('imagen')
+    descripcion = request.form.get('descripcion', '')
     try:
         ensure_menu_table_upgrade()
         cur = mysql.connection.cursor()
         cur.execute(
-            "UPDATE menu SET Nombre_Menu=%s, Precio=%s, Categoria=%s, Imagen=%s WHERE id=%s",
-            (nombre, precio, categoria, imagen, producto_id)
+            "UPDATE menu SET Nombre_Menu=%s, Precio=%s, Categoria=%s, Imagen=%s, Descripcion=%s WHERE id=%s",
+            (nombre, precio, categoria, imagen, descripcion, producto_id)
         )
         mysql.connection.commit()
         cur.close()
@@ -504,8 +586,9 @@ def ensure_client_orders_tables():
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 usuario_id INT NULL,
                 estado VARCHAR(20) DEFAULT 'pendiente',
+                mesa VARCHAR(50) NULL,
                 creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (usuario_id) REFERENCES usuarios(idusuario)
+                FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
             )
             """
         )
@@ -539,22 +622,38 @@ def cart_view():
         cur = mysql.connection.cursor()
         for pid, entry in cart.items():
             try:
-                cur.execute("SELECT id, Nombre_Menu, Precio FROM menu WHERE id=%s", (pid,))
-                row = cur.fetchone()
-                if not row:
-                    continue
-                cantidad = int(entry.get('qty', 1))
-                precio = float(row[2])
-                subtotal = cantidad * precio
-                total += subtotal
-                items.append({
-                    'id': row[0],
-                    'nombre': row[1],
-                    'precio': precio,
-                    'cantidad': cantidad,
-                    'subtotal': subtotal,
-                })
-            except Exception:
+                # Si es un producto temporal
+                if entry.get('temp', False):
+                    cantidad = int(entry.get('qty', 1))
+                    precio = float(entry.get('precio', 0))
+                    subtotal = cantidad * precio
+                    total += subtotal
+                    items.append({
+                        'id': pid,
+                        'nombre': entry.get('nombre', 'Producto'),
+                        'precio': precio,
+                        'cantidad': cantidad,
+                        'subtotal': subtotal,
+                    })
+                else:
+                    # Producto de la base de datos
+                    cur.execute("SELECT id, Nombre_Menu, Precio FROM menu WHERE id=%s", (pid,))
+                    row = cur.fetchone()
+                    if not row:
+                        continue
+                    cantidad = int(entry.get('qty', 1))
+                    precio = float(row[2])
+                    subtotal = cantidad * precio
+                    total += subtotal
+                    items.append({
+                        'id': row[0],
+                        'nombre': row[1],
+                        'precio': precio,
+                        'cantidad': cantidad,
+                        'subtotal': subtotal,
+                    })
+            except Exception as e:
+                print(f"Error cargando item {pid}: {e}")
                 continue
         cur.close()
     except Exception as e:
@@ -564,15 +663,50 @@ def cart_view():
 @app.route('/cart/add/<int:producto_id>', methods=['POST'])
 def cart_add(producto_id: int):
     qty = int(request.form.get('qty', '1'))
+    mesa = request.form.get('mesa', '')
     cart = _get_cart()
     key = str(producto_id)
+    
+    # Guardar la mesa en la sesión si no existe ya
+    if mesa and 'mesa_carrito' not in session:
+        session['mesa_carrito'] = mesa
+    elif not mesa and 'mesa_carrito' in session:
+        mesa = session['mesa_carrito']
+    
     if key in cart:
         cart[key]['qty'] = int(cart[key].get('qty', 1)) + qty
     else:
         cart[key] = {'qty': qty}
+    
     session['cart'] = cart
     flash('Producto agregado al carrito', 'success')
     return redirect(request.referrer or url_for('menu'))
+
+@app.route('/cart/add/temp', methods=['POST'])
+def cart_add_temp():
+    nombre = request.form.get('nombre')
+    precio = float(request.form.get('precio', 0))
+    qty = int(request.form.get('qty', '1'))
+    categoria = request.form.get('categoria', '')
+    
+    # Crear un ID único para el producto temporal usando hash del nombre
+    import hashlib
+    temp_id = 'temp_' + hashlib.md5(nombre.encode()).hexdigest()[:10]
+    
+    cart = _get_cart()
+    if temp_id in cart:
+        cart[temp_id]['qty'] += qty
+    else:
+        cart[temp_id] = {
+            'qty': qty,
+            'nombre': nombre,
+            'precio': precio,
+            'categoria': categoria,
+            'temp': True
+        }
+    session['cart'] = cart
+    flash(f'{nombre} agregado al carrito', 'success')
+    return redirect(request.referrer or url_for('index'))
 
 @app.route('/cart/update', methods=['POST'])
 def cart_update():
@@ -609,48 +743,136 @@ def cart_checkout():
     if not cart:
         flash('El carrito está vacío', 'error')
         return redirect(url_for('cart_view'))
+    
+    # Obtener la mesa del formulario
+    mesa = request.form.get('mesa', '').strip()
+    if not mesa:
+        flash('Debes indicar el número de mesa', 'error')
+        return redirect(url_for('cart_view'))
+    
     ensure_client_orders_tables()
     try:
         cur = mysql.connection.cursor()
-        cur.execute("INSERT INTO pedidos (usuario_id, estado) VALUES (%s, %s)", (session.get('user_id'), 'pendiente'))
+        # Verificar si la columna mesa existe, si no, agregarla
+        try:
+            cur.execute("DESCRIBE pedidos")
+            cols = [row[0].lower() for row in cur.fetchall()]
+            if 'mesa' not in cols:
+                cur.execute("ALTER TABLE pedidos ADD COLUMN mesa VARCHAR(50) NULL")
+                mysql.connection.commit()
+        except Exception:
+            pass
+        
+        cur.execute("INSERT INTO pedidos (usuario_id, estado, mesa) VALUES (%s, %s, %s)", (session.get('user_id'), 'pendiente', mesa))
         pedido_id = cur.lastrowid
         for pid, entry in cart.items():
-            cur.execute("SELECT Precio FROM menu WHERE id=%s", (pid,))
-            row = cur.fetchone()
-            if not row:
+            try:
+                int(pid)  # Verificar que es un ID válido
+                cur.execute("SELECT Precio FROM menu WHERE id=%s", (pid,))
+                row = cur.fetchone()
+                if not row:
+                    continue
+                precio = float(row[0])
+                cantidad = int(entry.get('qty', 1))
+                cur.execute(
+                    "INSERT INTO pedido_items (pedido_id, menu_id, cantidad, precio_unitario) VALUES (%s, %s, %s, %s)",
+                    (pedido_id, pid, cantidad, precio)
+                )
+            except ValueError:
+                # Ignorar IDs no numéricos (productos temporales)
                 continue
-            precio = float(row[0])
-            cantidad = int(entry.get('qty', 1))
-            cur.execute(
-                "INSERT INTO pedido_items (pedido_id, menu_id, cantidad, precio_unitario) VALUES (%s, %s, %s, %s)",
-                (pedido_id, pid, cantidad, precio)
-            )
         mysql.connection.commit()
         cur.close()
-        # Vaciar carrito
+        # Vaciar carrito y mesa
         session['cart'] = {}
+        session.pop('mesa_carrito', None)
         flash('Pedido enviado correctamente', 'success')
     except Exception as e:
         print(f"Error en checkout: {e}")
         flash('Error al procesar el pedido', 'error')
     return redirect(url_for('index'))
 
-# ===== Vista de pedidos para administrador =====
-@app.route('/admin/pedidos')
-@admin_required
-def admin_pedidos_list():
-    ensure_client_orders_tables()
-    pedidos = []
+@app.route('/api/producto/<int:producto_id>')
+def api_producto(producto_id):
+    from flask import jsonify
     try:
         cur = mysql.connection.cursor()
+        cur.execute("""
+            SELECT id, Nombre_Menu, Precio, Categoria, Imagen, Descripcion 
+            FROM menu 
+            WHERE id=%s
+        """, (producto_id,))
+        producto = cur.fetchone()
+        cur.close()
+        
+        if producto:
+            return jsonify({
+                'id': producto[0],
+                'nombre': producto[1],
+                'precio': float(producto[2]),
+                'categoria': producto[3],
+                'imagen': producto[4],
+                'descripcion': producto[5] or ''
+            })
+        else:
+            return jsonify({'error': 'Producto no encontrado'}), 404
+    except Exception as e:
+        print(f"Error obteniendo producto: {e}")
+        return jsonify({'error': 'Error al obtener producto'}), 500
+
+# ===== Vista de pedidos para administrador =====
+@app.route('/admin/pedidos-nuevo')
+@admin_required
+def admin_pedidos_nuevo():
+    ensure_client_orders_tables()
+    try:
+        cur = mysql.connection.cursor()
+        try:
+            cur.execute("DESCRIBE pedidos")
+            cols = [row[0].lower() for row in cur.fetchall()]
+            if 'mesa' not in cols:
+                cur.execute("ALTER TABLE pedidos ADD COLUMN mesa VARCHAR(50) NULL")
+                mysql.connection.commit()
+        except Exception:
+            pass
+
         cur.execute(
-            "SELECT p.id, p.usuario_id, p.estado, p.creado_en, COALESCE(u.nombre, '') FROM pedidos p LEFT JOIN usuarios u ON p.usuario_id=u.idusuario ORDER BY p.id DESC"
+            """
+            SELECT p.id, COALESCE(p.mesa, '') AS mesa, COALESCE(u.nombre, '') AS cliente,
+                   p.estado, p.creado_en
+            FROM pedidos p
+            LEFT JOIN usuarios u ON p.usuario_id = u.id
+            ORDER BY p.id DESC
+            """
         )
-        pedidos = cur.fetchall()
+        base_rows = cur.fetchall()
+
+        pedidos = []
+        for row in base_rows:
+            pedido_id = row[0]
+            try:
+                cur.execute(
+                    """
+                    SELECT pi.cantidad, pi.precio_unitario, m.Nombre_Menu
+                    FROM pedido_items pi
+                    JOIN menu m ON pi.menu_id = m.id
+                    WHERE pi.pedido_id = %s
+                    """,
+                    (pedido_id,)
+                )
+                items = cur.fetchall()
+                total = sum(float(it[0]) * float(it[1]) for it in items)
+            except Exception:
+                items = []
+                total = 0.0
+
+            pedidos.append((row[0], row[1], row[2], row[3], row[4], items, total))
+
         cur.close()
     except Exception as e:
-        print(f"Error listando pedidos: {e}")
-    return render_template('admin_pedidos.html', pedidos=pedidos)
+        print(f"Error listando pedidos nuevo: {e}")
+        pedidos = []
+    return render_template('admin_pedidos_nuevo.html', pedidos=pedidos)
 
 @app.route('/admin/pedidos/<int:pedido_id>/estado', methods=['POST'])
 @admin_required
@@ -665,7 +887,37 @@ def admin_pedido_cambiar_estado(pedido_id: int):
     except Exception as e:
         print(f"Error actualizando estado de pedido: {e}")
         flash('Error al actualizar estado del pedido', 'error')
-    return redirect(url_for('admin_pedidos_list'))
+    return redirect(url_for('admin_pedidos_nuevo'))
+
+# Eliminar pedido (solo si ya fue entregado)
+@app.route('/admin/pedidos/<int:pedido_id>/eliminar', methods=['POST'])
+@admin_required
+def admin_pedido_eliminar(pedido_id: int):
+    try:
+        cur = mysql.connection.cursor()
+        # Verificar estado del pedido
+        cur.execute("SELECT estado FROM pedidos WHERE id=%s", (pedido_id,))
+        row = cur.fetchone()
+        if not row:
+            cur.close()
+            flash('Pedido no encontrado', 'error')
+            return redirect(url_for('admin_pedidos_nuevo'))
+        estado = (row[0] or '').lower()
+        if estado != 'entregado':
+            cur.close()
+            flash('Solo se pueden eliminar pedidos entregados', 'error')
+            return redirect(url_for('admin_pedidos_nuevo'))
+
+        # Borrar primero items, luego pedido
+        cur.execute("DELETE FROM pedido_items WHERE pedido_id=%s", (pedido_id,))
+        cur.execute("DELETE FROM pedidos WHERE id=%s", (pedido_id,))
+        mysql.connection.commit()
+        cur.close()
+        flash('Pedido eliminado', 'success')
+    except Exception as e:
+        print(f"Error eliminando pedido {pedido_id}: {e}")
+        flash('Error al eliminar pedido', 'error')
+    return redirect(url_for('admin_pedidos_nuevo'))
 
 # ===== CRUD Mozos =====
 @app.route('/admin/mozos/crear', methods=['POST'])

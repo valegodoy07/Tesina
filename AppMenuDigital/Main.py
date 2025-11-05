@@ -17,6 +17,16 @@ app.config['MYSQL_HOST'] = Config.MYSQL_HOST
 app.config['MYSQL_USER'] = Config.MYSQL_USER
 app.config['MYSQL_PASSWORD'] = Config.MYSQL_PASSWORD
 app.config['MYSQL_DB'] = Config.MYSQL_DB
+print(f"[startup] DB host={app.config['MYSQL_HOST']} port={app.config['MYSQL_PORT']} user={app.config['MYSQL_USER']} db={app.config['MYSQL_DB']}")
+app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static', 'images')
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10 MB
+_ALLOWED_IMAGE_EXTS = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.avif'}
+
+# Asegurar carpeta de imágenes
+try:
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+except Exception as e:
+    print(f"[startup] No se pudo crear carpeta de imágenes: {e}")
 
 # Clase MySQL personalizada usando pymysql
 class MySQL:
@@ -50,6 +60,21 @@ def get_db_connection():
     )
     return connection
 
+def _log_db_info(tag: str):
+    try:
+        conn = mysql.connection
+        cur = conn.cursor()
+        cur.execute("SELECT DATABASE()")
+        dbn = cur.fetchone()[0]
+        cur.execute("SELECT VERSION()")
+        ver = cur.fetchone()[0]
+        cur.execute("SELECT CURRENT_USER()")
+        usr = cur.fetchone()[0]
+        print(f"[db-info:{tag}] database={dbn} version={ver} current_user={usr}")
+        cur.close()
+    except Exception as e:
+        print(f"[db-info:{tag}] error: {e}")
+
 # (revert) Sin inicialización automática de tablas
 # Context processor to expose cart count in all templates
 @app.context_processor
@@ -74,6 +99,7 @@ def index():
     categorias = ['desayunos', 'almuerzos', 'cenas', 'meriendas', 'postres', 'bebidas', 'comida_sin_tac', 'promociones']
     productos_por_categoria = {c: [] for c in categorias}
     try:
+        ensure_menu_table_exists()
         cur = mysql.connection.cursor()
         cur.execute("""
             SELECT id, Nombre_Menu, Precio, LOWER(COALESCE(Categoria, '')) as cat, COALESCE(Imagen, ''), COALESCE(Descripcion, '')
@@ -98,6 +124,7 @@ def index():
 @app.route('/menu')
 def menu():
     try:
+        ensure_menu_table_exists()
         ensure_menu_table_upgrade()
         cur = mysql.connection.cursor()
         cur.execute("SELECT id, Nombre_Menu, Precio, COALESCE(Categoria, ''), COALESCE(Imagen, '') FROM menu ORDER BY id DESC")
@@ -155,12 +182,37 @@ def login():
         password = request.form['password']
         
         try:
-            cur = mysql.connection.cursor()
-            cur.execute("SELECT * FROM usuarios WHERE email = %s", (email,))
+            conn = mysql.connection
+            cur = conn.cursor()
+            # Selecciona columnas explícitas para evitar dependencia de orden
+            cur.execute("SELECT id, nombre, email, password FROM usuarios WHERE email = %s LIMIT 1", (email,))
             user = cur.fetchone()
-            cur.close()
-            
-            if user and check_password_hash(user[3], password):
+            print(f"[login] fetched user for {email}: {bool(user)}")
+
+            password_ok = False
+            upgraded = False
+            if user:
+                stored_pwd = user[3]
+                try:
+                    password_ok = check_password_hash(stored_pwd, password)
+                except Exception as e:
+                    print(f"[login] check_password_hash error: {e}")
+                    password_ok = False
+                if not password_ok:
+                    # Fallback: si la DB tuviese texto plano (migración)
+                    try:
+                        password_ok = (stored_pwd == password)
+                        if password_ok and not (isinstance(stored_pwd, str) and stored_pwd.startswith('pbkdf2:')):
+                            new_hash = generate_password_hash(password)
+                            cur.execute("UPDATE usuarios SET password=%s WHERE id=%s", (new_hash, user[0]))
+                            conn.commit()
+                            upgraded = True
+                            print("[login] upgraded password hash for user id", user[0])
+                    except Exception as e:
+                        print(f"[login] legacy password check error: {e}")
+                        password_ok = False
+
+            if user and password_ok:
                 session['user_id'] = user[0]
                 session['nombre'] = user[1]
                 # Guardar email en sesión
@@ -189,10 +241,12 @@ def login():
                         session['rol'] = 'usuario'
                 except Exception:
                     session['rol'] = 'admin' if (is_admin or session.get('user_id') == 1) else 'usuario'
-                flash('¡Inicio de sesión exitoso!', 'success')
+                flash('¡Inicio de sesión exitoso!' + (' (contraseña actualizada)' if upgraded else ''), 'success')
+                _log_db_info('login')
                 return redirect(url_for('index'))
             else:
                 flash('Email o contraseña incorrectos', 'error')
+                print(f"[login] invalid credentials for {email}")
                 
         except Exception as e:
             print(f"Error en login: {e}")
@@ -215,7 +269,8 @@ def registro():
         
         try:
             ensure_core_tables()
-            cur = mysql.connection.cursor()
+            conn = mysql.connection
+            cur = conn.cursor()
             
             # Verificar si el email ya existe
             cur.execute("SELECT * FROM usuarios WHERE email = %s", (email,))
@@ -237,8 +292,11 @@ def registro():
                 # Si ya existe en mozos por UNIQUE email, ignoramos
                 pass
 
-            mysql.connection.commit()
+            conn.commit()
+            new_id = cur.lastrowid
+            print(f"[registro] usuario creado id={new_id} email={email}")
             cur.close()
+            _log_db_info('registro')
             
             flash('¡Registro exitoso! Ahora puedes iniciar sesión', 'success')
             return redirect(url_for('login'))
@@ -303,6 +361,10 @@ def mozo_required(view_func):
 
 def ensure_pedidos_tables():
     try:
+        # Asegurar tablas base necesarias
+        ensure_mozos_table_exists()
+        ensure_menu_table_exists()
+
         cur = mysql.connection.cursor()
         cur.execute(
             """
@@ -313,7 +375,7 @@ def ensure_pedidos_tables():
                 estado VARCHAR(20) DEFAULT 'abierto',
                 notas TEXT,
                 creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (mozo_id) REFERENCES mozos(id)
+                CONSTRAINT fk_pedidos_mozo_mozo FOREIGN KEY (mozo_id) REFERENCES mozos(id)
             )
             """
         )
@@ -324,8 +386,8 @@ def ensure_pedidos_tables():
                 pedido_id INT NOT NULL,
                 producto_id INT NOT NULL,
                 cantidad INT NOT NULL DEFAULT 1,
-                FOREIGN KEY (pedido_id) REFERENCES pedidos_mozo(id),
-                FOREIGN KEY (producto_id) REFERENCES productos(id)
+                CONSTRAINT fk_pedido_items_mozo_pedido FOREIGN KEY (pedido_id) REFERENCES pedidos_mozo(id),
+                CONSTRAINT fk_pedido_items_mozo_menu FOREIGN KEY (producto_id) REFERENCES menu(id)
             )
             """
         )
@@ -333,6 +395,25 @@ def ensure_pedidos_tables():
         cur.close()
     except Exception as e:
         print(f"Error asegurando tablas de pedidos: {e}")
+
+def ensure_mozos_table_exists():
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS mozos (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                nombre VARCHAR(100) NOT NULL,
+                email VARCHAR(120) UNIQUE,
+                telefono VARCHAR(30),
+                activo TINYINT(1) DEFAULT 1
+            )
+            """
+        )
+        mysql.connection.commit()
+        cur.close()
+    except Exception as e:
+        print(f"Error asegurando tabla mozos: {e}")
 
 
 def ensure_menu_table_upgrade():
@@ -359,6 +440,26 @@ def ensure_menu_table_upgrade():
         cur.close()
     except Exception as e:
         print(f"No se pudo verificar/actualizar columnas de menu: {e}")
+
+def ensure_menu_table_exists():
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS menu (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                Nombre_Menu VARCHAR(150) NOT NULL,
+                Precio DECIMAL(10,2) NOT NULL,
+                Categoria VARCHAR(50) NULL,
+                Imagen VARCHAR(255) NULL,
+                Descripcion TEXT NULL
+            )
+            """
+        )
+        mysql.connection.commit()
+        cur.close()
+    except Exception as e:
+        print(f"Error creando tabla menu si no existe: {e}")
 
 # ===== Panel de Control (Admin) =====
 @app.route('/admin')
@@ -444,6 +545,64 @@ def mozo_pedido_crear():
     except Exception as e:
         print(f"Error creando pedido: {e}")
         flash('Error al crear pedido', 'error')
+    return redirect(url_for('mozo_dashboard'))
+
+@app.route('/mozo/productos/crear', methods=['POST'])
+@mozo_required
+def mozo_productos_crear():
+    nombre = request.form.get('nombre')
+    precio = request.form.get('precio')
+    categoria = (request.form.get('categoria') or '').lower()
+    imagen = request.form.get('imagen') or ''
+    descripcion = request.form.get('descripcion') or ''
+    categorias_validas = ['desayunos','almuerzos','meriendas','cenas','postres','bebidas','comida_sin_tac','promociones']
+    if not nombre:
+        flash('El nombre del producto es obligatorio', 'error')
+        return redirect(url_for('mozo_dashboard'))
+    if not precio:
+        flash('El precio es obligatorio', 'error')
+        return redirect(url_for('mozo_dashboard'))
+    try:
+        precio_val = float(precio)
+    except Exception:
+        flash('El precio no es válido', 'error')
+        return redirect(url_for('mozo_dashboard'))
+    if not categoria or categoria not in categorias_validas:
+        flash('Debes seleccionar una categoría válida', 'error')
+        return redirect(url_for('mozo_dashboard'))
+    try:
+        ensure_menu_table_exists()
+        ensure_menu_table_upgrade()
+        # Manejo de subida de archivo
+        f = request.files.get('imagen_file')
+        if f and getattr(f, 'filename', ''):
+            from werkzeug.utils import secure_filename
+            filename = secure_filename(f.filename)
+            _, ext = os.path.splitext(filename)
+            if ext.lower() not in _ALLOWED_IMAGE_EXTS:
+                flash('Formato de imagen no permitido', 'error')
+                return redirect(url_for('mozo_dashboard'))
+            dest = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            try:
+                f.save(dest)
+                # Guardamos ruta relativa para usar con url_for('static', filename=...)
+                imagen = f"images/{filename}"
+            except Exception as e:
+                print(f"Error guardando imagen: {e}")
+                flash('No se pudo guardar la imagen', 'error')
+                return redirect(url_for('mozo_dashboard'))
+        cur = mysql.connection.cursor()
+        cur.execute(
+            "INSERT INTO menu (Nombre_Menu, Precio, Categoria, Imagen, Descripcion) VALUES (%s, %s, %s, %s, %s)",
+            (nombre, precio_val, categoria, imagen, descripcion)
+        )
+        mysql.connection.commit()
+        print(f"[mozo_productos_crear] insert OK id={cur.lastrowid} nombre={nombre} cat={categoria}")
+        cur.close()
+        flash('Producto agregado al menú', 'success')
+    except Exception as e:
+        print(f"Error mozo creando producto: {e}")
+        flash('Error al agregar producto', 'error')
     return redirect(url_for('mozo_dashboard'))
 
 @app.route('/mozo/pedidos/<int:pedido_id>/estado', methods=['POST'])

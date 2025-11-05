@@ -1,42 +1,36 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for,flash, session
 from functools import wraps
+from flask_mysqldb import MySQL
 from werkzeug.security import generate_password_hash, check_password_hash
-try:
-    from .config import Config
-except ImportError:  # Permite ejecución directa: python AppMenuDigital/Main.py
-    from config import Config
+from config import Config
 import os
-import pymysql
 
-app = Flask(__name__, template_folder=getattr(Config, 'TEMPLATE_FOLDER', 'Templates'), static_folder=getattr(Config, 'STATIC_FOLDER', 'static'))
-app.config.from_object(Config)
-app.secret_key = getattr(Config, 'SECRET_KEY', os.environ.get('SECRET_KEY', 'dev-secret-key'))
+app = Flask(__name__)
+
+# Configuración de la aplicación
+app.config['SECRET_KEY'] = Config.SECRET_KEY
+app.config['MYSQL_PORT'] = Config.MYSQL_PORT
+app.config['MYSQL_HOST'] = Config.MYSQL_HOST
+app.config['MYSQL_USER'] = Config.MYSQL_USER
+app.config['MYSQL_PASSWORD'] = Config.MYSQL_PASSWORD
+app.config['MYSQL_DB'] = Config.MYSQL_DB
 
 # Clase MySQL personalizada usando pymysql
 class MySQL:
     def __init__(self, app=None):
         self.app = app
-        self._connection = None
-
+    
     @property
     def connection(self):
-        if self._connection is None:
-            self._connection = pymysql.connect(
-                host=self.app.config['MYSQL_HOST'],
-                port=self.app.config.get('MYSQL_PORT', 3306),
-                user=self.app.config['MYSQL_USER'],
-                password=self.app.config['MYSQL_PASSWORD'],
-                database=self.app.config['MYSQL_DB'],
-                autocommit=False
-            )
-        return self._connection
-
-    def close(self):
-        if self._connection is not None:
-            try:
-                self._connection.close()
-            finally:
-                self._connection = None
+        return pymysql.connect(
+            host=self.app.config['localhost'],
+            port=self.app.config['MYSQL_PORT'],
+            user=self.app.config['ROOT'],
+            password=self.app.config['ROOT'],
+            database=self.app.config['menu_digital'],
+            cursorclass=pymysql.cursors.DictCursor,
+            autocommit=False
+        )
 mysql = MySQL(app)
 # (revert) Sin configuración de subida de imágenes
 

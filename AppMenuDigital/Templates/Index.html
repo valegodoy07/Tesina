@@ -125,7 +125,7 @@
             {% for p in productos_por_categoria['desayunos'] %}
               <div class="menu-item" data-product-id="{{ p[0] }}" onclick="showProductDetail({{ p[0] }})">
                 <div class="menu-item-image">
-                  {% if p[4] %}
+                  {% if p[4] and p[4] != '' %}
                     {% if p[4].startswith('http://') or p[4].startswith('https://') %}
                       <img src="{{ p[4] }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
                     {% else %}
@@ -158,7 +158,7 @@
                 <div class="menu-item-image">
                   {% if p[4] %}
                     {% if p[4].startswith('http://') or p[4].startswith('https://') %}
-                      <img src="{{ p[4] }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
+                    <img src="{{ p[4] }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
                     {% else %}
                       <img src="{{ url_for('static', filename=p[4]) }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
                     {% endif %}
@@ -167,7 +167,7 @@
                   {% endif %}
                 </div>
                 <div class="price-container">
-                  <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
+                <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
                 </div>
               </div>
             {% endfor %}
@@ -189,7 +189,7 @@
                 <div class="menu-item-image">
                   {% if p[4] %}
                     {% if p[4].startswith('http://') or p[4].startswith('https://') %}
-                      <img src="{{ p[4] }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
+                    <img src="{{ p[4] }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
                     {% else %}
                       <img src="{{ url_for('static', filename=p[4]) }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
                     {% endif %}
@@ -198,7 +198,7 @@
                   {% endif %}
                 </div>
                 <div class="price-container">
-                  <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
+                <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
                 </div>
               </div>
             {% endfor %}
@@ -220,7 +220,7 @@
                 <div class="menu-item-image">
                   {% if p[4] %}
                     {% if p[4].startswith('http://') or p[4].startswith('https://') %}
-                      <img src="{{ p[4] }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
+                    <img src="{{ p[4] }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
                     {% else %}
                       <img src="{{ url_for('static', filename=p[4]) }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
                     {% endif %}
@@ -229,7 +229,7 @@
                   {% endif %}
                 </div>
                 <div class="price-container">
-                  <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
+                <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
                 </div>
               </div>
             {% endfor %}
@@ -251,7 +251,7 @@
                 <div class="menu-item-image">
                   {% if p[4] %}
                     {% if p[4].startswith('http://') or p[4].startswith('https://') %}
-                      <img src="{{ p[4] }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
+                    <img src="{{ p[4] }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
                     {% else %}
                       <img src="{{ url_for('static', filename=p[4]) }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
                     {% endif %}
@@ -260,7 +260,7 @@
                   {% endif %}
                 </div>
                 <div class="price-container">
-                  <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
+                <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
                 </div>
               </div>
             {% endfor %}
@@ -276,13 +276,13 @@
       <div class="container">
         <h2>Bebidas</h2>
         <div class="menu-items">
-          {% if productos_por_categoria.get('bebidas') %}
+        {% if productos_por_categoria.get('bebidas') %}
             {% for p in productos_por_categoria['bebidas'] %}
               <div class="menu-item" data-product-id="{{ p[0] }}" onclick="showProductDetail({{ p[0] }})">
                 <div class="menu-item-image">
                   {% if p[4] %}
                     {% if p[4].startswith('http://') or p[4].startswith('https://') %}
-                      <img src="{{ p[4] }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
+                    <img src="{{ p[4] }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
                     {% else %}
                       <img src="{{ url_for('static', filename=p[4]) }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
                     {% endif %}
@@ -291,14 +291,14 @@
                   {% endif %}
                 </div>
                 <div class="price-container">
-                  <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
+                <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
                 </div>
               </div>
             {% endfor %}
           {% else %}
             <p style="text-align: center; color: #666; padding: 40px; grid-column: 1 / -1;">No hay productos disponibles en esta categoría</p>
           {% endif %}
-        </div>
+          </div>
       </div>
     </section>
 
@@ -313,7 +313,7 @@
                 <div class="menu-item-image">
                   {% if p[4] %}
                     {% if p[4].startswith('http://') or p[4].startswith('https://') %}
-                      <img src="{{ p[4] }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
+                    <img src="{{ p[4] }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
                     {% else %}
                       <img src="{{ url_for('static', filename=p[4]) }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
                     {% endif %}
@@ -322,7 +322,7 @@
                   {% endif %}
                 </div>
                 <div class="price-container">
-                  <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
+                <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
                 </div>
               </div>
             {% endfor %}
@@ -344,7 +344,7 @@
                 <div class="menu-item-image">
                   {% if p[4] %}
                     {% if p[4].startswith('http://') or p[4].startswith('https://') %}
-                      <img src="{{ p[4] }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
+                    <img src="{{ p[4] }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
                     {% else %}
                       <img src="{{ url_for('static', filename=p[4]) }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
                     {% endif %}
@@ -353,7 +353,7 @@
                   {% endif %}
                 </div>
                 <div class="price-container">
-                  <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
+                <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
                 </div>
               </div>
             {% endfor %}

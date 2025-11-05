@@ -95,10 +95,20 @@ def inject_cart_count():
 # Rutas de la aplicación
 @app.route('/')
 def index():
+    # Cargar dinámicamente productos por categoría para el Index
     categorias = ['desayunos', 'almuerzos', 'cenas', 'meriendas', 'postres', 'bebidas', 'comida_sin_tac', 'promociones']
     productos_por_categoria = {c: [] for c in categorias}
+    cur = None
+    
+    print("=" * 50)
+    print("[INDEX] INICIANDO CARGA DE PRODUCTOS")
+    print("=" * 50)
+    
     try:
+        # Obtener conexión
         cur = mysql.connection.cursor()
+        print("[INDEX] ✓ Cursor creado")
+        
         # Asegurar que existe la tabla productos
         cur.execute("""
             CREATE TABLE IF NOT EXISTS productos (
@@ -111,26 +121,106 @@ def index():
             )
         """)
         mysql.connection.commit()
+        print("[INDEX] ✓ Tabla productos verificada/creada")
         
-        # Leer de la tabla productos
+        # Contar productos totales
+        try:
+            cur.execute("SELECT COUNT(*) FROM productos")
+            total = cur.fetchone()[0]
+            print(f"[INDEX] ✓ Total de productos en tabla: {total}")
+        except Exception as e:
+            print(f"[INDEX] ✗ Error contando productos: {e}")
+            total = 0
+        
+        # Leer TODOS los productos sin filtro de categoría primero
         cur.execute("""
-            SELECT id, nombre, precio, LOWER(COALESCE(categoria, '')) as cat, COALESCE(imagen, ''), COALESCE(descripcion, '')
+            SELECT id, nombre, precio, categoria, imagen, descripcion
             FROM productos
-            WHERE LOWER(COALESCE(categoria, '')) IN ('desayunos','almuerzos','cenas','meriendas','postres','bebidas','comida_sin_tac','promociones')
             ORDER BY id DESC
         """)
         filas = cur.fetchall()
+        print(f"[INDEX] ✓ Productos encontrados en consulta: {len(filas)}")
+        
+        # Procesar cada producto
         for f in filas:
-            cat = (f[3] or '').lower()
-            if cat in productos_por_categoria:
-                productos_por_categoria[cat].append(f)
-        cur.close()
+            try:
+                producto_id = f[0]
+                producto_nombre = f[1]
+                producto_precio = f[2]
+                producto_categoria = (f[3] or '').strip().lower() if f[3] else ''
+                producto_imagen = f[4] or ''
+                producto_descripcion = f[5] or ''
+                
+                print(f"[INDEX] Producto: id={producto_id}, nombre={producto_nombre}, cat='{producto_categoria}', precio={producto_precio}")
+                
+                # Si la categoría está vacía, asignarla a una categoría por defecto
+                if not producto_categoria:
+                    producto_categoria = 'desayunos'
+                    print(f"[INDEX] ⚠ Categoría vacía, asignando a 'desayunos'")
+                
+                # Crear tupla con el orden correcto: (id, nombre, precio, categoria, imagen, descripcion)
+                producto_tupla = (
+                    producto_id,
+                    producto_nombre,
+                    producto_precio,
+                    producto_categoria,  # Esta es la posición 3, pero necesitamos la imagen en posición 4
+                    producto_imagen,
+                    producto_descripcion
+                )
+                
+                # Reordenar para que coincida con lo que espera el template
+                # Template espera: p[0]=id, p[1]=nombre, p[2]=precio, p[3]=categoria, p[4]=imagen, p[5]=descripcion
+                producto_final = (
+                    producto_id,      # [0] id
+                    producto_nombre,  # [1] nombre
+                    producto_precio,  # [2] precio
+                    producto_categoria, # [3] categoria (para filtrado)
+                    producto_imagen,  # [4] imagen
+                    producto_descripcion # [5] descripcion
+                )
+                
+                # Agregar a la categoría correspondiente
+                if producto_categoria in categorias:
+                    productos_por_categoria[producto_categoria].append(producto_final)
+                    print(f"[INDEX] ✓ Agregado a categoría '{producto_categoria}'")
+                else:
+                    print(f"[INDEX] ✗ Categoría '{producto_categoria}' no válida. Categorías válidas: {categorias}")
+                    
+            except Exception as e:
+                print(f"[INDEX] ✗ Error procesando producto: {e}")
+                import traceback
+                traceback.print_exc()
+        
+        # Resumen final
+        print("\n[INDEX] RESUMEN POR CATEGORÍA:")
+        print("-" * 50)
+        total_en_categorias = 0
+        for cat in categorias:
+            count = len(productos_por_categoria[cat])
+            total_en_categorias += count
+            if count > 0:
+                print(f"[INDEX]   {cat}: {count} productos")
+                for p in productos_por_categoria[cat]:
+                    print(f"[INDEX]     - {p[1]} (${p[2]})")
+        
+        print(f"\n[INDEX] Total productos en categorías: {total_en_categorias}")
+        print("=" * 50)
+        
     except Exception as e:
-        print(f"Error al cargar productos para index: {e}")
+        print(f"[INDEX] ✗✗✗ ERROR CRÍTICO: {e}")
+        import traceback
+        traceback.print_exc()
+    finally:
+        if cur:
+            cur.close()
+            print("[INDEX] Cursor cerrado")
 
     ctx = {'productos_por_categoria': productos_por_categoria}
     if 'user_id' in session:
         ctx['usuario'] = session.get('nombre')
+    
+    print(f"[INDEX] Retornando template con {sum(len(p) for p in productos_por_categoria.values())} productos")
+    print("=" * 50)
     return render_template('Index.html', **ctx)
 
 @app.route('/menu')

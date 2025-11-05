@@ -1,9 +1,12 @@
-from flask import Flask, render_template, request, redirect, url_for,flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 from functools import wraps
-from flask_mysqldb import MySQL
 from werkzeug.security import generate_password_hash, check_password_hash
-from config import Config
+try:
+    from .config import Config
+except ImportError:
+    from config import Config
 import os
+import pymysql
 
 app = Flask(__name__)
 
@@ -23,13 +26,14 @@ class MySQL:
     @property
     def connection(self):
         return pymysql.connect(
-            host=self.app.config['localhost'],
+            host=self.app.config['MYSQL_HOST'],
             port=self.app.config['MYSQL_PORT'],
-            user=self.app.config['ROOT'],
-            password=self.app.config['ROOT'],
-            database=self.app.config['menu_digital'],
-            cursorclass=pymysql.cursors.DictCursor,
-            autocommit=False
+            user=self.app.config['MYSQL_USER'],
+            password=self.app.config['MYSQL_PASSWORD'],
+            database=self.app.config['MYSQL_DB'],
+            autocommit=False,
+            charset='utf8mb4',
+            connect_timeout=5
         )
 mysql = MySQL(app)
 # (revert) Sin configuración de subida de imágenes
@@ -210,6 +214,7 @@ def registro():
             return render_template('Registro.html')
         
         try:
+            ensure_core_tables()
             cur = mysql.connection.cursor()
             
             # Verificar si el email ya existe
@@ -243,6 +248,25 @@ def registro():
             flash('Error al registrar usuario', 'error')
     
     return render_template('Registro.html')
+
+def ensure_core_tables():
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS usuarios (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                nombre VARCHAR(100) NOT NULL,
+                email VARCHAR(100) UNIQUE NOT NULL,
+                password VARCHAR(255) NOT NULL,
+                fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+        mysql.connection.commit()
+        cur.close()
+    except Exception as e:
+        print(f"Error asegurando tabla usuarios: {e}")
 
 @app.route('/logout')
 def logout():
@@ -564,7 +588,7 @@ def ensure_client_orders_tables():
                 estado VARCHAR(20) DEFAULT 'pendiente',
                 mesa VARCHAR(50) NULL,
                 creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (usuario_id) REFERENCES usuarios(idusuario)
+                FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
             )
             """
         )
@@ -817,7 +841,7 @@ def admin_pedidos_nuevo():
             SELECT p.id, COALESCE(p.mesa, '') AS mesa, COALESCE(u.nombre, '') AS cliente,
                    p.estado, p.creado_en
             FROM pedidos p
-            LEFT JOIN usuarios u ON p.usuario_id = u.idusuario
+            LEFT JOIN usuarios u ON p.usuario_id = u.id
             ORDER BY p.id DESC
             """
         )

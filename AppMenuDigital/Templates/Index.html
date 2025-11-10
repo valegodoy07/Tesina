@@ -511,13 +511,17 @@
           <p id="modalProductDescription"></p>
         </div>
         <div class="modal-add-to-cart">
-          <div style="margin-bottom: 10px;">
-            <label for="quantity">Cantidad:</label>
-            <input type="number" id="quantity" name="quantity" min="1" value="1" style="width: 80px; padding: 8px; margin: 10px;">
+          <div style="margin-bottom: 15px;">
+            <label for="nombre_cliente" style="display: block; font-weight: bold; margin-bottom: 5px; color: #713D2A;">Nombre del Cliente:</label>
+            <input type="text" id="nombre_cliente" name="nombre_cliente" placeholder="Ej: Juan Pérez" required style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px;">
           </div>
-          <div style="margin-bottom: 10px;">
-            <label for="mesa">Mesa:</label>
-            <input type="text" id="mesa" name="mesa" placeholder="Ej: Mesa 1" required style="width: 150px; padding: 8px; margin: 10px;">
+          <div style="margin-bottom: 15px;">
+            <label for="quantity" style="display: block; font-weight: bold; margin-bottom: 5px; color: #713D2A;">Cantidad:</label>
+            <input type="number" id="quantity" name="quantity" min="1" value="1" required style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px;">
+          </div>
+          <div style="margin-bottom: 15px;">
+            <label for="mesa" style="display: block; font-weight: bold; margin-bottom: 5px; color: #713D2A;">Número de Mesa:</label>
+            <input type="text" id="mesa" name="mesa" placeholder="Ej: Mesa 1" required style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px;">
           </div>
           <button onclick="addToCartFromModal()" class="btn-add-cart">Añadir al carrito</button>
         </div>
@@ -550,15 +554,32 @@
       currentProduct = null;
       document.getElementById('quantity').value = 1;
       document.getElementById('mesa').value = '';
+      document.getElementById('nombre_cliente').value = '';
     }
 
     function addToCartFromModal() {
       if (!currentProduct) return;
-      const quantity = parseInt(document.getElementById('quantity').value);
-      const mesa = document.getElementById('mesa').value;
       
-      if (!mesa || mesa.trim() === '') {
+      const nombreCliente = document.getElementById('nombre_cliente').value.trim();
+      const quantity = parseInt(document.getElementById('quantity').value);
+      const mesa = document.getElementById('mesa').value.trim();
+      
+      // Validaciones
+      if (!nombreCliente) {
+        alert('Por favor, ingresa el nombre del cliente');
+        document.getElementById('nombre_cliente').focus();
+        return;
+      }
+      
+      if (!quantity || quantity < 1) {
+        alert('Por favor, ingresa una cantidad válida');
+        document.getElementById('quantity').focus();
+        return;
+      }
+      
+      if (!mesa) {
         alert('Por favor, ingresa el número de mesa');
+        document.getElementById('mesa').focus();
         return;
       }
       
@@ -566,6 +587,12 @@
       const form = document.createElement('form');
       form.method = 'POST';
       form.action = `/cart/add/${currentProduct.id}`;
+      
+      const nombreInput = document.createElement('input');
+      nombreInput.type = 'hidden';
+      nombreInput.name = 'nombre_cliente';
+      nombreInput.value = nombreCliente;
+      form.appendChild(nombreInput);
       
       const qtyInput = document.createElement('input');
       qtyInput.type = 'hidden';

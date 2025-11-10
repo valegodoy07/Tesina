@@ -39,13 +39,13 @@
           {% for it in items %}
           <tr>
             <td>{{ it.nombre }}</td>
-            <td>${{ '%.2f' % it.precio }}</td>
+            <td>${{ '%.2f'|format(it.precio) }}</td>
             <td>
               <input type="number" name="qty_{{ it.id }}" value="{{ it.cantidad }}" min="0" style="width:70px;">
             </td>
-            <td>${{ '%.2f' % it.subtotal }}</td>
+            <td>${{ '%.2f'|format(it.subtotal) }}</td>
             <td>
-              <form method="POST" action="{{ url_for('cart_remove', producto_id=it.id) }}">
+              <form method="POST" action="{{ url_for('cart_remove', producto_id=it.id) }}" style="display:inline;">
                 <button type="submit" class="btn-danger">Eliminar</button>
               </form>
             </td>
@@ -56,17 +56,23 @@
       <div style="display:flex; gap:10px; margin-top:12px;">
         <button type="submit">Actualizar cantidades</button>
       </div>
+    </form>
       <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-top: 20px;">
-        <h3 style="margin: 0 0 15px 0; font-size: 24px; color: #713D2A; text-align: right;">Total a pagar: ${{ '%.2f' % total }}</h3>
+        <h3 style="margin: 0 0 15px 0; font-size: 24px; color: #713D2A; text-align: right;">Total a pagar: ${{ '%.2f'|format(total) }}</h3>
         <form method="POST" action="{{ url_for('cart_checkout') }}">
-          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-            <label for="mesa" style="font-weight: bold;">Mesa:</label>
-            <input type="text" id="mesa" name="mesa" value="{{ session.get('mesa_carrito', '') }}" placeholder="Ej: Mesa 1" required style="width: 200px; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+          <div style="display: flex; flex-direction: column; gap: 15px;">
+            <div>
+              <label for="nombre_cliente" style="display: block; font-weight: bold; margin-bottom: 5px; color: #713D2A;">Nombre del Cliente:</label>
+              <input type="text" id="nombre_cliente" name="nombre_cliente" value="{{ nombre_cliente }}" placeholder="Ej: Juan Pérez" required style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 5px; font-size: 14px;">
+            </div>
+            <div>
+              <label for="mesa" style="display: block; font-weight: bold; margin-bottom: 5px; color: #713D2A;">Número de Mesa:</label>
+              <input type="text" id="mesa" name="mesa" value="{{ mesa_carrito }}" placeholder="Ej: Mesa 1" required style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 5px; font-size: 14px;">
+            </div>
           </div>
-          <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px;">Enviar pedido</button>
+          <button type="submit" class="btn-primary" style="width: 100%; margin-top: 15px; padding: 12px; font-size: 16px;">Enviar pedido</button>
         </form>
       </div>
-    </form>
     {% else %}
       <div style="text-align: center; padding: 40px;">
         <p style="font-size: 18px; color: #666;">Tu carrito está vacío.</p>
@@ -76,4 +82,3 @@
   </div>
 </body>
 </html>
-

@@ -1,318 +1,3 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>P&C</title>
-  <title>RESTOBAR</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='Styles.css') }}">
-</head>
-<body>
-
-  <div class="barra-superior">
-    <div class="menu-icono" onclick="toggleMenu()">☰</div>
-    SABORES QUE TE INVITAN A QUEDARTE
-    
-    <div class="user-info">
-      <a href="{{ url_for('cart_view') }}" style="background: rgba(255, 255, 255, 0.2); padding: 5px 15px; border-radius: 5px;">🛒 Carrito ({{ cart_count }})</a>
-    </div>
-  </div>
-
-  <div id="menu-lateral" class="menu-lateral">
-    {% if session.get('user_id') %}
-      {% if session.get('rol') == 'mozo' %}
-        <a href="{{ url_for('mozo_dashboard') }}">MI PANEL DE MOZO</a>
-      {% elif session.get('is_admin') or session.get('user_id') == 1 %}
-        <a href="{{ url_for('admin_dashboard') }}">MI PANEL DE GESTIÓN</a>
-      {% endif %}
-      <a href="{{ url_for('logout') }}">CERRAR SESIÓN</a>
-    {% else %}
-      <a href="{{ url_for('login') }}">INICIAR SESIÓN</a>
-      <a href="{{ url_for('registro') }}">REGISTRARSE</a>
-    {% endif %}
-    <a href="#">CONTACTO</a>
-  </div>
-
-  <!-- Hero Section -->
-  <div class="hero-section">
-    <div class="hero-content">
-      <h1>P&C RESTOBAR</h1>
-      <p>SABORES QUE TE INVITAN A QUEDARTE</p>
-      <div class="hero-buttons">
-        <button onclick="showMenu()" class="btn-primary">Ver Carta</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Categorías del Menú (ocultas inicialmente) -->
-  <div id="menu-categories" class="menu-categories" style="display: none;">
-    <div class="container">
-      <div class="menu-header-section">
-        <h2>Nuestra Carta</h2>
-        <p class="subtitle">Explora nuestros deliciosos platos organizados por categorías</p>
-        <button onclick="showMenu()" class="btn-close">✕ Cerrar Carta</button>
-      </div>
-      
-      <div class="categories-grid">
-        <!-- Desayunos -->
-        <div class="category-card" onclick="toggleCategory('desayunos')">
-          <div class="category-icon"></div>
-          <h3>Desayunos</h3>
-          <p>Comienza tu día con nuestros deliciosos desayunos</p>
-        </div>
-
-        <!-- Almuerzos -->
-        <div class="category-card" onclick="toggleCategory('almuerzos')">
-          <div class="category-icon"></div>
-          <h3>Almuerzos</h3>
-          <p>Platos fuertes para el mediodía</p>
-        </div>
-
-        <!-- Cenas -->
-        <div class="category-card" onclick="toggleCategory('cenas')">
-          <div class="category-icon"></div>
-          <h3>Cenas</h3>
-          <p>Especialidades para la noche</p>
-        </div>
-
-        <!-- Meriendas -->
-        <div class="category-card" onclick="toggleCategory('meriendas')">
-          <div class="category-icon"></div>
-          <h3>Meriendas</h3>
-          <p>Snacks y acompañamientos</p>
-        </div>
-
-        <!-- Postres -->
-        <div class="category-card" onclick="toggleCategory('postres')">
-          <div class="category-icon"></div>
-          <h3>Postres</h3>
-          <p>Dulces tentaciones para el final</p>
-        </div>
-
-        <!-- Bebidas -->
-        <div class="category-card" onclick="toggleCategory('bebidas')">
-          <div class="category-icon"></div>
-          <h3>Bebidas</h3>
-          <p>Refrescantes y deliciosas</p>
-        </div>
-
-        <!-- Comida sin TAC -->
-        <div class="category-card" onclick="toggleCategory('comida_sin_tac')">
-          <div class="category-icon"></div>
-          <h3>Comida sin TAC</h3>
-          <p>Opciones libres de gluten</p>
-        </div>
-
-        <!-- Promociones -->
-        <div class="category-card promotion-card" onclick="toggleCategory('promociones')">
-          <div class="category-icon"></div>
-          <h3>Promociones</h3>
-          <p>Ofertas especiales del día</p>
-          <span class="promo-badge">¡OFERTA!</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Secciones de cada categoría -->
-  <div class="menu-sections" style="display: none;">
-    <!-- Desayunos -->
-    <section id="desayunos" class="menu-section">
-      <div class="container">
-        <h2>Desayunos</h2>
-        <div class="menu-items">
-          {% if productos_por_categoria.get('desayunos') %}
-            {% for p in productos_por_categoria['desayunos'] %}
-              <div class="menu-item" data-product-id="{{ p[0] }}" onclick="showProductDetail({{ p[0] }})">
-                <div class="menu-item-image">
-                  {% if p[4] and p[4] != '' %}
-                    {% if p[4].startswith('http://') or p[4].startswith('https://') %}
-                      <img src="{{ p[4] }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
-                    {% else %}
-                      <img src="{{ url_for('static', filename=p[4]) }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
-                    {% endif %}
-                  {% else %}
-                    <img src="{{ url_for('static', filename='images/default-food.png') }}" alt="{{ p[1] }}" loading="lazy">
-                  {% endif %}
-                </div>
-                <div class="price-container">
-                  <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
-                </div>
-              </div>
-            {% endfor %}
-          {% else %}
-            <p style="text-align: center; color: #666; padding: 40px; grid-column: 1 / -1;">No hay productos disponibles en esta categoría</p>
-          {% endif %}
-        </div>
-      </div>
-    </section>
-
-    <!-- Almuerzos -->
-    <section id="almuerzos" class="menu-section">
-      <div class="container">
-        <h2>Almuerzos</h2>
-        <div class="menu-items">
-          {% if productos_por_categoria.get('almuerzos') %}
-            {% for p in productos_por_categoria['almuerzos'] %}
-              <div class="menu-item" data-product-id="{{ p[0] }}" onclick="showProductDetail({{ p[0] }})">
-                <div class="menu-item-image">
-                  {% if p[4] %}
-                    {% if p[4].startswith('http://') or p[4].startswith('https://') %}
-                    <img src="{{ p[4] }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
-                    {% else %}
-                      <img src="{{ url_for('static', filename=p[4]) }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
-                    {% endif %}
-                  {% else %}
-                    <img src="{{ url_for('static', filename='images/default-food.png') }}" alt="{{ p[1] }}" loading="lazy">
-                  {% endif %}
-                </div>
-                <div class="price-container">
-                <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
-                </div>
-              </div>
-            {% endfor %}
-          {% else %}
-            <p style="text-align: center; color: #666; padding: 40px; grid-column: 1 / -1;">No hay productos disponibles en esta categoría</p>
-          {% endif %}
-        </div>
-      </div>
-    </section>
-
-    <!-- Cenas -->
-    <section id="cenas" class="menu-section">
-      <div class="container">
-        <h2>Cenas</h2>
-        <div class="menu-items">
-          {% if productos_por_categoria.get('cenas') %}
-            {% for p in productos_por_categoria['cenas'] %}
-              <div class="menu-item" data-product-id="{{ p[0] }}" onclick="showProductDetail({{ p[0] }})">
-                <div class="menu-item-image">
-                  {% if p[4] %}
-                    {% if p[4].startswith('http://') or p[4].startswith('https://') %}
-                    <img src="{{ p[4] }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
-                    {% else %}
-                      <img src="{{ url_for('static', filename=p[4]) }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
-                    {% endif %}
-                  {% else %}
-                    <img src="{{ url_for('static', filename='images/default-food.png') }}" alt="{{ p[1] }}" loading="lazy">
-                  {% endif %}
-                </div>
-                <div class="price-container">
-                <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
-                </div>
-              </div>
-            {% endfor %}
-          {% else %}
-            <p style="text-align: center; color: #666; padding: 40px; grid-column: 1 / -1;">No hay productos disponibles en esta categoría</p>
-          {% endif %}
-        </div>
-      </div>
-    </section>
-
-    <!-- Meriendas -->
-    <section id="meriendas" class="menu-section">
-      <div class="container">
-        <h2>Meriendas</h2>
-        <div class="menu-items">
-          {% if productos_por_categoria.get('meriendas') %}
-            {% for p in productos_por_categoria['meriendas'] %}
-              <div class="menu-item" data-product-id="{{ p[0] }}" onclick="showProductDetail({{ p[0] }})">
-                <div class="menu-item-image">
-                  {% if p[4] %}
-                    {% if p[4].startswith('http://') or p[4].startswith('https://') %}
-                    <img src="{{ p[4] }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
-                    {% else %}
-                      <img src="{{ url_for('static', filename=p[4]) }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
-                    {% endif %}
-                  {% else %}
-                    <img src="{{ url_for('static', filename='images/default-food.png') }}" alt="{{ p[1] }}" loading="lazy">
-                  {% endif %}
-                </div>
-                <div class="price-container">
-                <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
-                </div>
-              </div>
-            {% endfor %}
-          {% else %}
-            <p style="text-align: center; color: #666; padding: 40px; grid-column: 1 / -1;">No hay productos disponibles en esta categoría</p>
-          {% endif %}
-        </div>
-      </div>
-    </section>
-
-    <!-- Postres -->
-    <section id="postres" class="menu-section">
-      <div class="container">
-        <h2>Postres</h2>
-        <div class="menu-items">
-          {% if productos_por_categoria.get('postres') %}
-            {% for p in productos_por_categoria['postres'] %}
-              <div class="menu-item" data-product-id="{{ p[0] }}" onclick="showProductDetail({{ p[0] }})">
-                <div class="menu-item-image">
-                  {% if p[4] %}
-                    {% if p[4].startswith('http://') or p[4].startswith('https://') %}
-                    <img src="{{ p[4] }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
-                    {% else %}
-                      <img src="{{ url_for('static', filename=p[4]) }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
-                    {% endif %}
-                  {% else %}
-                    <img src="{{ url_for('static', filename='images/default-food.png') }}" alt="{{ p[1] }}" loading="lazy">
-                  {% endif %}
-                </div>
-                <div class="price-container">
-                <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
-                </div>
-              </div>
-            {% endfor %}
-          {% else %}
-            <p style="text-align: center; color: #666; padding: 40px; grid-column: 1 / -1;">No hay productos disponibles en esta categoría</p>
-          {% endif %}
-        </div>
-      </div>
-    </section>
-
-    <!-- Bebidas -->
-    <section id="bebidas" class="menu-section">
-      <div class="container">
-        <h2>Bebidas</h2>
-        <div class="menu-items">
-        {% if productos_por_categoria.get('bebidas') %}
-            {% for p in productos_por_categoria['bebidas'] %}
-              <div class="menu-item" data-product-id="{{ p[0] }}" onclick="showProductDetail({{ p[0] }})">
-                <div class="menu-item-image">
-                  {% if p[4] %}
-                    {% if p[4].startswith('http://') or p[4].startswith('https://') %}
-                    <img src="{{ p[4] }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
-                    {% else %}
-                      <img src="{{ url_for('static', filename=p[4]) }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
-                    {% endif %}
-                  {% else %}
-                    <img src="{{ url_for('static', filename='images/default-food.png') }}" alt="{{ p[1] }}" loading="lazy">
-                  {% endif %}
-                </div>
-                <div class="price-container">
-                <span class="price">${{ "{:,.0f}".format(p[2]) }}</span>
-                </div>
-              </div>
-            {% endfor %}
-          {% else %}
-            <p style="text-align: center; color: #666; padding: 40px; grid-column: 1 / -1;">No hay productos disponibles en esta categoría</p>
-          {% endif %}
-          </div>
-      </div>
-    </section>
-
-    <!-- Comida sin TAC -->
-    <section id="comida_sin_tac" class="menu-section">
-      <div class="container">
-        <h2>Comida sin TAC</h2>
-        <div class="menu-items">
-          {% if productos_por_categoria.get('comida_sin_tac') %}
-            {% for p in productos_por_categoria['comida_sin_tac'] %}
-              <div class="menu-item" data-product-id="{{ p[0] }}" onclick="showProductDetail({{ p[0] }})">
-                <div class="menu-item-image">
-                  {% if p[4] %}
-                    {% if p[4].startswith('http://') or p[4].startswith('https://') %}
                     <img src="{{ p[4] }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
                     {% else %}
                       <img src="{{ url_for('static', filename=p[4]) }}" alt="{{ p[1] }}" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-food.png') }}';">
@@ -340,7 +25,7 @@
         <div class="menu-items">
           {% if productos_por_categoria.get('promociones') %}
             {% for p in productos_por_categoria['promociones'] %}
-              <div class="menu-item promo-item" data-product-id="{{ p[0] }}" onclick="showProductDetail({{ p[0] }})">
+              <div class="menu-item promo-item" data-product-id="{{ p[0] }}" onclick="showProductDetail({{ p[0] }})" style="cursor: pointer;">
                 <div class="menu-item-image">
                   {% if p[4] %}
                     {% if p[4].startswith('http://') or p[4].startswith('https://') %}
@@ -533,15 +218,21 @@
     let currentProduct = null;
 
     function showProductDetail(productId) {
+      console.log('Mostrando producto:', productId);
       fetch(`/api/producto/${productId}`)
-        .then(response => response.json())
+        .then(response => {
+          console.log('Respuesta del API:', response);
+          return response.json();
+        })
         .then(data => {
+          console.log('Datos del producto:', data);
           currentProduct = data;
           document.getElementById('modalProductImage').src = data.imagen || '{{ url_for("static", filename="images/default-food.png") }}';
           document.getElementById('modalProductName').textContent = data.nombre;
           document.getElementById('modalProductPrice').textContent = data.precio.toLocaleString('es-CL');
           document.getElementById('modalProductDescription').textContent = data.descripcion || 'Sin descripción disponible';
           document.getElementById('productModal').style.display = 'block';
+          console.log('Modal mostrado');
         })
         .catch(error => {
           console.error('Error:', error);
@@ -558,7 +249,10 @@
     }
 
     function addToCartFromModal() {
-      if (!currentProduct) return;
+      if (!currentProduct) {
+        alert('Error: No hay producto seleccionado');
+        return;
+      }
       
       const nombreCliente = document.getElementById('nombre_cliente').value.trim();
       const quantity = parseInt(document.getElementById('quantity').value);
@@ -582,6 +276,12 @@
         document.getElementById('mesa').focus();
         return;
       }
+      
+      // Mostrar mensaje de carga
+      const btn = document.querySelector('.btn-add-cart');
+      const originalText = btn.textContent;
+      btn.textContent = 'Agregando...';
+      btn.disabled = true;
       
       // Crear formulario para añadir al carrito
       const form = document.createElement('form');
@@ -762,16 +462,36 @@
 
     .modal-add-to-cart {
       display: flex;
-      align-items: center;
+      flex-direction: column;
       gap: 15px;
       margin-top: 25px;
       padding-top: 20px;
       border-top: 2px solid #f0f0f0;
     }
 
+    .modal-add-to-cart > div {
+      width: 100%;
+    }
+
     .modal-add-to-cart label {
       font-weight: bold;
       color: #713D2A;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .modal-add-to-cart input {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    .modal-add-to-cart input:focus {
+      outline: none;
+      border-color: #713D2A;
     }
 
     .btn-add-cart {
@@ -784,6 +504,8 @@
       font-size: 16px;
       font-weight: bold;
       transition: background-color 0.3s;
+      width: 100%;
+      margin-top: 10px;
     }
 
     .btn-add-cart:hover {

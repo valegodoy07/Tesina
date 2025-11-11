@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 try:
@@ -99,28 +99,14 @@ def index():
     categorias = ['desayunos', 'almuerzos', 'cenas', 'meriendas', 'postres', 'bebidas', 'comida_sin_tac', 'promociones']
     productos_por_categoria = {c: [] for c in categorias}
     
-    print(f"\n{'='*60}")
-    print("[index] INICIANDO carga de productos...")
-    print(f"{'='*60}\n")
-    
     conn = None
     cur = None
     try:
-        # Obtener conexión
-        print("[index] Obteniendo conexión a MySQL...")
+        # Obtener conexión y guardarla en una variable
         conn = mysql.connection
-        print(f"[index] Conexión obtenida: {conn}")
-        
         cur = conn.cursor()
-        print("[index] ✓ Cursor creado")
-        
-        # Verificar base de datos
-        cur.execute("SELECT DATABASE()")
-        db_name = cur.fetchone()[0]
-        print(f"[index] Base de datos actual: {db_name}")
         
         # Crear tabla si no existe
-        print("[index] Creando/verificando tabla productos...")
         cur.execute("""
             CREATE TABLE IF NOT EXISTS productos (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -132,58 +118,37 @@ def index():
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         """)
         conn.commit()
-        print("[index] ✓ Tabla productos creada/verificada")
-        
-        # Verificar que la tabla existe
-        cur.execute("SHOW TABLES LIKE 'productos'")
-        table_exists = cur.fetchone()
-        if table_exists:
-            print("[index] ✓ Tabla 'productos' existe")
-        else:
-            print("[index] ✗ ERROR: Tabla 'productos' NO existe")
-            raise Exception("La tabla productos no existe")
         
         # Contar productos
         cur.execute("SELECT COUNT(*) FROM productos")
-        total = cur.fetchone()[0]
-        print(f"[index] Total de productos en tabla: {total}")
+        result = cur.fetchone()
+        total = result[0] if result else 0
         
         if total > 0:
             # Leer productos
-            print("[index] Consultando productos...")
             cur.execute("""
                 SELECT id, nombre, precio, LOWER(COALESCE(categoria, '')) as cat, COALESCE(imagen, ''), COALESCE(descripcion, '')
                 FROM productos
                 ORDER BY id DESC
             """)
             filas = cur.fetchall()
-            print(f"[index] Productos encontrados: {len(filas)}")
             
             # Procesar productos
             for f in filas:
-                print(f"[index] Producto: id={f[0]}, nombre={f[1]}, precio={f[2]}, cat='{f[3]}', imagen={f[4]}")
-                cat = (f[3] or '').lower().strip()
-                
-                if cat in categorias:
-                    productos_por_categoria[cat].append(f)
-                    print(f"[index] ✓ Agregado a categoría: {cat}")
-                else:
-                    print(f"[index] ✗ Categoría '{cat}' no válida")
-        else:
-            print("[index] ⚠ No hay productos en la tabla")
-        
-        # Resumen
-        print("\n[index] Resumen por categoría:")
-        for cat, prods in productos_por_categoria.items():
-            if prods:
-                print(f"[index]   - {cat}: {len(prods)} productos")
-                for p in prods:
-                    print(f"[index]     * {p[1]} (${p[2]})")
+                try:
+                    if f and len(f) >= 4:
+                        cat = (f[3] or '').lower().strip()
+                        if cat in categorias:
+                            productos_por_categoria[cat].append(f)
+                except Exception as e:
+                    print(f"Error procesando producto: {e}")
+                    continue
         
     except Exception as e:
-        print(f"\n[index] ✗ ERROR: {e}")
+        print(f"[index] ERROR: {e}")
         import traceback
         traceback.print_exc()
+        # Continuar aunque haya error - mostrar página vacía en lugar de error 500
     finally:
         if cur:
             try:
@@ -193,13 +158,8 @@ def index():
         if conn:
             try:
                 conn.close()
-                print("[index] Conexión cerrada")
             except:
                 pass
-    
-    total_productos = sum(len(p) for p in productos_por_categoria.values())
-    print(f"[index] Total productos a mostrar: {total_productos}")
-    print(f"{'='*60}\n")
     
     ctx = {'productos_por_categoria': productos_por_categoria}
     if 'user_id' in session:
@@ -1070,21 +1030,37 @@ def cart_add(producto_id: int):
     if mesa:
         session['mesa_carrito'] = mesa
     
+    # Obtener nombre del producto para el mensaje
+    try:
+        cur = mysql.connection.cursor()
+        # Intentar obtener de productos primero
+        cur.execute("SELECT nombre FROM productos WHERE id = %s", (producto_id,))
+        row = cur.fetchone()
+        if not row:
+            # Si no está en productos, buscar en menu
+            cur.execute("SELECT Nombre_Menu FROM menu WHERE id = %s", (producto_id,))
+            row = cur.fetchone()
+        nombre_producto = row[0] if row else 'Producto'
+        cur.close()
+    except:
+        nombre_producto = 'Producto'
+    
     # Si el producto ya está en el carrito, incrementar cantidad
     if key in cart:
         cart[key]['qty'] = int(cart[key].get('qty', 1)) + qty
+        flash(f'Cantidad actualizada: {nombre_producto} x{qty} agregado al carrito', 'success')
     else:
         cart[key] = {'qty': qty}
+        flash(f'{nombre_producto} agregado al carrito (Cantidad: {qty})', 'success')
     
-    # Guardar nombre del cliente y mesa en cada item del carrito (opcional, para mantener consistencia)
+    # Guardar nombre del cliente y mesa en cada item del carrito
     if nombre_cliente:
         cart[key]['nombre_cliente'] = nombre_cliente
     if mesa:
         cart[key]['mesa'] = mesa
     
     session['cart'] = cart
-    flash(f'Producto agregado al carrito', 'success')
-    return redirect(request.referrer or url_for('index'))
+    return redirect(url_for('index'))
 
 @app.route('/cart/add/temp', methods=['POST'])
 def cart_add_temp():

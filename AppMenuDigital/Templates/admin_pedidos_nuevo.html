@@ -45,7 +45,12 @@
                         {% if p[5] and p[5]|length > 0 %}
                             <ul style="margin: 0; padding-left: 20px; font-size: 12px;">
                                 {% for item in p[5] %}
-                                <li>{{ item[2] }} x{{ item[0] }} - ${{ '%.2f'|format(item[1]) }}</li>
+                                <li>
+                                    {{ item[2] }} x{{ item[0] }} - ${{ '%.2f'|format(item[1]) }}
+                                    {% if item|length > 3 and item[3] %}
+                                        <br><span style="color: #666; font-style: italic; font-size: 11px;">📝 {{ item[3] }}</span>
+                                    {% endif %}
+                                </li>
                                 {% endfor %}
                             </ul>
                         {% else %}

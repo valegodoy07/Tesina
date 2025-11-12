@@ -46,21 +46,9 @@ class MySQL:
             connect_timeout=5
         )
 mysql = MySQL(app)
-# (revert) Sin configuración de subida de imágenes
-
-# Inicializar MySQL
-# Función para obtener conexión a la base de datos
-def get_db_connection():
-    connection = pymysql.connect(
-        host=app.config['MYSQL_HOST'],
-        user=app.config['MYSQL_USER'],
-        password=app.config['MYSQL_PASSWORD'],
-        database=app.config['MYSQL_DB'],
-        cursorclass=pymysql.cursors.DictCursor
-    )
-    return connection
 
 def _log_db_info(tag: str):
+    """Log de información de base de datos (solo para debug)"""
     try:
         conn = mysql.connection
         cur = conn.cursor()
@@ -111,16 +99,6 @@ def index():
         
         if cur:
             try:
-                # Verificar base de datos actual
-                try:
-                    cur.execute("SELECT DATABASE()")
-                    db_result = cur.fetchone()
-                    db_name = db_result[0] if db_result else "DESCONOCIDA"
-                    print(f"[index] Usando base de datos: {db_name}")
-                except Exception as db_check_error:
-                    print(f"[index] Error verificando base de datos: {db_check_error}")
-                    db_name = "ERROR"
-                
                 # Crear tabla si no existe
                 cur.execute("""
                     CREATE TABLE IF NOT EXISTS productos (
@@ -133,126 +111,51 @@ def index():
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
                 """)
                 mysql.connection.commit()
-                print(f"[index] Tabla 'productos' verificada/creada")
                 
-                # Leer productos - consulta simple y directa
+                # Leer y procesar productos
                 try:
-                    cur.execute("SELECT COUNT(*) FROM productos")
-                    total_bd = cur.fetchone()[0]
-                    print(f"\n[index] ===== CARGANDO PRODUCTOS =====")
-                    print(f"[index] Total productos en tabla 'productos': {total_bd}")
-                except Exception as count_error:
-                    print(f"[index] Error contando productos: {count_error}")
-                    total_bd = 0
-                
-                # Leer productos - FORZAR lectura directa sin alias para evitar problemas
-                print(f"[index] Ejecutando SELECT FROM productos...")
-                try:
-                    # Primero leer sin procesar
                     cur.execute("SELECT id, nombre, precio, categoria, imagen, descripcion FROM productos ORDER BY id DESC")
                     filas_raw = cur.fetchall()
-                    print(f"[index] Productos encontrados (raw): {len(filas_raw)}")
                     
                     # Procesar y convertir categorías a minúsculas
                     filas = []
                     for row in filas_raw:
                         if row and len(row) >= 4:
-                            # Convertir categoría a minúsculas
-                            cat_original = row[3] if len(row) > 3 else ''
-                            cat_lower = (cat_original or '').lower().strip()
-                            
-                            # Crear tupla con formato correcto: (id, nombre, precio, categoria_lower, imagen, descripcion)
+                            cat_lower = (row[3] or '').lower().strip() if len(row) > 3 else ''
                             fila = (
-                                row[0],  # id
-                                row[1],  # nombre
-                                float(row[2]) if row[2] else 0.0,  # precio
-                                cat_lower,  # categoria (lowercase)
-                                row[4] if len(row) > 4 and row[4] else '',  # imagen
-                                row[5] if len(row) > 5 and row[5] else ''  # descripcion
+                                row[0],
+                                row[1],
+                                float(row[2]) if row[2] else 0.0,
+                                cat_lower,
+                                row[4] if len(row) > 4 and row[4] else '',
+                                row[5] if len(row) > 5 and row[5] else ''
                             )
                             filas.append(fila)
-                            print(f"[index]   Producto raw: ID={row[0]}, nombre='{row[1]}', categoria='{cat_original}' -> procesado: categoria='{cat_lower}'")
-                    
-                    print(f"[index] Productos procesados para mostrar: {len(filas)}")
                 except Exception as select_error:
-                    print(f"[index] ✗ ERROR en SELECT: {select_error}")
+                    print(f"[index] ERROR en SELECT: {select_error}")
                     import traceback
                     traceback.print_exc()
                     filas = []
                 
-                if len(filas) == 0:
-                    print(f"[index] ⚠ ADVERTENCIA: No hay productos en la tabla 'productos'")
-                    # Verificar que la tabla existe y tiene datos
+                # Procesar productos por categoría
+                for f in filas:
                     try:
-                        cur.execute("SHOW TABLES LIKE 'productos'")
-                        table_exists = cur.fetchone()
-                        if table_exists:
-                            print(f"[index] La tabla 'productos' existe pero está vacía")
-                            # Intentar ver estructura de la tabla
-                            cur.execute("DESCRIBE productos")
-                            estructura = cur.fetchall()
-                            print(f"[index] Estructura de tabla 'productos': {[col[0] for col in estructura]}")
-                        else:
-                            print(f"[index] ✗ ERROR: La tabla 'productos' no existe!")
-                    except Exception as desc_error:
-                        print(f"[index] Error verificando tabla: {desc_error}")
-                
-                # Procesar productos
-                productos_procesados = 0
-                print(f"[index] Procesando {len(filas)} productos...")
-                for idx, f in enumerate(filas):
-                    try:
-                        print(f"[index] Procesando producto #{idx+1}: {f}")
-                        if f and len(f) >= 4:  # Mínimo 4 campos necesarios
+                        if f and len(f) >= 4:
                             producto_id = f[0]
                             producto_nombre = f[1] if len(f) > 1 else 'Sin nombre'
                             producto_precio = float(f[2]) if len(f) > 2 and f[2] else 0.0
-                            # La categoría ya viene en minúsculas del SELECT con LOWER()
                             cat = (f[3] or '').lower().strip() if len(f) > 3 else ''
                             producto_imagen = (f[4] or '') if len(f) > 4 else ''
                             producto_descripcion = (f[5] or '') if len(f) > 5 else ''
                             
-                            print(f"[index]   Producto: ID={producto_id}, nombre='{producto_nombre}', categoria='{cat}', precio={producto_precio}")
-                            
                             if cat and cat in categorias:
-                                # Crear tupla completa para el template
                                 producto_completo = (producto_id, producto_nombre, producto_precio, cat, producto_imagen, producto_descripcion)
                                 productos_por_categoria[cat].append(producto_completo)
-                                productos_procesados += 1
-                                print(f"  ✓ Producto agregado a categoría '{cat}': '{producto_nombre}' (ID: {producto_id})")
-                            else:
-                                print(f"  ✗ Producto ignorado: '{producto_nombre}' (ID: {producto_id}) - categoría '{cat}' no válida")
-                                print(f"     Categorías válidas: {categorias}")
-                        else:
-                            print(f"  ✗ Producto con formato incorrecto (solo {len(f) if f else 0} campos): {f}")
                     except Exception as e:
-                        print(f"  ✗ Error procesando producto {f}: {e}")
-                        import traceback
-                        traceback.print_exc()
+                        print(f"[index] Error procesando producto: {e}")
                         continue
-                
-                print(f"[index] Total productos procesados: {productos_procesados}")
-                for cat, prods in productos_por_categoria.items():
-                    if len(prods) > 0:
-                        print(f"  - {cat}: {len(prods)} productos")
-                
-                # Si no se procesaron productos pero hay en BD, mostrar info de debug
-                if productos_procesados == 0 and len(filas) > 0:
-                    print(f"[index] ⚠ ADVERTENCIA: Hay {len(filas)} productos en BD pero ninguno fue procesado")
-                    print(f"[index] Categorías válidas: {categorias}")
-                    for f in filas[:10]:  # Mostrar primeros 10
-                        if f and len(f) >= 4:
-                            cat_bd = (f[3] or '').lower().strip()
-                            print(f"    - Producto BD: ID={f[0]}, nombre='{f[1]}', categoria='{cat_bd}'")
-                            if cat_bd not in categorias:
-                                print(f"      ✗ Categoría '{cat_bd}' no está en la lista de categorías válidas")
-                
-                # Si hay productos procesados, mostrar detalles
-                if productos_procesados > 0:
-                    print(f"[index] ✓ {productos_procesados} productos procesados correctamente y listos para mostrar")
             except Exception as db_error:
                 print(f"[index] Error en consulta BD: {db_error}")
-                # Continuar sin productos
             finally:
                 if cur:
                     try:
@@ -264,33 +167,10 @@ def index():
         print(f"[index] ERROR general: {e}")
         import traceback
         traceback.print_exc()
-        # Continuar aunque haya error - mostrar página vacía en lugar de error 500
-    
-    # Debug: mostrar resumen antes de renderizar
-    total_productos = sum(len(prods) for prods in productos_por_categoria.values())
-    print(f"\n[index] ===== RESUMEN FINAL =====")
-    print(f"[index] Total productos a mostrar en template: {total_productos}")
-    for cat, prods in productos_por_categoria.items():
-        if len(prods) > 0:
-            print(f"[index]   {cat}: {len(prods)} productos")
-            # Mostrar nombres de los primeros 3 productos de cada categoría
-            for p in prods[:3]:
-                print(f"      - {p[1]} (ID: {p[0]})")
-    if total_productos == 0:
-        print(f"[index] ⚠ ADVERTENCIA: NO HAY PRODUCTOS PARA MOSTRAR")
-        print(f"[index] Esto significa que el template mostrará 'No hay productos disponibles'")
-    print(f"[index] =========================\n")
-    
-    # Verificar que productos_por_categoria tenga la estructura correcta
-    print(f"[index] Verificación final - productos_por_categoria es un dict: {isinstance(productos_por_categoria, dict)}")
-    print(f"[index] Claves en productos_por_categoria: {list(productos_por_categoria.keys())}")
     
     ctx = {'productos_por_categoria': productos_por_categoria}
     if 'user_id' in session:
         ctx['usuario'] = session.get('nombre')
-    
-    # Verificar que el contexto se pase correctamente
-    print(f"[index] Contexto a pasar al template: productos_por_categoria con {total_productos} productos")
     
     return render_template('Index.html', **ctx)
 
@@ -808,7 +688,8 @@ def mozo_dashboard():
                 cur.execute(
                     """
                     SELECT pi.cantidad, pi.precio_unitario, 
-                           COALESCE(pr.nombre, m.Nombre_Menu, CONCAT('Producto ID:', pi.menu_id)) AS nombre_producto
+                           COALESCE(pr.nombre, m.Nombre_Menu, CONCAT('Producto ID:', pi.menu_id)) AS nombre_producto,
+                           COALESCE(pi.notas, '') AS notas
                     FROM pedido_items pi
                     LEFT JOIN productos pr ON pi.menu_id = pr.id
                     LEFT JOIN menu m ON pi.menu_id = m.id
@@ -877,10 +758,6 @@ def mozo_productos_crear():
     descripcion = request.form.get('descripcion', '').strip()
     categorias_validas = ['desayunos','almuerzos','meriendas','cenas','postres','bebidas','comida_sin_tac','promociones','veggie']
     
-    print(f"\n{'='*60}")
-    print(f"[mozo_productos_crear] INICIANDO - nombre={nombre}, precio={precio}, categoria={categoria}")
-    print(f"{'='*60}\n")
-    
     if not nombre:
         flash('El nombre del producto es obligatorio', 'error')
         return redirect(url_for('mozo_dashboard'))
@@ -903,19 +780,7 @@ def mozo_productos_crear():
         conn = mysql.connection
         cur = conn.cursor()
         
-        print(f"[mozo_productos_crear] Conexión obtenida: {type(conn)}")
-        
-        # Verificar base de datos actual
-        try:
-            cur.execute("SELECT DATABASE()")
-            db_result = cur.fetchone()
-            db_name = db_result[0] if db_result else "DESCONOCIDA"
-            print(f"[mozo_productos_crear] Usando base de datos: {db_name}")
-        except Exception as db_check_error:
-            print(f"[mozo_productos_crear] Error verificando base de datos: {db_check_error}")
-            db_name = "ERROR"
-        
-        # Crear tabla si no existe - Asegurar que la tabla existe
+        # Crear tabla si no existe
         try:
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS productos (
@@ -929,17 +794,8 @@ def mozo_productos_crear():
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
             """)
             conn.commit()
-            print(f"[mozo_productos_crear] ✓ Tabla 'productos' verificada/creada")
-            
-            # Verificar que la tabla existe
-            cur.execute("SHOW TABLES LIKE 'productos'")
-            table_check = cur.fetchone()
-            if table_check:
-                print(f"[mozo_productos_crear] ✓ Tabla 'productos' confirmada en BD")
-            else:
-                print(f"[mozo_productos_crear] ✗ ERROR: Tabla 'productos' no existe después de crear!")
         except Exception as table_error:
-            print(f"[mozo_productos_crear] ✗ ERROR creando tabla: {table_error}")
+            print(f"[mozo_productos_crear] ERROR creando tabla: {table_error}")
             import traceback
             traceback.print_exc()
             cur.close()
@@ -959,8 +815,6 @@ def mozo_productos_crear():
             filename = secure_filename(f.filename)
             _, ext = os.path.splitext(filename)
             
-            print(f"[mozo_productos_crear] Archivo recibido: {filename}, extensión: {ext}")
-            
             if ext.lower() not in _ALLOWED_IMAGE_EXTS:
                 flash('Formato de imagen no permitido. Formatos permitidos: JPG, PNG, GIF, WEBP, AVIF', 'error')
                 cur.close()
@@ -973,50 +827,30 @@ def mozo_productos_crear():
             
             dest = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
             
-            print(f"[mozo_productos_crear] Guardando imagen en: {dest}")
-            print(f"[mozo_productos_crear] Ruta completa: {os.path.abspath(dest)}")
-            
             try:
-                # Asegurar que el directorio existe
                 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-                
                 f.save(dest)
                 
-                # Verificar que el archivo se guardó
                 if os.path.exists(dest):
                     imagen = f"images/{unique_filename}"
-                    print(f"[mozo_productos_crear] ✓ Imagen guardada correctamente: {imagen}")
                 else:
-                    print(f"[mozo_productos_crear] ✗ ERROR: El archivo no se guardó en {dest}")
                     flash('No se pudo guardar la imagen', 'error')
                     cur.close()
                     return redirect(url_for('mozo_dashboard'))
-                    
             except Exception as e:
-                print(f"[mozo_productos_crear] ✗ Error guardando imagen: {e}")
+                print(f"[mozo_productos_crear] ERROR guardando imagen: {e}")
                 import traceback
                 traceback.print_exc()
                 flash(f'Error al guardar la imagen: {str(e)}', 'error')
                 cur.close()
                 return redirect(url_for('mozo_dashboard'))
         elif not imagen_url:
-            # Si no hay imagen ni URL, usar imagen por defecto
             imagen = ''
-            print(f"[mozo_productos_crear] No se proporcionó imagen ni URL - se usará imagen por defecto")
-        
-        # Insertar en la tabla productos
-        print(f"\n[mozo_productos_crear] Insertando producto en BD:")
-        print(f"  - Nombre: {nombre}")
-        print(f"  - Precio: {precio_val}")
-        print(f"  - Categoría: {categoria}")
-        print(f"  - Imagen: {imagen}")
-        print(f"  - Descripción: {descripcion[:50] if descripcion else 'N/A'}...")
         
         # Verificar que no exista un producto con el mismo nombre
         cur.execute("SELECT id FROM productos WHERE nombre = %s", (nombre,))
         existing = cur.fetchone()
         if existing:
-            print(f"[mozo_productos_crear] ADVERTENCIA: Ya existe un producto con nombre '{nombre}' (ID: {existing[0]})")
             flash(f'Ya existe un producto con el nombre "{nombre}"', 'warning')
         
         # Asegurar que la categoría esté en minúsculas antes de insertar
@@ -1027,19 +861,14 @@ def mozo_productos_crear():
             return redirect(url_for('mozo_dashboard'))
         
         # Insertar producto
-        print(f"[mozo_productos_crear] Ejecutando INSERT con valores:")
-        print(f"  nombre='{nombre}', descripcion='{descripcion[:30] if descripcion else ''}...', precio={precio_val}, imagen='{imagen}', categoria='{categoria_final}'")
-        
         try:
             cur.execute(
                 "INSERT INTO productos (nombre, descripcion, precio, imagen, categoria) VALUES (%s, %s, %s, %s, %s)",
                 (nombre, descripcion, precio_val, imagen, categoria_final)
             )
             product_id = cur.lastrowid
-            print(f"[mozo_productos_crear] ✓ INSERT ejecutado - Producto insertado con ID: {product_id}")
-            print(f"[mozo_productos_crear] ✓ Categoría guardada: '{categoria_final}' (en minúsculas)")
         except Exception as insert_error:
-            print(f"[mozo_productos_crear] ✗ ERROR en INSERT: {insert_error}")
+            print(f"[mozo_productos_crear] ERROR en INSERT: {insert_error}")
             import traceback
             traceback.print_exc()
             conn.rollback()
@@ -1047,19 +876,11 @@ def mozo_productos_crear():
             flash(f'Error al insertar producto: {str(insert_error)}', 'error')
             return redirect(url_for('mozo_dashboard'))
         
-        # Hacer commit explícito usando la MISMA conexión
+        # Hacer commit
         try:
             conn.commit()
-            print(f"[mozo_productos_crear] ✓ Commit realizado exitosamente en conexión {id(conn)}")
-            
-            # Verificar inmediatamente después del commit
-            cur.execute("SELECT COUNT(*) FROM productos WHERE id = %s", (product_id,))
-            count_after_commit = cur.fetchone()[0]
-            print(f"[mozo_productos_crear] Verificación post-commit: {count_after_commit} producto(s) con ID {product_id}")
-            if count_after_commit == 0:
-                print(f"[mozo_productos_crear] ⚠ ADVERTENCIA: Producto no encontrado después del commit!")
         except Exception as commit_error:
-            print(f"[mozo_productos_crear] ✗ ERROR en commit: {commit_error}")
+            print(f"[mozo_productos_crear] ERROR en commit: {commit_error}")
             import traceback
             traceback.print_exc()
             conn.rollback()
@@ -1067,56 +888,11 @@ def mozo_productos_crear():
             flash(f'Error al guardar producto: {str(commit_error)}', 'error')
             return redirect(url_for('mozo_dashboard'))
         
-        # Verificar que se guardó correctamente - hacer una nueva consulta para asegurar que se ve el commit
-        print(f"[mozo_productos_crear] Verificando producto guardado (ID: {product_id})...")
-        try:
-            cur.execute("SELECT id, nombre, precio, categoria, imagen FROM productos WHERE id = %s", (product_id,))
-            verify_row = cur.fetchone()
-            if verify_row:
-                print(f"[mozo_productos_crear] ✓ Verificación EXITOSA: Producto {verify_row[0]} - '{verify_row[1]}' guardado correctamente")
-                print(f"[mozo_productos_crear]   Categoría: '{verify_row[3]}'")
-                print(f"[mozo_productos_crear]   Precio: ${verify_row[2]}")
-                print(f"[mozo_productos_crear]   Imagen: '{verify_row[4] if len(verify_row) > 4 else 'N/A'}'")
-                
-                # Verificar que la categoría sea válida
-                cat_lower = (verify_row[3] or '').lower().strip()
-                categorias_validas = ['desayunos','almuerzos','meriendas','cenas','postres','bebidas','comida_sin_tac','promociones','veggie']
-                if cat_lower not in categorias_validas:
-                    print(f"[mozo_productos_crear] ⚠ ADVERTENCIA: Categoría '{cat_lower}' no está en la lista de categorías válidas")
-                    print(f"[mozo_productos_crear]   Categorías válidas: {categorias_validas}")
-                    print(f"[mozo_productos_crear]   El producto se guardó pero NO aparecerá en el menú hasta que la categoría sea válida")
-                else:
-                    print(f"[mozo_productos_crear] ✓ Categoría '{cat_lower}' es válida - el producto aparecerá en el menú")
-            else:
-                print(f"[mozo_productos_crear] ✗ ERROR: Producto no encontrado después de insertar!")
-                print(f"[mozo_productos_crear]   Esto indica un problema con el commit o la conexión")
-        except Exception as verify_error:
-            print(f"[mozo_productos_crear] ✗ ERROR verificando producto: {verify_error}")
-            import traceback
-            traceback.print_exc()
-        
-        # Contar total de productos en la tabla
-        try:
-            cur.execute("SELECT COUNT(*) FROM productos")
-            total_count = cur.fetchone()[0]
-            print(f"[mozo_productos_crear] ✓ Total de productos en tabla 'productos': {total_count}")
-            
-            # Listar todos los productos para debug
-            cur.execute("SELECT id, nombre, categoria FROM productos ORDER BY id DESC LIMIT 10")
-            all_products = cur.fetchall()
-            print(f"[mozo_productos_crear] Últimos 10 productos en BD:")
-            for prod in all_products:
-                cat_display = prod[2] if prod[2] else '(sin categoría)'
-                print(f"    - ID: {prod[0]}, Nombre: '{prod[1]}', Categoría: '{cat_display}'")
-        except Exception as count_error:
-            print(f"[mozo_productos_crear] Error contando productos: {count_error}")
-        
         cur.close()
-        flash(f'Producto "{nombre}" agregado al menú correctamente (ID: {product_id})', 'success')
-        print(f"[mozo_productos_crear] ✓ Producto guardado exitosamente")
+        flash(f'Producto "{nombre}" agregado al menú correctamente', 'success')
         
     except Exception as e:
-        print(f"[mozo_productos_crear] ✗ ERROR general: {e}")
+        print(f"[mozo_productos_crear] ERROR general: {e}")
         import traceback
         traceback.print_exc()
         try:
@@ -1603,10 +1379,20 @@ def ensure_client_orders_tables():
                 menu_id INT NOT NULL,
                 cantidad INT NOT NULL DEFAULT 1,
                 precio_unitario DECIMAL(10,2) NOT NULL,
+                notas TEXT NULL,
                 FOREIGN KEY (pedido_id) REFERENCES pedidos(id) ON DELETE CASCADE
             )
             """
         )
+        # Asegurar que la columna notas existe (por si la tabla ya existía sin ella)
+        try:
+            cur.execute("DESCRIBE pedido_items")
+            cols = [row[0].lower() for row in cur.fetchall()]
+            if 'notas' not in cols:
+                cur.execute("ALTER TABLE pedido_items ADD COLUMN notas TEXT NULL")
+                mysql.connection.commit()
+        except Exception as e:
+            print(f"Error verificando columna notas en pedido_items: {e}")
         # Intentar eliminar la foreign key restrictiva a menu si existe
         try:
             cur.execute("""
@@ -1656,6 +1442,7 @@ def cart_view():
                         'precio': precio,
                         'cantidad': cantidad,
                         'subtotal': subtotal,
+                        'notas': entry.get('notas', ''),
                     })
                 else:
                     # Producto de la base de datos - usar tabla productos
@@ -1679,6 +1466,7 @@ def cart_view():
                         'precio': precio,
                         'cantidad': cantidad,
                         'subtotal': subtotal,
+                        'notas': entry.get('notas', ''),
                     })
             except Exception as e:
                 print(f"Error cargando item {pid}: {e}")
@@ -1693,6 +1481,7 @@ def cart_add(producto_id: int):
     qty = int(request.form.get('qty', '1'))
     mesa = request.form.get('mesa', '').strip()
     nombre_cliente = request.form.get('nombre_cliente', '').strip()
+    notas = request.form.get('notas', '').strip()
     
     cart = _get_cart()
     key = str(producto_id)
@@ -1721,9 +1510,18 @@ def cart_add(producto_id: int):
     # Si el producto ya está en el carrito, incrementar cantidad
     if key in cart:
         cart[key]['qty'] = int(cart[key].get('qty', 1)) + qty
+        # Si hay nuevas notas, agregarlas o actualizarlas
+        if notas:
+            notas_existentes = cart[key].get('notas', '')
+            if notas_existentes:
+                cart[key]['notas'] = f"{notas_existentes}; {notas}"
+            else:
+                cart[key]['notas'] = notas
         flash(f'Cantidad actualizada: {nombre_producto} x{qty} agregado al carrito', 'success')
     else:
         cart[key] = {'qty': qty}
+        if notas:
+            cart[key]['notas'] = notas
         flash(f'{nombre_producto} agregado al carrito (Cantidad: {qty})', 'success')
     
     # Guardar nombre del cliente y mesa en cada item del carrito
@@ -1932,13 +1730,17 @@ def cart_checkout():
                     print(f"No se pudo encontrar menu_id para producto {pid}")
                     continue
                 
+                # Obtener notas del item del carrito
+                notas_item = entry.get('notas', '') or ''
+                
                 # Insertar item del pedido
                 cur.execute(
-                    "INSERT INTO pedido_items (pedido_id, menu_id, cantidad, precio_unitario) VALUES (%s, %s, %s, %s)",
-                    (pedido_id, menu_id, cantidad, precio)
+                    "INSERT INTO pedido_items (pedido_id, menu_id, cantidad, precio_unitario, notas) VALUES (%s, %s, %s, %s, %s)",
+                    (pedido_id, menu_id, cantidad, precio, notas_item)
                 )
                 items_agregados += 1
-                print(f"[CHECKOUT] ✓ Item agregado: {nombre_producto} x{cantidad} = ${precio * cantidad}")
+                notas_msg = f" (Notas: {notas_item})" if notas_item else ""
+                print(f"[CHECKOUT] ✓ Item agregado: {nombre_producto} x{cantidad} = ${precio * cantidad}{notas_msg}")
             except Exception as e:
                 print(f"[CHECKOUT] ✗ Error agregando item {pid} al pedido: {e}")
                 import traceback
@@ -2064,10 +1866,14 @@ def admin_pedidos_nuevo():
             try:
                 cur.execute(
                     """
-                    SELECT pi.cantidad, pi.precio_unitario, m.Nombre_Menu
+                    SELECT pi.cantidad, pi.precio_unitario, 
+                           COALESCE(pr.nombre, m.Nombre_Menu, CONCAT('Producto ID:', pi.menu_id)) AS nombre_producto,
+                           COALESCE(pi.notas, '') AS notas
                     FROM pedido_items pi
-                    JOIN menu m ON pi.menu_id = m.id
+                    LEFT JOIN productos pr ON pi.menu_id = pr.id
+                    LEFT JOIN menu m ON pi.menu_id = m.id
                     WHERE pi.pedido_id = %s
+                    ORDER BY pi.id
                     """,
                     (pedido_id,)
                 )

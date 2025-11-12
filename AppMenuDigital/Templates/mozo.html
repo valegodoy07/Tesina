@@ -293,12 +293,68 @@
                 <option value="bebidas">Bebidas</option>
                     <option value="comida_sin_tac">Comida sin TACC</option>
                 <option value="promociones">Promociones</option>
+                <option value="veggie">Veggie</option>
             </select>
-            <input type="text" name="imagen" placeholder="URL de imagen (opcional)">
-            <input type="file" name="imagen_file" accept="image/*">
-            <input type="text" name="descripcion" placeholder="Descripción (opcional)">
+            <input type="text" name="imagen" placeholder="URL de imagen (opcional)" style="grid-column: 1 / -1;">
+            <div style="grid-column: 1 / -1;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #713D2A;">O subir imagen desde tu computadora:</label>
+                <input type="file" name="imagen_file" accept="image/*" style="width: 100%; padding: 8px; border: 2px solid #ddd; border-radius: 8px;">
+                <small style="color: #666; font-size: 12px;">Formatos permitidos: JPG, PNG, GIF, WEBP, AVIF (máx. 10MB)</small>
+            </div>
+            <input type="text" name="descripcion" placeholder="Descripción (opcional)" style="grid-column: 1 / -1;">
                 <button type="submit">Agregar Producto</button>
         </form>
+        </div>
+
+        <!-- Sección: Lista de Productos -->
+        <div class="section-card">
+            <h2>📦 Productos del Menú</h2>
+            {% if productos and productos|length > 0 %}
+                <div class="productos-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
+                    {% for prod in productos %}
+                    <div class="producto-card" style="background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 12px; padding: 20px; position: relative;">
+                        <div style="display: flex; gap: 15px; align-items: start;">
+                            {% if prod[4] %}
+                            <div style="width: 80px; height: 80px; border-radius: 8px; overflow: hidden; flex-shrink: 0;">
+                                {% if prod[4].startswith('http://') or prod[4].startswith('https://') %}
+                                <img src="{{ prod[4] }}" alt="{{ prod[1] }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                <img src="{{ url_for('static', filename=prod[4]) }}" alt="{{ prod[1] }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='{{ url_for('static', filename='images/default-food.png') }}';">
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            <div style="flex: 1;">
+                                <h3 style="margin: 0 0 8px 0; color: #713D2A; font-size: 18px;">{{ prod[1] }}</h3>
+                                <p style="margin: 0 0 5px 0; color: #666; font-size: 14px;"><strong>Precio:</strong> ${{ '%.2f'|format(prod[2]) }}</p>
+                                <p style="margin: 0 0 5px 0; color: #666; font-size: 12px;"><strong>Categoría:</strong> {{ prod[3]|replace('_', ' ')|title }}</p>
+                                {% if prod[5] %}
+                                <p style="margin: 0; color: #999; font-size: 12px;">{{ prod[5][:50] }}{% if prod[5]|length > 50 %}...{% endif %}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div style="margin-top: 15px; display: flex; gap: 10px;">
+                            <button class="btn-editar-producto" 
+                                    data-id="{{ prod[0] }}"
+                                    data-nombre="{{ prod[1] }}"
+                                    data-precio="{{ prod[2] }}"
+                                    data-categoria="{{ prod[3] }}"
+                                    data-imagen="{{ prod[4] or '' }}"
+                                    data-descripcion="{{ prod[5] or '' }}"
+                                    style="flex: 1; padding: 10px; background: #74b9ff; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">✏️ Editar</button>
+                            <form method="POST" action="{{ url_for('mozo_productos_eliminar', producto_id=prod[0]) }}" style="flex: 1; margin: 0;" onsubmit="return confirm('¿Estás seguro de eliminar este producto?');">
+                                <button type="submit" style="width: 100%; padding: 10px; background: #d63031; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">🗑️ Eliminar</button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">📦</div>
+                    <h3>No hay productos en el menú</h3>
+                    <p>Agrega productos usando el formulario de arriba</p>
+                </div>
+            {% endif %}
         </div>
 
         <!-- Sección: Pedidos de Clientes -->
@@ -352,17 +408,22 @@
                         </div>
                         {% endif %}
                         
-                        <div class="pedido-actions">
-                            <form method="POST" action="{{ url_for('mozo_pedido_cliente_estado', pedido_id=p[0]) }}" style="display: flex; gap: 12px; width: 100%; align-items: center;">
-                                <select name="estado" required>
+                        <div class="pedido-actions" style="display: flex; gap: 12px; width: 100%; align-items: center; flex-wrap: wrap;">
+                            <form method="POST" action="{{ url_for('mozo_pedido_cliente_estado', pedido_id=p[0]) }}" style="display: flex; gap: 12px; flex: 1; align-items: center; min-width: 0;">
+                                <select name="estado" required style="flex: 1; min-width: 180px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
                                     <option value="pendiente" {% if p[3]=='pendiente' %}selected{% endif %}>Pendiente</option>
                                     <option value="en_preparacion" {% if p[3]=='en_preparacion' %}selected{% endif %}>En Preparación</option>
                                     <option value="listo" {% if p[3]=='listo' %}selected{% endif %}>Listo</option>
                                     <option value="entregado" {% if p[3]=='entregado' %}selected{% endif %}>Entregado</option>
                                     <option value="cancelado" {% if p[3]=='cancelado' %}selected{% endif %}>Cancelado</option>
                                 </select>
-                                <button type="submit">Actualizar Estado</button>
+                                <button type="submit" style="padding: 12px 20px; background: #27ae60; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: background 0.3s; white-space: nowrap;" onmouseover="this.style.background='#229954'" onmouseout="this.style.background='#27ae60'">✓ Actualizar Estado</button>
                             </form>
+                            {% if p[3] == 'entregado' or p[3] == 'cancelado' %}
+                            <form method="POST" action="{{ url_for('mozo_pedido_cliente_eliminar', pedido_id=p[0]) }}" style="margin: 0;" onsubmit="return confirm('¿Estás seguro de eliminar este pedido? Esta acción no se puede deshacer.');">
+                                <button type="submit" style="padding: 12px 20px; background: #d63031; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: background 0.3s; white-space: nowrap;" onmouseover="this.style.background='#b71c1c'" onmouseout="this.style.background='#d63031'">🗑️ Eliminar</button>
+                            </form>
+                            {% endif %}
                         </div>
                     </div>
                     {% endfor %}
@@ -376,6 +437,78 @@
             {% endif %}
         </div>
     </div>
+
+    <!-- Modal para editar producto -->
+    <div id="modalEditar" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 12px; padding: 30px; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;">
+            <h2 style="margin-top: 0; color: #713D2A;">✏️ Editar Producto</h2>
+            <form method="POST" id="formEditar" enctype="multipart/form-data" class="producto-form">
+                <input type="text" name="nombre" id="edit_nombre" placeholder="Nombre del producto" required>
+                <input type="number" step="0.01" name="precio" id="edit_precio" placeholder="Precio" required>
+                <select name="categoria" id="edit_categoria" required>
+                    <option value="">Seleccionar categoría</option>
+                    <option value="desayunos">Desayunos</option>
+                    <option value="almuerzos">Almuerzos</option>
+                    <option value="meriendas">Meriendas</option>
+                    <option value="cenas">Cenas</option>
+                    <option value="postres">Postres</option>
+                    <option value="bebidas">Bebidas</option>
+                    <option value="comida_sin_tac">Comida sin TACC</option>
+                    <option value="promociones">Promociones</option>
+                </select>
+                <input type="text" name="imagen" id="edit_imagen" placeholder="URL de imagen (opcional)">
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #713D2A;">O subir nueva imagen:</label>
+                    <input type="file" name="imagen_file" accept="image/*" style="width: 100%; padding: 8px; border: 2px solid #ddd; border-radius: 8px;">
+                    <small style="color: #666; font-size: 12px;">Formatos: JPG, PNG, GIF, WEBP, AVIF (máx. 10MB)</small>
+                </div>
+                <input type="text" name="descripcion" id="edit_descripcion" placeholder="Descripción (opcional)">
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button type="submit" style="flex: 1; padding: 12px; background: #713D2A; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Guardar Cambios</button>
+                    <button type="button" onclick="cerrarModal()" style="flex: 1; padding: 12px; background: #636e72; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function editarProducto(id, nombre, precio, categoria, imagen, descripcion) {
+            document.getElementById('edit_nombre').value = nombre || '';
+            document.getElementById('edit_precio').value = precio || '';
+            document.getElementById('edit_categoria').value = categoria || '';
+            document.getElementById('edit_imagen').value = imagen || '';
+            document.getElementById('edit_descripcion').value = descripcion || '';
+            document.getElementById('formEditar').action = '/mozo/productos/' + id + '/editar';
+            document.getElementById('modalEditar').style.display = 'flex';
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalEditar').style.display = 'none';
+        }
+
+        // Asignar eventos a los botones de editar
+        document.addEventListener('DOMContentLoaded', function() {
+            const botonesEditar = document.querySelectorAll('.btn-editar-producto');
+            botonesEditar.forEach(function(boton) {
+                boton.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    const nombre = this.getAttribute('data-nombre') || '';
+                    const precio = this.getAttribute('data-precio') || '';
+                    const categoria = this.getAttribute('data-categoria') || '';
+                    const imagen = this.getAttribute('data-imagen') || '';
+                    const descripcion = this.getAttribute('data-descripcion') || '';
+                    editarProducto(id, nombre, precio, categoria, imagen, descripcion);
+                });
+            });
+        });
+
+        // Cerrar modal al hacer clic fuera
+        document.getElementById('modalEditar').addEventListener('click', function(e) {
+            if (e.target === this) {
+                cerrarModal();
+            }
+        });
+    </script>
 </body>
 </html>
 

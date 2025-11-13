@@ -42,7 +42,7 @@
         <h1>Bienvenido a P&C Restobar</h1>
         <p>donde cada plato cuenta su historia</p>
       {% endif %}
-      <div class="auth-buttons" style="margin-top: 20px;">
+      <div class="auth-buttons" style="margin-top: 50px;">
         <button class="btn-primary" onclick="showMenu()" style="background-color: rgba(113, 61, 42, 0.9); color: white; border: none; padding: 15px 30px; border-radius: 8px; font-weight: bold; font-size: 18px; cursor: pointer;">Ver Carta</button>
       </div>
     </div>
@@ -105,11 +105,8 @@
                     <img src="{{ url_for('static', filename='images/default-food.png') }}" alt="{{ p[1] }}" loading="lazy">
                   {% endif %}
                 </div>
-                <div style="padding: 10px; background: #f8f9fa; border-top: 1px solid #e9ecef;">
-                  <div style="font-weight: bold; color: #333; margin-bottom: 5px; font-size: 14px;">{{ p[1] }}</div>
-                  <div class="price-container" style="background: transparent; border: none; padding: 0;">
-                    <span class="price" style="font-size: 16px; color: #713D2A;">${{ "{:,.0f}".format(p[2]) }}</span>
-                  </div>
+                <div style="padding: 20px; background: #f8f9fa; border-top: 1px solid #e9ecef; min-height: 80px; display: flex; align-items: center; justify-content: center;">
+                  <div style="font-weight: bold; color: #333; font-size: 20px; text-align: center; line-height: 1.4;">{{ p[1] }}</div>
                 </div>
               </div>
             {% endfor %}
@@ -139,11 +136,8 @@
                     <img src="{{ url_for('static', filename='images/default-food.png') }}" alt="{{ p[1] }}" loading="lazy">
                   {% endif %}
                 </div>
-                <div style="padding: 10px; background: #f8f9fa; border-top: 1px solid #e9ecef;">
-                  <div style="font-weight: bold; color: #333; margin-bottom: 5px; font-size: 14px;">{{ p[1] }}</div>
-                  <div class="price-container" style="background: transparent; border: none; padding: 0;">
-                    <span class="price" style="font-size: 16px; color: #713D2A;">${{ "{:,.0f}".format(p[2]) }}</span>
-                  </div>
+                <div style="padding: 20px; background: #f8f9fa; border-top: 1px solid #e9ecef; min-height: 80px; display: flex; align-items: center; justify-content: center;">
+                  <div style="font-weight: bold; color: #333; font-size: 20px; text-align: center; line-height: 1.4;">{{ p[1] }}</div>
                 </div>
               </div>
             {% endfor %}
@@ -173,11 +167,8 @@
                     <img src="{{ url_for('static', filename='images/default-food.png') }}" alt="{{ p[1] }}" loading="lazy">
                   {% endif %}
                 </div>
-                <div style="padding: 10px; background: #f8f9fa; border-top: 1px solid #e9ecef;">
-                  <div style="font-weight: bold; color: #333; margin-bottom: 5px; font-size: 14px;">{{ p[1] }}</div>
-                  <div class="price-container" style="background: transparent; border: none; padding: 0;">
-                    <span class="price" style="font-size: 16px; color: #713D2A;">${{ "{:,.0f}".format(p[2]) }}</span>
-                  </div>
+                <div style="padding: 20px; background: #f8f9fa; border-top: 1px solid #e9ecef; min-height: 80px; display: flex; align-items: center; justify-content: center;">
+                  <div style="font-weight: bold; color: #333; font-size: 20px; text-align: center; line-height: 1.4;">{{ p[1] }}</div>
                 </div>
               </div>
             {% endfor %}
@@ -207,11 +198,8 @@
                     <img src="{{ url_for('static', filename='images/default-food.png') }}" alt="{{ p[1] }}" loading="lazy">
                   {% endif %}
                 </div>
-                <div style="padding: 10px; background: #f8f9fa; border-top: 1px solid #e9ecef;">
-                  <div style="font-weight: bold; color: #333; margin-bottom: 5px; font-size: 14px;">{{ p[1] }}</div>
-                  <div class="price-container" style="background: transparent; border: none; padding: 0;">
-                    <span class="price" style="font-size: 16px; color: #713D2A;">${{ "{:,.0f}".format(p[2]) }}</span>
-                  </div>
+                <div style="padding: 20px; background: #f8f9fa; border-top: 1px solid #e9ecef; min-height: 80px; display: flex; align-items: center; justify-content: center;">
+                  <div style="font-weight: bold; color: #333; font-size: 20px; text-align: center; line-height: 1.4;">{{ p[1] }}</div>
                 </div>
               </div>
             {% endfor %}
@@ -241,11 +229,8 @@
                     <img src="{{ url_for('static', filename='images/default-food.png') }}" alt="{{ p[1] }}" loading="lazy">
                   {% endif %}
                 </div>
-                <div style="padding: 10px; background: #f8f9fa; border-top: 1px solid #e9ecef;">
-                  <div style="font-weight: bold; color: #333; margin-bottom: 5px; font-size: 14px;">{{ p[1] }}</div>
-                  <div class="price-container" style="background: transparent; border: none; padding: 0;">
-                    <span class="price" style="font-size: 16px; color: #713D2A;">${{ "{:,.0f}".format(p[2]) }}</span>
-                  </div>
+                <div style="padding: 20px; background: #f8f9fa; border-top: 1px solid #e9ecef; min-height: 80px; display: flex; align-items: center; justify-content: center;">
+                  <div style="font-weight: bold; color: #333; font-size: 20px; text-align: center; line-height: 1.4;">{{ p[1] }}</div>
                 </div>
               </div>
             {% endfor %}
@@ -275,11 +260,8 @@
                     <img src="{{ url_for('static', filename='images/default-food.png') }}" alt="{{ p[1] }}" loading="lazy">
                   {% endif %}
                 </div>
-                <div style="padding: 10px; background: #f8f9fa; border-top: 1px solid #e9ecef;">
-                  <div style="font-weight: bold; color: #333; margin-bottom: 5px; font-size: 14px;">{{ p[1] }}</div>
-                  <div class="price-container" style="background: transparent; border: none; padding: 0;">
-                    <span class="price" style="font-size: 16px; color: #713D2A;">${{ "{:,.0f}".format(p[2]) }}</span>
-                  </div>
+                <div style="padding: 20px; background: #f8f9fa; border-top: 1px solid #e9ecef; min-height: 80px; display: flex; align-items: center; justify-content: center;">
+                  <div style="font-weight: bold; color: #333; font-size: 20px; text-align: center; line-height: 1.4;">{{ p[1] }}</div>
                 </div>
               </div>
             {% endfor %}
@@ -309,11 +291,8 @@
                     <img src="{{ url_for('static', filename='images/default-food.png') }}" alt="{{ p[1] }}" loading="lazy">
                   {% endif %}
                 </div>
-                <div style="padding: 10px; background: #f8f9fa; border-top: 1px solid #e9ecef;">
-                  <div style="font-weight: bold; color: #333; margin-bottom: 5px; font-size: 14px;">{{ p[1] }}</div>
-                  <div class="price-container" style="background: transparent; border: none; padding: 0;">
-                    <span class="price" style="font-size: 16px; color: #713D2A;">${{ "{:,.0f}".format(p[2]) }}</span>
-                  </div>
+                <div style="padding: 20px; background: #f8f9fa; border-top: 1px solid #e9ecef; min-height: 80px; display: flex; align-items: center; justify-content: center;">
+                  <div style="font-weight: bold; color: #333; font-size: 20px; text-align: center; line-height: 1.4;">{{ p[1] }}</div>
                 </div>
               </div>
             {% endfor %}
@@ -374,11 +353,8 @@
                     <img src="{{ url_for('static', filename='images/default-food.png') }}" alt="{{ p[1] }}" loading="lazy">
                   {% endif %}
                 </div>
-                <div style="padding: 10px; background: #f8f9fa; border-top: 1px solid #e9ecef;">
-                  <div style="font-weight: bold; color: #333; margin-bottom: 5px; font-size: 14px;">{{ p[1] }}</div>
-                  <div class="price-container" style="background: transparent; border: none; padding: 0;">
-                    <span class="price" style="font-size: 16px; color: #713D2A;">${{ "{:,.0f}".format(p[2]) }}</span>
-                  </div>
+                <div style="padding: 20px; background: #f8f9fa; border-top: 1px solid #e9ecef; min-height: 80px; display: flex; align-items: center; justify-content: center;">
+                  <div style="font-weight: bold; color: #333; font-size: 20px; text-align: center; line-height: 1.4;">{{ p[1] }}</div>
                 </div>
               </div>
             {% endfor %}
@@ -548,6 +524,10 @@
             <label for="mesa" style="display: block; font-weight: bold; margin-bottom: 5px; color: #713D2A;">Número de Mesa:</label>
             <input type="text" id="mesa" name="mesa" placeholder="Ej: Mesa 1" required style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px;">
           </div>
+          <div style="margin-bottom: 15px;">
+            <label for="notas" style="display: block; font-weight: bold; margin-bottom: 5px; color: #713D2A;">Notas o Modificaciones (opcional):</label>
+            <textarea id="notas" name="notas" placeholder="Ej: Sin cebolla, bien cocido, sin picante, etc." rows="3" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px; resize: vertical; font-family: Arial, sans-serif;"></textarea>
+          </div>
           <button onclick="addToCartFromModal()" class="btn-add-cart">Añadir al carrito</button>
         </div>
       </div>
@@ -586,6 +566,7 @@
       document.getElementById('quantity').value = 1;
       document.getElementById('mesa').value = '';
       document.getElementById('nombre_cliente').value = '';
+      document.getElementById('notas').value = '';
     }
 
     function addToCartFromModal() {
@@ -597,6 +578,7 @@
       const nombreCliente = document.getElementById('nombre_cliente').value.trim();
       const quantity = parseInt(document.getElementById('quantity').value);
       const mesa = document.getElementById('mesa').value.trim();
+      const notas = document.getElementById('notas').value.trim();
       
       // Validaciones
       if (!nombreCliente) {
@@ -645,6 +627,12 @@
       mesaInput.name = 'mesa';
       mesaInput.value = mesa;
       form.appendChild(mesaInput);
+      
+      const notasInput = document.createElement('input');
+      notasInput.type = 'hidden';
+      notasInput.name = 'notas';
+      notasInput.value = notas;
+      form.appendChild(notasInput);
       
       document.body.appendChild(form);
       form.submit();

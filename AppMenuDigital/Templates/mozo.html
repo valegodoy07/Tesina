@@ -395,6 +395,11 @@
                                     <span class="item-name">{{ item[2] }}</span>
                                     <span class="item-qty">x{{ item[0] }}</span>
                                     <span class="item-price">${{ '%.2f'|format(item[1]) }}</span>
+                                    {% if item|length > 3 and item[3] %}
+                                        <div style="font-size: 11px; color: #666; font-style: italic; margin-top: 3px; padding-left: 10px;">
+                                            📝 {{ item[3] }}
+                                        </div>
+                                    {% endif %}
                                 </li>
                                 {% endfor %}
                             </ul>

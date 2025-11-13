@@ -106,13 +106,13 @@ body {
 }
 
 .welcome-message h1 {
-  font-size: 42px;
+  font-size: 56px;
   font-weight: bold;
   margin: 0;
 }
 
 .welcome-message p {
-  font-size: 20px;
+  font-size: 26px;
   margin-top: 5px;
 }
 
@@ -886,7 +886,7 @@ body .container > h2 {
 
 .menu-items {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 25px;
   margin-top: 40px;
   padding: 20px 0;
@@ -897,27 +897,27 @@ body .container > h2 {
 
 @media (min-width: 480px) {
   .menu-items {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   }
 }
 
 @media (min-width: 768px) {
   .menu-items {
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
     gap: 30px;
   }
 }
 
 @media (min-width: 1024px) {
   .menu-items {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 35px;
   }
 }
 
 @media (min-width: 1400px) {
   .menu-items {
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   }
 }
 
@@ -929,7 +929,7 @@ body .container > h2 {
   overflow: hidden;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   cursor: pointer;
-  aspect-ratio: 1;
+  aspect-ratio: 0.9;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -944,7 +944,7 @@ body .container > h2 {
 
 .menu-item-image {
   width: 100%;
-  height: 85%;
+  height: 75%;
   overflow: hidden;
   flex-shrink: 0;
 }

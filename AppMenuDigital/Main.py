@@ -243,27 +243,10 @@ def login():
             print(f"[login] fetched user for {email}: {bool(user)}")
 
             password_ok = False
-            upgraded = False
             if user:
                 stored_pwd = user[3]
-                try:
-                    password_ok = check_password_hash(stored_pwd, password)
-                except Exception as e:
-                    print(f"[login] check_password_hash error: {e}")
-                    password_ok = False
-                if not password_ok:
-                    # Fallback: si la DB tuviese texto plano (migración)
-                    try:
-                        password_ok = (stored_pwd == password)
-                        if password_ok and not (isinstance(stored_pwd, str) and stored_pwd.startswith('pbkdf2:')):
-                            new_hash = generate_password_hash(password)
-                            cur.execute("UPDATE usuarios SET password=%s WHERE id=%s", (new_hash, user[0]))
-                            conn.commit()
-                            upgraded = True
-                            print("[login] upgraded password hash for user id", user[0])
-                    except Exception as e:
-                        print(f"[login] legacy password check error: {e}")
-                        password_ok = False
+                # Comparar contraseña en texto plano (NO RECOMENDADO por seguridad)
+                password_ok = (stored_pwd == password)
 
             if user and password_ok:
                 session['user_id'] = user[0]
@@ -294,7 +277,7 @@ def login():
                         session['rol'] = 'usuario'
                 except Exception:
                     session['rol'] = 'admin' if (is_admin or session.get('user_id') == 1) else 'usuario'
-                flash('¡Inicio de sesión exitoso!' + (' (contraseña actualizada)' if upgraded else ''), 'success')
+                flash('¡Inicio de sesión exitoso!', 'success')
                 _log_db_info('login')
                 return redirect(url_for('index'))
             else:
@@ -332,12 +315,11 @@ def registro():
                 cur.close()
                 return render_template('Registro.html')
             
-            # Crear nuevo usuario
-            hashed_password = generate_password_hash(password)
+            # Crear nuevo usuario (contraseña en texto plano - NO RECOMENDADO por seguridad)
             cur.execute("""
                 INSERT INTO usuarios (nombre, email, password)
                 VALUES (%s, %s, %s)
-            """, (nombre, email, hashed_password))
+            """, (nombre, email, password))
             # Registrar también como mozo activo por defecto
             try:
                 cur.execute("INSERT INTO mozos (nombre, email, activo) VALUES (%s, %s, %s)", (nombre, email, 1))

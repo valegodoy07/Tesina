@@ -56,8 +56,8 @@ body {
   justify-content: center;
   align-items: center;
   flex-direction: column;
-  color: white;
-  text-shadow: 2px 2px 5px black;
+  color: rgb(83, 55, 55);
+  text-shadow: 2px 2px 5px black
   padding-top: 60px;
   text-align: center;
 }
@@ -92,6 +92,7 @@ body {
 
 .user-info a:hover {
   background: rgba(255, 255, 255, 0.3);
+  background: rgb(0 0 0 / 48%);
 }
 
 .welcome-message {
@@ -104,6 +105,7 @@ body {
   text-shadow: 2px 2px 5px black;
   z-index: 1;
 }
+
 
 .welcome-message h1 {
   font-size: 56px;

@@ -685,6 +685,11 @@ def mozo_dashboard():
                 
                 if len(items) > 0:
                     print(f"  ✓ Pedido {pedido_id}: {len(items)} items encontrados - Total: ${total:.2f}")
+                    # Debug: mostrar notas de cada item
+                    for idx, it in enumerate(items):
+                        if len(it) > 3:
+                            notas_debug = it[3] if it[3] else '(vacío)'
+                            print(f"    Item {idx+1}: {it[2]} - Notas: '{notas_debug}'")
                 else:
                     print(f"  ⚠ Pedido {pedido_id}: SIN ITEMS")
                     # Verificar si hay items en la tabla
@@ -1714,6 +1719,8 @@ def cart_checkout():
                 
                 # Obtener notas del item del carrito
                 notas_item = entry.get('notas', '') or ''
+                if notas_item:
+                    notas_item = str(notas_item).strip()
                 
                 # Insertar item del pedido
                 cur.execute(
@@ -1723,6 +1730,8 @@ def cart_checkout():
                 items_agregados += 1
                 notas_msg = f" (Notas: {notas_item})" if notas_item else ""
                 print(f"[CHECKOUT] ✓ Item agregado: {nombre_producto} x{cantidad} = ${precio * cantidad}{notas_msg}")
+                if notas_item:
+                    print(f"[CHECKOUT]   → Notas guardadas en BD: '{notas_item}'")
             except Exception as e:
                 print(f"[CHECKOUT] ✗ Error agregando item {pid} al pedido: {e}")
                 import traceback

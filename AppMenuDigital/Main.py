@@ -937,11 +937,18 @@ def mozo_productos_eliminar(producto_id: int):
 @mozo_required
 def mozo_productos_editar(producto_id: int):
     """Editar un producto del menú"""
-    nombre = request.form.get('nombre')
-    precio = request.form.get('precio')
-    categoria = (request.form.get('categoria') or '').lower()
-    descripcion = request.form.get('descripcion', '')
-    imagen = request.form.get('imagen', '')
+    nombre = request.form.get('nombre', '').strip()
+    precio = request.form.get('precio', '').strip()
+    categoria = (request.form.get('categoria') or '').lower().strip()
+    descripcion = request.form.get('descripcion', '').strip()
+    imagen = request.form.get('imagen', '').strip()
+    
+    print(f"[mozo_productos_editar] Datos recibidos del formulario:")
+    print(f"  - nombre: '{nombre}'")
+    print(f"  - precio: '{precio}'")
+    print(f"  - categoria: '{categoria}'")
+    print(f"  - descripcion: '{descripcion}'")
+    print(f"  - imagen: '{imagen}'")
     
     categorias_validas = ['desayunos', 'almuerzos', 'cenas', 'meriendas', 'postres', 'bebidas', 'comida_sin_tac', 'promociones', 'veggie']
     
@@ -962,18 +969,28 @@ def mozo_productos_editar(producto_id: int):
         flash('Debes seleccionar una categoría válida', 'error')
         return redirect(url_for('mozo_dashboard'))
     
+    conn = None
     cur = None
     try:
-        cur = mysql.connection.cursor()
+        # Usar la misma conexión para todo
+        conn = mysql.connection
+        cur = conn.cursor()
         
         # Verificar que el producto existe
         cur.execute("SELECT id FROM productos WHERE id = %s", (producto_id,))
         if not cur.fetchone():
             flash('Producto no encontrado', 'error')
             cur.close()
+            conn.close()
             return redirect(url_for('mozo_dashboard'))
         
+        # Obtener la imagen actual del producto antes de actualizar
+        cur.execute("SELECT imagen FROM productos WHERE id = %s", (producto_id,))
+        producto_actual = cur.fetchone()
+        imagen_actual = producto_actual[0] if producto_actual and producto_actual[0] else ''
+        
         # Manejo de subida de archivo
+        imagen_nueva_subida = False
         f = request.files.get('imagen_file')
         if f and getattr(f, 'filename', ''):
             from werkzeug.utils import secure_filename
@@ -983,6 +1000,7 @@ def mozo_productos_editar(producto_id: int):
                 if ext.lower() not in _ALLOWED_IMAGE_EXTS:
                     flash('Formato de imagen no permitido', 'error')
                     cur.close()
+                    conn.close()
                     return redirect(url_for('mozo_dashboard'))
                 
                 # Generar nombre único
@@ -992,44 +1010,84 @@ def mozo_productos_editar(producto_id: int):
                 try:
                     f.save(filepath)
                     imagen = f"images/{unique_filename}"
+                    imagen_nueva_subida = True
                     print(f"[mozo_productos_editar] Imagen guardada: {imagen}")
                 except Exception as save_error:
                     print(f"[mozo_productos_editar] Error guardando imagen: {save_error}")
                     flash('Error al guardar la imagen', 'error')
                     cur.close()
+                    conn.close()
                     return redirect(url_for('mozo_dashboard'))
         
-        # Actualizar producto
-        if imagen:
-            cur.execute("""
-                UPDATE productos 
-                SET nombre = %s, descripcion = %s, precio = %s, imagen = %s, categoria = %s
-                WHERE id = %s
-            """, (nombre, descripcion, precio_val, imagen, categoria, producto_id))
+        # Determinar qué imagen usar: URL proporcionada > archivo subido > imagen actual
+        if imagen and not imagen_nueva_subida:
+            # Si hay URL de imagen pero no se subió archivo, usar la URL
+            imagen_final = imagen
+        elif imagen_nueva_subida:
+            # Si se subió un archivo, usar la nueva imagen
+            imagen_final = imagen
         else:
-            # Si no hay nueva imagen, mantener la anterior
-            cur.execute("""
-                UPDATE productos 
-                SET nombre = %s, descripcion = %s, precio = %s, categoria = %s
-                WHERE id = %s
-            """, (nombre, descripcion, precio_val, categoria, producto_id))
+            # Si no hay nueva imagen ni URL, mantener la actual
+            imagen_final = imagen_actual
         
-        mysql.connection.commit()
+        # Actualizar producto
+        print(f"[mozo_productos_editar] Actualizando producto {producto_id}: nombre={nombre}, precio={precio_val}, categoria={categoria}, imagen={imagen_final}")
+        cur.execute("""
+            UPDATE productos 
+            SET nombre = %s, descripcion = %s, precio = %s, imagen = %s, categoria = %s
+            WHERE id = %s
+        """, (nombre, descripcion, precio_val, imagen_final, categoria, producto_id))
+        
+        rows_affected = cur.rowcount
+        print(f"[mozo_productos_editar] Filas afectadas por UPDATE: {rows_affected}")
+        
+        if rows_affected == 0:
+            flash('No se pudo actualizar el producto. Verifica que el producto existe.', 'error')
+            cur.close()
+            conn.close()
+            return redirect(url_for('mozo_dashboard'))
+        
+        # Hacer commit usando la misma conexión
+        conn.commit()
+        print(f"[mozo_productos_editar] ✓ Commit realizado")
+        
+        # Verificar que se actualizó correctamente
+        cur.execute("SELECT nombre, precio, categoria, descripcion, imagen FROM productos WHERE id = %s", (producto_id,))
+        producto_verificado = cur.fetchone()
+        if producto_verificado:
+            print(f"[mozo_productos_editar] Producto verificado después del UPDATE:")
+            print(f"  - Nombre: {producto_verificado[0]}")
+            print(f"  - Precio: {producto_verificado[1]}")
+            print(f"  - Categoría: {producto_verificado[2]}")
+            print(f"  - Descripción: {producto_verificado[3]}")
+            print(f"  - Imagen: {producto_verificado[4]}")
+        
         cur.close()
+        conn.close()
         
         flash(f'Producto "{nombre}" actualizado correctamente', 'success')
-        print(f"[mozo_productos_editar] Producto {producto_id} actualizado: {nombre}")
+        print(f"[mozo_productos_editar] Producto {producto_id} actualizado exitosamente: {nombre}")
     except Exception as e:
         print(f"[mozo_productos_editar] Error: {e}")
         import traceback
         traceback.print_exc()
         try:
-            mysql.connection.rollback()
-        except:
-            pass
+            if conn:
+                conn.rollback()
+                print(f"[mozo_productos_editar] Rollback realizado")
+        except Exception as rollback_error:
+            print(f"[mozo_productos_editar] Error en rollback: {rollback_error}")
         flash(f'Error al actualizar producto: {str(e)}', 'error')
         if cur:
-            cur.close()
+            try:
+                cur.close()
+            except:
+                pass
+        if conn:
+            try:
+                conn.close()
+            except:
+                pass
     
     return redirect(url_for('mozo_dashboard'))
 

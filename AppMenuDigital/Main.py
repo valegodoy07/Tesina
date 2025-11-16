@@ -1,6 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from functools import wraps
-from werkzeug.security import generate_password_hash, check_password_hash
 try:
     from .config import Config
 except ImportError:
@@ -63,8 +62,6 @@ def _log_db_info(tag: str):
     except Exception as e:
         print(f"[db-info:{tag}] error: {e}")
 
-# (revert) Sin inicialización automática de tablas
-# Context processor to expose cart count in all templates
 @app.context_processor
 def inject_cart_count():
     try:
@@ -188,46 +185,6 @@ def menu():
         print(f"Error al cargar productos (menu): {e}")
         return render_template('menu.html', productos=[])
 
-# ===== Páginas por categoría (estáticas por ahora) =====
-@app.route('/categoria/<nombre>')
-def categoria(nombre: str):
-    # Normalizamos nombre para plantilla
-    nombre_lower = nombre.lower()
-    categorias_validas = ['desayunos', 'almuerzos', 'meriendas', 'cenas', 'postres', 'bebidas', 'comida_sin_tac', 'promociones', 'veggie']
-    if nombre_lower not in categorias_validas:
-        flash('Categoría no encontrada', 'error')
-        return redirect(url_for('index'))
-    template_name = f"categoria_{nombre_lower}.html"
-    try:
-        # Si existiese DB: podríamos filtrar productos por categoria
-        productos = []
-        if nombre_lower != 'promociones':
-            try:
-                cur = mysql.connection.cursor()
-                if nombre_lower == 'desayunos':
-                    filtro = 'desayunos'
-                elif nombre_lower == 'almuerzos':
-                    filtro = 'almuerzos'
-                elif nombre_lower == 'meriendas':
-                    filtro = 'meriendas'
-                elif nombre_lower == 'cenas':
-                    filtro = 'cenas'
-                elif nombre_lower == 'postres':
-                    filtro = 'postres'
-                elif nombre_lower == 'bebidas':
-                    filtro = 'bebidas'
-                else:
-                    filtro = 'general'
-                cur.execute("SELECT id, nombre, descripcion, precio, imagen FROM productos WHERE categoria=%s", (filtro,))
-                productos = cur.fetchall()
-                cur.close()
-            except Exception as e:
-                print(f"Error consultando productos por categoría: {e}")
-        return render_template(template_name, productos=productos)
-    except Exception:
-        # fallback si no hay plantilla específica
-        return render_template('menu.html', productos=[])
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -290,7 +247,6 @@ def login():
     
     return render_template('Login.html')
 
-# esta funcion maneja el registro de nuevos usuarios
 @app.route('/registro', methods=['GET', 'POST'])
 def registro():
     if request.method == 'POST':
@@ -393,43 +349,6 @@ def mozo_required(view_func):
             return redirect(url_for('index'))
         return view_func(*args, **kwargs)
     return wrapped
-
-def ensure_pedidos_tables():
-    try:
-        # Asegurar tablas base necesarias
-        ensure_mozos_table_exists()
-        ensure_menu_table_exists()
-
-        cur = mysql.connection.cursor()
-        cur.execute(
-            """
-            CREATE TABLE IF NOT EXISTS pedidos_mozo (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                mozo_id INT NOT NULL,
-                mesa VARCHAR(20) NOT NULL,
-                estado VARCHAR(20) DEFAULT 'abierto',
-                notas TEXT,
-                creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                CONSTRAINT fk_pedidos_mozo_mozo FOREIGN KEY (mozo_id) REFERENCES mozos(id)
-            )
-            """
-        )
-        cur.execute(
-            """
-            CREATE TABLE IF NOT EXISTS pedido_items_mozo (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                pedido_id INT NOT NULL,
-                producto_id INT NOT NULL,
-                cantidad INT NOT NULL DEFAULT 1,
-                CONSTRAINT fk_pedido_items_mozo_pedido FOREIGN KEY (pedido_id) REFERENCES pedidos_mozo(id),
-                CONSTRAINT fk_pedido_items_mozo_menu FOREIGN KEY (producto_id) REFERENCES menu(id)
-            )
-            """
-        )
-        mysql.connection.commit()
-        cur.close()
-    except Exception as e:
-        print(f"Error asegurando tablas de pedidos: {e}")
 
 def ensure_mozos_table_exists():
     try:
@@ -689,7 +608,9 @@ def mozo_dashboard():
                     for idx, it in enumerate(items):
                         if len(it) > 3:
                             notas_debug = it[3] if it[3] else '(vacío)'
-                            print(f"    Item {idx+1}: {it[2]} - Notas: '{notas_debug}'")
+                            print(f"    Item {idx+1}: {it[2]} - Comentario: '{notas_debug}'")
+                        else:
+                            print(f"    Item {idx+1}: {it[2]} - Sin comentario (longitud: {len(it)})")
                 else:
                     print(f"  ⚠ Pedido {pedido_id}: SIN ITEMS")
                     # Verificar si hay items en la tabla
@@ -728,12 +649,6 @@ def mozo_dashboard():
             except:
                 pass
         return render_template('mozo.html', pedidos=[], productos=[])
-
-# Esta ruta ya no se necesita - comentada porque no se crean pedidos desde el panel de mozos
-# @app.route('/mozo/pedidos/crear', methods=['POST'])
-# @mozo_required
-# def mozo_pedido_crear():
-#     ...
 
 @app.route('/mozo/productos/crear', methods=['POST'])
 @mozo_required
@@ -900,8 +815,12 @@ def mozo_productos_crear():
 @mozo_required
 def mozo_productos_eliminar(producto_id: int):
     """Eliminar un producto del menú"""
+    conn = None
+    cur = None
     try:
-        cur = mysql.connection.cursor()
+        # Usar la misma conexión para todo
+        conn = mysql.connection
+        cur = conn.cursor()
         
         # Obtener nombre del producto antes de eliminarlo
         cur.execute("SELECT nombre FROM productos WHERE id = %s", (producto_id,))
@@ -910,26 +829,61 @@ def mozo_productos_eliminar(producto_id: int):
         if not producto:
             flash('Producto no encontrado', 'error')
             cur.close()
+            conn.close()
             return redirect(url_for('mozo_dashboard'))
         
         nombre_producto = producto[0]
         
         # Eliminar el producto
+        print(f"[mozo_productos_eliminar] Eliminando producto {producto_id}: {nombre_producto}")
         cur.execute("DELETE FROM productos WHERE id = %s", (producto_id,))
-        mysql.connection.commit()
-        cur.close()
+        rows_affected = cur.rowcount
+        print(f"[mozo_productos_eliminar] Filas afectadas por DELETE: {rows_affected}")
         
-        flash(f'Producto "{nombre_producto}" eliminado correctamente', 'success')
-        print(f"[mozo_productos_eliminar] Producto {producto_id} eliminado: {nombre_producto}")
+        if rows_affected == 0:
+            flash('No se pudo eliminar el producto. Verifica que el producto existe.', 'error')
+            cur.close()
+            conn.close()
+            return redirect(url_for('mozo_dashboard'))
+        
+        # Hacer commit usando la misma conexión
+        conn.commit()
+        print(f"[mozo_productos_eliminar] ✓ Commit realizado")
+        
+        # Verificar que se eliminó correctamente
+        cur.execute("SELECT id FROM productos WHERE id = %s", (producto_id,))
+        producto_verificado = cur.fetchone()
+        if producto_verificado:
+            print(f"[mozo_productos_eliminar] ⚠ ADVERTENCIA: El producto todavía existe después del DELETE")
+            flash('Error: El producto no se eliminó correctamente', 'error')
+        else:
+            print(f"[mozo_productos_eliminar] ✓ Producto eliminado correctamente")
+            flash(f'Producto "{nombre_producto}" eliminado correctamente', 'success')
+        
+        cur.close()
+        conn.close()
+        
     except Exception as e:
         print(f"[mozo_productos_eliminar] Error: {e}")
         import traceback
         traceback.print_exc()
         try:
-            mysql.connection.rollback()
-        except:
-            pass
+            if conn:
+                conn.rollback()
+                print(f"[mozo_productos_eliminar] Rollback realizado")
+        except Exception as rollback_error:
+            print(f"[mozo_productos_eliminar] Error en rollback: {rollback_error}")
         flash(f'Error al eliminar producto: {str(e)}', 'error')
+        if cur:
+            try:
+                cur.close()
+            except:
+                pass
+        if conn:
+            try:
+                conn.close()
+            except:
+                pass
     
     return redirect(url_for('mozo_dashboard'))
 
@@ -1030,8 +984,19 @@ def mozo_productos_editar(producto_id: int):
             # Si no hay nueva imagen ni URL, mantener la actual
             imagen_final = imagen_actual
         
+        # Obtener datos actuales antes de actualizar para comparar
+        cur.execute("SELECT nombre, precio, categoria, descripcion, imagen FROM productos WHERE id = %s", (producto_id,))
+        datos_antes = cur.fetchone()
+        if datos_antes:
+            print(f"[mozo_productos_editar] Datos ANTES del UPDATE:")
+            print(f"  - Nombre: '{datos_antes[0]}' -> '{nombre}'")
+            print(f"  - Precio: {datos_antes[1]} -> {precio_val}")
+            print(f"  - Categoría: '{datos_antes[2]}' -> '{categoria}'")
+            print(f"  - Descripción: '{datos_antes[3]}' -> '{descripcion}'")
+            print(f"  - Imagen: '{datos_antes[4]}' -> '{imagen_final}'")
+        
         # Actualizar producto
-        print(f"[mozo_productos_editar] Actualizando producto {producto_id}: nombre={nombre}, precio={precio_val}, categoria={categoria}, imagen={imagen_final}")
+        print(f"[mozo_productos_editar] Ejecutando UPDATE para producto {producto_id}")
         cur.execute("""
             UPDATE productos 
             SET nombre = %s, descripcion = %s, precio = %s, imagen = %s, categoria = %s

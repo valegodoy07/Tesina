@@ -24,7 +24,8 @@ CREATE TABLE IF NOT EXISTS productos (
 CREATE TABLE IF NOT EXISTS categorias (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) UNIQUE NOT NULL,
-    descripcion VARCHAR(255)
+    descripcion VARCHAR(255),
+    orden INT DEFAULT 0
 );
 
 -- Crear tabla de mozos
@@ -45,9 +46,19 @@ INSERT INTO productos (nombre, descripcion, precio, imagen, categoria) VALUES
 ('Ensalada César', 'Ensalada fresca con lechuga, crutones y aderezo especial', 6000.00, 'ensalada.png', 'entradas'),
 ('Limonada', 'Limonada natural refrescante', 2500.00, 'limonada.png', 'bebidas'); 
 
--- Insertar categorías de ejemplo (opcional)
-INSERT INTO categorias (nombre, descripcion) VALUES
-('platos_principales', 'Platos fuertes y principales'),
-('entradas', 'Entradas y aperitivos'),
-('bebidas', 'Bebidas frías y calientes')
-ON DUPLICATE KEY UPDATE descripcion = VALUES(descripcion);
+-- Insertar categorías de la aplicación
+-- Primero eliminar categorías existentes si es necesario (opcional, comentar si quieres conservar datos)
+-- DELETE FROM categorias;
+
+-- Insertar todas las categorías usadas en la aplicación
+INSERT INTO categorias (nombre, descripcion, orden) VALUES
+('desayunos', 'Platos para el desayuno', 1),
+('almuerzos', 'Platos para el almuerzo', 2),
+('meriendas', 'Opciones para la merienda', 3),
+('cenas', 'Platos para la cena', 4),
+('postres', 'Postres y dulces', 5),
+('bebidas', 'Bebidas y refrescos', 6),
+('comida_sin_tac', 'Comida sin TACC (sin gluten)', 7),
+('promociones', 'Promociones especiales', 8),
+('veggie', 'Opciones vegetarianas', 9)
+ON DUPLICATE KEY UPDATE descripcion = VALUES(descripcion), orden = VALUES(orden);

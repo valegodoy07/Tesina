@@ -213,6 +213,18 @@
 				input.addEventListener('blur', handleInput);
 			});
 		});
+
+		// Auto-hide flash messages after 3 seconds
+		setTimeout(function() {
+			const flashMessages = document.querySelectorAll('.flash-message');
+			flashMessages.forEach(function(message) {
+				message.style.transition = 'opacity 0.5s ease-out';
+				message.style.opacity = '0';
+				setTimeout(function() {
+					message.remove();
+				}, 500);
+			});
+		}, 3000);
 	</script>
 </body>
 </html>

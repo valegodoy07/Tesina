@@ -31,6 +31,7 @@
             <th>Producto</th>
             <th>Precio</th>
             <th>Cantidad</th>
+            <th>Notas/Modificaciones</th>
             <th>Subtotal</th>
             <th></th>
           </tr>
@@ -42,6 +43,13 @@
             <td>${{ '%.2f'|format(it.precio) }}</td>
             <td>
               <input type="number" name="qty_{{ it.id }}" value="{{ it.cantidad }}" min="0" style="width:70px;">
+            </td>
+            <td>
+              {% if it.notas %}
+                <span style="color: #666; font-size: 13px; font-style: italic;">{{ it.notas }}</span>
+              {% else %}
+                <span style="color: #999; font-size: 13px;">Sin notas</span>
+              {% endif %}
             </td>
             <td>${{ '%.2f'|format(it.subtotal) }}</td>
             <td>
@@ -80,5 +88,19 @@
       </div>
     {% endif %}
   </div>
+
+  <script>
+    // Auto-hide flash messages after 3 seconds
+    setTimeout(function() {
+      const flashMessages = document.querySelectorAll('.flash-message');
+      flashMessages.forEach(function(message) {
+        message.style.transition = 'opacity 0.5s ease-out';
+        message.style.opacity = '0';
+        setTimeout(function() {
+          message.remove();
+        }, 500);
+      });
+    }, 3000);
+  </script>
 </body>
 </html>

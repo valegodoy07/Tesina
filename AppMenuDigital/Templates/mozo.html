@@ -335,11 +335,11 @@
                         <div style="margin-top: 15px; display: flex; gap: 10px;">
                             <button class="btn-editar-producto" 
                                     data-id="{{ prod[0] }}"
-                                    data-nombre="{{ prod[1] }}"
+                                    data-nombre="{{ prod[1]|replace('"', '&quot;')|replace("'", '&#39;') }}"
                                     data-precio="{{ prod[2] }}"
                                     data-categoria="{{ prod[3] }}"
-                                    data-imagen="{{ prod[4] or '' }}"
-                                    data-descripcion="{{ prod[5] or '' }}"
+                                    data-imagen="{{ (prod[4] or '')|replace('"', '&quot;')|replace("'", '&#39;') }}"
+                                    data-descripcion="{{ (prod[5] or '')|replace('"', '&quot;')|replace("'", '&#39;')|replace('\n', ' ') }}"
                                     style="flex: 1; padding: 10px; background: #74b9ff; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">✏️ Editar</button>
                             <form method="POST" action="{{ url_for('mozo_productos_eliminar', producto_id=prod[0]) }}" style="flex: 1; margin: 0;" onsubmit="return confirm('¿Estás seguro de eliminar este producto?');">
                                 <button type="submit" style="width: 100%; padding: 10px; background: #d63031; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">🗑️ Eliminar</button>
@@ -391,14 +391,22 @@
                             <h4>Items del Pedido:</h4>
                             <ul class="item-list">
                                 {% for item in p[5] %}
-                                <li>
-                                    <span class="item-name">{{ item[2] }}</span>
-                                    <span class="item-qty">x{{ item[0] }}</span>
-                                    <span class="item-price">${{ '%.2f'|format(item[1]) }}</span>
-                                    {% if item|length > 3 and item[3] %}
-                                        <div style="font-size: 11px; color: #666; font-style: italic; margin-top: 3px; padding-left: 10px;">
-                                            📝 {{ item[3] }}
+                                <li style="flex-direction: column; align-items: flex-start;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                                        <span class="item-name">{{ item[2] }}</span>
+                                        <div style="display: flex; align-items: center; gap: 15px;">
+                                            <span class="item-qty">x{{ item[0] }}</span>
+                                            <span class="item-price">${{ '%.2f'|format(item[1] * item[0]) }}</span>
                                         </div>
+                                    </div>
+                                    {% if item|length > 3 %}
+                                        {% set nota = item[3]|default('')|string|trim %}
+                                        {% if nota and nota != '' and nota != 'None' %}
+                                        <div style="font-size: 13px; color: #713D2A; margin-top: 10px; padding: 12px 15px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px; width: 100%; box-sizing: border-box;">
+                                            <strong style="display: flex; align-items: center; gap: 5px; margin-bottom: 5px;">💬 Comentario del pedido:</strong>
+                                            <span style="display: block; font-style: italic; color: #333;">{{ nota }}</span>
+                                        </div>
+                                        {% endif %}
                                     {% endif %}
                                 </li>
                                 {% endfor %}
@@ -447,7 +455,7 @@
     <div id="modalEditar" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
         <div style="background: white; border-radius: 12px; padding: 30px; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;">
             <h2 style="margin-top: 0; color: #713D2A;">✏️ Editar Producto</h2>
-            <form method="POST" id="formEditar" enctype="multipart/form-data" class="producto-form">
+            <form method="POST" id="formEditar" enctype="multipart/form-data" class="producto-form" onsubmit="return validarFormularioEditar()">
                 <input type="text" name="nombre" id="edit_nombre" placeholder="Nombre del producto" required>
                 <input type="number" step="0.01" name="precio" id="edit_precio" placeholder="Precio" required>
                 <select name="categoria" id="edit_categoria" required>
@@ -460,6 +468,7 @@
                     <option value="bebidas">Bebidas</option>
                     <option value="comida_sin_tac">Comida sin TACC</option>
                     <option value="promociones">Promociones</option>
+                    <option value="veggie">Veggie</option>
                 </select>
                 <input type="text" name="imagen" id="edit_imagen" placeholder="URL de imagen (opcional)">
                 <div>
@@ -467,7 +476,7 @@
                     <input type="file" name="imagen_file" accept="image/*" style="width: 100%; padding: 8px; border: 2px solid #ddd; border-radius: 8px;">
                     <small style="color: #666; font-size: 12px;">Formatos: JPG, PNG, GIF, WEBP, AVIF (máx. 10MB)</small>
                 </div>
-                <input type="text" name="descripcion" id="edit_descripcion" placeholder="Descripción (opcional)">
+                <textarea name="descripcion" id="edit_descripcion" placeholder="Descripción (opcional)" rows="3" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px; resize: vertical; font-family: Arial, sans-serif;"></textarea>
                 <div style="display: flex; gap: 10px; margin-top: 10px;">
                     <button type="submit" style="flex: 1; padding: 12px; background: #713D2A; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Guardar Cambios</button>
                     <button type="button" onclick="cerrarModal()" style="flex: 1; padding: 12px; background: #636e72; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Cancelar</button>
@@ -489,6 +498,34 @@
 
         function cerrarModal() {
             document.getElementById('modalEditar').style.display = 'none';
+        }
+
+        function validarFormularioEditar() {
+            const nombre = document.getElementById('edit_nombre').value.trim();
+            const precio = document.getElementById('edit_precio').value.trim();
+            const categoria = document.getElementById('edit_categoria').value.trim();
+            
+            if (!nombre) {
+                alert('El nombre del producto es obligatorio');
+                document.getElementById('edit_nombre').focus();
+                return false;
+            }
+            
+            if (!precio || isNaN(precio) || parseFloat(precio) <= 0) {
+                alert('El precio debe ser un número mayor a 0');
+                document.getElementById('edit_precio').focus();
+                return false;
+            }
+            
+            if (!categoria) {
+                alert('Debes seleccionar una categoría');
+                document.getElementById('edit_categoria').focus();
+                return false;
+            }
+            
+            console.log('Formulario válido, enviando...');
+            console.log('URL:', document.getElementById('formEditar').action);
+            return true;
         }
 
         // Asignar eventos a los botones de editar
@@ -513,6 +550,18 @@
                 cerrarModal();
             }
         });
+
+        // Auto-hide flash messages after 3 seconds
+        setTimeout(function() {
+            const flashMessages = document.querySelectorAll('.flash-message');
+            flashMessages.forEach(function(message) {
+                message.style.transition = 'opacity 0.5s ease-out';
+                message.style.opacity = '0';
+                setTimeout(function() {
+                    message.remove();
+                }, 500);
+            });
+        }, 3000);
     </script>
 </body>
 </html>
